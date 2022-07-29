@@ -25,4 +25,10 @@ pub enum GdtfProblem {
     NoDataVersion,
     #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")]
     InvalidDataVersion(String),
+    #[error("node '{missing}' missing as child of '{parent}'")]
+    NodeMissing { missing: String, parent: String },
+    #[error("attribute '{attr}' missing on node '{node}'")]
+    AttributeMissing { attr: String, node: String },
+    #[error("UUID error: {0}'")]
+    UuidError (#[from] uuid::Error),
 }
