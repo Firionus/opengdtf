@@ -32,6 +32,6 @@ pub enum GdtfProblem {
     NodeMissing { missing: String, parent: String },
     #[error("attribute '{attr}' missing on node '{node}'")]
     AttributeMissing { attr: String, node: String },
-    #[error("UUID error: {0}'")]
-    UuidError (#[from] uuid::Error),
+    #[error("UUID error in {1}: {0}")]
+    UuidError (uuid::Error, String),
 }

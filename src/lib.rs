@@ -14,7 +14,7 @@ pub struct Gdtf {
     // File Information
     pub data_version: String,
     pub fixture_type_id: Uuid,
-    // pub ref_ft: Uuid,
+    pub ref_ft: Option<Uuid>,
     // pub can_have_children: bool,
     // Metadata
     // pub name: String,
@@ -62,11 +62,23 @@ impl TryFrom<&str> for Gdtf {
                 .and_then(|s| match Uuid::try_from(s) {
                     Ok(v) => Some(v),
                     Err(e) => {
-                        problems.push(GdtfProblem::UuidError(e));
+                        problems.push(GdtfProblem::UuidError(e, "FixtureTypeId".to_owned()));
                         None
                     }
                 })
                 .unwrap_or(Uuid::nil()),
+            ref_ft: ft
+                .and_then(|n| n.attribute("RefFT")) // I think it's okay to not have this
+                .and_then(|s| match s {
+                    "" => None,
+                    _ => match Uuid::try_from(s) {
+                        Ok(v) => Some(v),
+                        Err(e) => {
+                            problems.push(GdtfProblem::UuidError(e, "RefFT".to_owned()));
+                            None
+                        }
+                    }
+                }),
             problems,
         };
 
