@@ -1,4 +1,4 @@
-mod errors;
+pub mod errors;
 
 use std::fs::File;
 use std::io::Read;
@@ -16,7 +16,7 @@ impl TryFrom<&str> for Gdtf {
     type Error = GdtfCompleteFailure;
 
     fn try_from(description_content: &str) -> Result<Self, Self::Error> {
-        let doc = roxmltree::Document::parse(&description_content)?;
+        let doc = roxmltree::Document::parse(description_content)?;
 
         let root_node = doc
             .descendants()
@@ -27,7 +27,8 @@ impl TryFrom<&str> for Gdtf {
 
         let data_version = root_node
             .attribute("DataVersion")
-            .map(|s| { // validate
+            .map(|s| {
+                // validate
                 match s {
                     "1.1" => (),
                     "1.2" => (),
@@ -35,15 +36,16 @@ impl TryFrom<&str> for Gdtf {
                 };
                 s
             })
-            .unwrap_or_else(|| { // handle missing
+            .unwrap_or_else(|| {
+                // handle missing
                 problems.push(GdtfProblem::NoDataVersion);
                 ""
             })
             .into();
 
         let gdtf = Gdtf {
-            data_version: data_version,
-            problems: problems,
+            data_version,
+            problems,
         };
 
         Ok(gdtf)
@@ -58,18 +60,21 @@ impl TryFrom<&String> for Gdtf {
     }
 }
 
-// TODO replace unwraps by non-panicking code
 impl TryFrom<&Path> for Gdtf {
     type Error = GdtfCompleteFailure;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
-        let reader = File::open(path).unwrap();
-        let mut zip = zip::ZipArchive::new(reader).unwrap();
-        let mut file = zip.by_name("description.xml").unwrap();
+        let zipfile =
+            File::open(path).map_err(|e| GdtfCompleteFailure::OpenError(path.into(), e))?;
+        let mut zip = zip::ZipArchive::new(zipfile)?;
+        let mut file = zip
+            .by_name("description.xml")
+            .map_err(GdtfCompleteFailure::DescriptionXmlMissing)?;
         let mut content = String::new();
-        file.read_to_string(&mut content).unwrap();
+        file.read_to_string(&mut content)
+            .map_err(GdtfCompleteFailure::DescriptionXmlReadError)?;
 
-        Ok(Gdtf::try_from(&content[..]).unwrap())
+        Gdtf::try_from(&content[..])
     }
 }
 
@@ -110,8 +115,8 @@ mod tests {
     fn data_version_missing() {
         let invalid_xml = "<GDTF></GDTF>";
         let gdtf = Gdtf::try_from(invalid_xml).unwrap();
-        assert!(&gdtf.data_version == ""); // Default value should be applied
-        assert!(&gdtf.problems == &vec![GdtfProblem::NoDataVersion]);
+        assert!(&gdtf.data_version.is_empty()); // Default value should be applied
+        assert!(gdtf.problems == vec![GdtfProblem::NoDataVersion]);
         let msg = format!("{}", &gdtf.problems[0]);
         assert!(msg == "missing attribute 'DataVersion' on 'GDTF' node");
     }
@@ -121,8 +126,15 @@ mod tests {
         let invalid_xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
         let gdtf = Gdtf::try_from(invalid_xml).unwrap();
         assert!(&gdtf.data_version == "1.0"); // Wrong value should be output
-        assert!(&gdtf.problems == &vec![GdtfProblem::InvalidDataVersion("1.0".to_owned())]);
+        assert!(gdtf.problems == vec![GdtfProblem::InvalidDataVersion("1.0".to_owned())]);
         let msg = format!("{}", &gdtf.problems[0]);
         assert!(msg == "attribute 'DataVersion' of 'GDTF' node is invalid. Got '1.0'.");
+    }
+
+    #[test]
+    fn file_not_found() {
+        let path = Path::new("this/does/not/exist");
+        let e = Gdtf::try_from(path).unwrap_err();
+        assert!(matches!(e, GdtfCompleteFailure::OpenError(..)));
     }
 }
