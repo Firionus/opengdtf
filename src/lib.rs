@@ -4,17 +4,13 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use errors::GdtfCompleteFailure;
+use errors::{GdtfCompleteFailure, GdtfProblem};
 
 #[derive(Debug)]
 pub struct Gdtf {
     pub data_version: String,
-    pub errors: Option<()>, // TODO lay out type
+    pub problems: Vec<GdtfProblem>,
 }
-
-// TODO implement the error list
-
-// TODO replace unwraps by non-panicking code
 
 impl TryFrom<&str> for Gdtf {
     type Error = GdtfCompleteFailure;
@@ -27,12 +23,27 @@ impl TryFrom<&str> for Gdtf {
             .find(|n| n.has_tag_name("GDTF"))
             .ok_or(GdtfCompleteFailure::NoRootNode)?;
 
+        let mut problems: Vec<GdtfProblem> = vec![];
+
+        let data_version = root_node
+            .attribute("DataVersion")
+            .map(|s| { // validate
+                match s {
+                    "1.1" => (),
+                    "1.2" => (),
+                    _ => problems.push(GdtfProblem::InvalidDataVersion(s.to_owned())),
+                };
+                s
+            })
+            .unwrap_or_else(|| { // handle missing
+                problems.push(GdtfProblem::NoDataVersion);
+                ""
+            })
+            .into();
+
         let gdtf = Gdtf {
-            data_version: root_node
-                .attribute("DataVersion")
-                .unwrap()
-                .into(), // TODO validate DataVersion format
-            errors: None,
+            data_version: data_version,
+            problems: problems,
         };
 
         Ok(gdtf)
@@ -47,6 +58,7 @@ impl TryFrom<&String> for Gdtf {
     }
 }
 
+// TODO replace unwraps by non-panicking code
 impl TryFrom<&Path> for Gdtf {
     type Error = GdtfCompleteFailure;
 
@@ -65,7 +77,7 @@ impl TryFrom<&Path> for Gdtf {
 mod tests {
     use std::path::Path;
 
-    use crate::{errors::GdtfCompleteFailure, Gdtf};
+    use crate::{errors::GdtfCompleteFailure, errors::GdtfProblem, Gdtf};
 
     #[test]
     fn data_version_parsing() {
@@ -92,5 +104,25 @@ mod tests {
         let res = Gdtf::try_from(invalid_xml);
         let e = res.unwrap_err();
         assert!(matches!(&e, GdtfCompleteFailure::NoRootNode));
+    }
+
+    #[test]
+    fn data_version_missing() {
+        let invalid_xml = "<GDTF></GDTF>";
+        let gdtf = Gdtf::try_from(invalid_xml).unwrap();
+        assert!(&gdtf.data_version == ""); // Default value should be applied
+        assert!(&gdtf.problems == &vec![GdtfProblem::NoDataVersion]);
+        let msg = format!("{}", &gdtf.problems[0]);
+        assert!(msg == "missing attribute 'DataVersion' on 'GDTF' node");
+    }
+
+    #[test]
+    fn data_version_invalid_format() {
+        let invalid_xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
+        let gdtf = Gdtf::try_from(invalid_xml).unwrap();
+        assert!(&gdtf.data_version == "1.0"); // Wrong value should be output
+        assert!(&gdtf.problems == &vec![GdtfProblem::InvalidDataVersion("1.0".to_owned())]);
+        let msg = format!("{}", &gdtf.problems[0]);
+        assert!(msg == "attribute 'DataVersion' of 'GDTF' node is invalid. Got '1.0'.");
     }
 }
