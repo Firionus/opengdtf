@@ -12,10 +12,6 @@ pub struct Gdtf {
     pub errors: Option<()>, // TODO lay out type
 }
 
-// TODO when does TryFrom fail and when is it succesful with an error list?
-// When there's full failure (i.e. it's not XML, tree parsing error, no root node, ...), return an Err
-// When anything can be gained from it, return (data, errors)
-
 // TODO implement the error list
 
 // TODO replace unwraps by non-panicking code
@@ -26,11 +22,13 @@ impl TryFrom<&str> for Gdtf {
     fn try_from(description_content: &str) -> Result<Self, Self::Error> {
         let doc = roxmltree::Document::parse(&description_content)?;
 
+        let root_node = doc
+            .descendants()
+            .find(|n| n.has_tag_name("GDTF"))
+            .ok_or(GdtfCompleteFailure::NoRootNode)?;
+
         let gdtf = Gdtf {
-            data_version: doc
-                .descendants()
-                .find(|n| n.has_tag_name("GDTF"))
-                .unwrap()
+            data_version: root_node
                 .attribute("DataVersion")
                 .unwrap()
                 .into(), // TODO validate DataVersion format
@@ -85,6 +83,14 @@ mod tests {
         let e = res.unwrap_err();
         assert!(matches!(&e, GdtfCompleteFailure::XmlError(..)));
         let msg: String = format!("{}", e);
-        assert!(msg == "Invalid XML: expected 'this' tag, not 'that' at 1:7");
+        assert!(msg == "invalid XML: expected 'this' tag, not 'that' at 1:7");
+    }
+
+    #[test]
+    fn no_root_node_error() {
+        let invalid_xml = "<this></this>";
+        let res = Gdtf::try_from(invalid_xml);
+        let e = res.unwrap_err();
+        assert!(matches!(&e, GdtfCompleteFailure::NoRootNode));
     }
 }
