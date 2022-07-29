@@ -7,11 +7,39 @@ pub struct Gdtf {
     pub data_version: String,
 }
 
-// TODO implementing TryFrom <some kind of reader or string> makes more sense, then ref that
-
 // TODO when does TryFrom fail and when is it succesful with an error list?
 
 // TODO implement the error list
+
+// TODO replace unwraps by non-panicking code
+
+impl TryFrom<&str> for Gdtf {
+    type Error = &'static str;
+
+    fn try_from(description_content: &str) -> Result<Self, Self::Error> {
+        let doc = roxmltree::Document::parse(&description_content).unwrap();
+
+        let gdtf = Gdtf {
+            data_version: doc
+                .descendants()
+                .find(|n| n.has_tag_name("GDTF"))
+                .unwrap()
+                .attribute("DataVersion")
+                .unwrap()
+                .into(), // TODO validate DataVersion format
+        };
+
+        Ok(gdtf)
+    }
+}
+
+impl TryFrom<&String> for Gdtf {
+    type Error = &'static str;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Gdtf::try_from(&value[..])
+    }
+}
 
 impl TryFrom<&Path> for Gdtf {
     type Error = &'static str;
@@ -23,19 +51,7 @@ impl TryFrom<&Path> for Gdtf {
         let mut content = String::new();
         file.read_to_string(&mut content).unwrap();
 
-        let doc = roxmltree::Document::parse(&content).unwrap();
-
-        let gdtf = Gdtf {
-            data_version: doc
-                .descendants()
-                .find(|n| n.has_tag_name("GDTF"))
-                .unwrap()
-                .attribute("DataVersion")
-                .unwrap()
-                .into(), // TODO validate dataversion format
-        };
-
-        Ok(gdtf)
+        Ok(Gdtf::try_from(&content[..]).unwrap())
     }
 }
 
