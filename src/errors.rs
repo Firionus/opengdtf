@@ -3,6 +3,9 @@ use std::{io, path::Path};
 use thiserror::Error;
 use zip::result::ZipError;
 
+// TODO rename to "CompleteFailure" and "Problem" - Gdtf is implicit
+// TODO make this be at crate level, accessible as crate::{CompleteFailure, Problem}
+
 #[derive(Error, Debug)]
 pub enum GdtfCompleteFailure {
     #[error("invalid XML: {0}")]

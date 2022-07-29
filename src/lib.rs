@@ -1,4 +1,5 @@
 pub mod errors;
+mod parts;
 
 use std::fs::File;
 use std::io::Read;
@@ -6,6 +7,7 @@ use std::path::Path;
 
 use errors::{GdtfCompleteFailure, GdtfProblem};
 use uuid::Uuid;
+use crate::parts::gdtf_node;
 
 #[derive(Debug)]
 pub struct Gdtf {
@@ -30,41 +32,20 @@ impl TryFrom<&str> for Gdtf {
     fn try_from(description_content: &str) -> Result<Self, Self::Error> {
         let doc = roxmltree::Document::parse(description_content)?;
 
-        let root_node = doc
-            .descendants()
-            .find(|n| n.has_tag_name("GDTF"))
-            .ok_or(GdtfCompleteFailure::NoRootNode)?;
-
         let mut problems: Vec<GdtfProblem> = vec![];
 
-        let data_version = root_node
-            .attribute("DataVersion")
-            .map(|s| {
-                // validate
-                match s {
-                    "1.1" => (),
-                    "1.2" => (),
-                    _ => problems.push(GdtfProblem::InvalidDataVersion(s.to_owned())),
-                };
-                s
-            })
-            .unwrap_or_else(|| {
-                // handle missing
-                problems.push(GdtfProblem::NoDataVersion);
-                ""
-            })
-            .into();
+        let (root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems)?;
 
         let ft = root_node
-            .descendants()
-            .find(|n| n.has_tag_name("FixtureType"))
-            .or_else(|| {
-                problems.push(GdtfProblem::NodeMissing {
-                    missing: "FixtureType".to_owned(),
-                    parent: "GDTF".to_owned(),
-                });
-                None
+        .descendants()
+        .find(|n| n.has_tag_name("FixtureType"))
+        .or_else(|| {
+            problems.push(GdtfProblem::NodeMissing {
+                missing: "FixtureType".to_owned(),
+                parent: "GDTF".to_owned(),
             });
+            None
+        });
 
         let gdtf = Gdtf {
             data_version,
@@ -123,7 +104,7 @@ impl TryFrom<&Path> for Gdtf {
 mod tests {
     use std::path::Path;
 
-    use crate::{errors::GdtfCompleteFailure, errors::GdtfProblem, Gdtf};
+    use crate::{errors::GdtfCompleteFailure, Gdtf};
 
     #[test]
     fn data_version_parsing() {
@@ -152,42 +133,6 @@ mod tests {
         assert!(matches!(&e, GdtfCompleteFailure::NoRootNode));
     }
 
-    #[test]
-    fn data_version_missing() {
-        let invalid_xml = "<GDTF></GDTF>";
-        let gdtf = Gdtf::try_from(invalid_xml).unwrap();
-        assert!(&gdtf.data_version.is_empty()); // Default value should be applied
-
-        println!();
-        gdtf.problems.iter().for_each(|p| {
-            println!("{}", p)
-        });
-        println!();
-
-        assert!(gdtf.problems == vec![GdtfProblem::NoDataVersion]);
-        let msg = format!("{}", &gdtf.problems[0]);
-        assert!(msg == "missing attribute 'DataVersion' on 'GDTF' node");
-    }
-
-    #[test]
-    fn data_version_invalid_format() {
-        let invalid_xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
-        let gdtf = Gdtf::try_from(invalid_xml).unwrap();
-
-        println!();
-        gdtf.problems.iter().for_each(|p| {
-            println!("{}", p)
-        });
-        println!("{:?}", gdtf.problems);
-
-        assert!(&gdtf.data_version == "1.0"); // Wrong value should be output
-
-
-
-        assert!(gdtf.problems == vec![GdtfProblem::InvalidDataVersion("1.0".to_owned())]);
-        let msg = format!("{}", &gdtf.problems[0]);
-        assert!(msg == "attribute 'DataVersion' of 'GDTF' node is invalid. Got '1.0'.");
-    }
 
     #[test]
     fn file_not_found() {
