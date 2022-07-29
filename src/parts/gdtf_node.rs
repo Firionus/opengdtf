@@ -16,8 +16,7 @@ pub fn parse_gdtf_node<'a>(
         .map(|s| {
             // validate
             match s {
-                "1.1" => (),
-                "1.2" => (),
+                "1.1" | "1.2" => (),
                 _ => problems.push(GdtfProblem::InvalidDataVersion(s.to_owned())),
             };
             s

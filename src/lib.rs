@@ -7,6 +7,7 @@ use std::path::Path;
 
 use crate::parts::gdtf_node;
 use errors::{GdtfCompleteFailure, GdtfProblem};
+use roxmltree::Node;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -17,11 +18,11 @@ pub struct Gdtf {
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
     // Metadata
-    // pub name: String,
-    // pub short_name: String,
-    // pub long_name: String,
-    // pub manufacturer: String,
-    // pub description: String,
+    pub name: String,
+    pub short_name: String,
+    pub long_name: String,
+    pub manufacturer: String,
+    pub description: String,
     // Library Related
     pub problems: Vec<GdtfProblem>,
 }
@@ -49,6 +50,7 @@ impl TryFrom<&str> for Gdtf {
 
         let gdtf = Gdtf {
             data_version,
+            // TODO all of this would be one level less nested if ft could be unwrapped - how to architect that?
             fixture_type_id: ft
                 .and_then(|n| {
                     n.attribute("FixtureTypeID").or_else(|| {
@@ -93,11 +95,35 @@ impl TryFrom<&str> for Gdtf {
                     }
                 })
                 .unwrap_or(true),
+            name: get_string_attribute(&ft, "Name", &mut problems),
+            short_name: get_string_attribute(&ft, "ShortName", &mut problems),
+            long_name: get_string_attribute(&ft, "LongName", &mut problems),
+            description: get_string_attribute(&ft, "Description", &mut problems),
+            manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems),
             problems,
         };
 
         Ok(gdtf)
     }
+}
+
+fn get_string_attribute(
+    nopt: &Option<Node>,
+    attr: &str,
+    problems: &mut Vec<GdtfProblem>,
+) -> String {
+    nopt.and_then(|n| {
+        n.attribute(attr).or_else(|| {
+            problems.push(GdtfProblem::AttributeMissing {
+                attr: attr.to_owned(),
+                node: n.tag_name().name().to_owned(), // TODO this might not be very useful if the node name occurs often
+            });
+
+            None
+        })
+    })
+    .unwrap_or("")
+    .to_owned()
 }
 
 impl TryFrom<&String> for Gdtf {
