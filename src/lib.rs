@@ -24,7 +24,7 @@ pub struct Gdtf {
     pub manufacturer: String,
     pub description: String,
     // Library Related
-    pub problems: Vec<GdtfProblem>,
+    pub problems: ProblemVector,
 }
 
 impl TryFrom<&str> for Gdtf {
@@ -33,7 +33,7 @@ impl TryFrom<&str> for Gdtf {
     fn try_from(description_content: &str) -> Result<Self, Self::Error> {
         let doc = roxmltree::Document::parse(description_content)?;
 
-        let mut problems: Vec<GdtfProblem> = vec![];
+        let mut problems: ProblemVector = vec![];
 
         let (root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems)?;
 
@@ -41,11 +41,10 @@ impl TryFrom<&str> for Gdtf {
             .descendants()
             .find(|n| n.has_tag_name("FixtureType"))
             .or_else(|| {
-                problems.push(GdtfProblem::NodeMissing {
+                problems.addn(GdtfProblem::NodeMissing {
                     missing: "FixtureType".to_owned(),
                     parent: "GDTF".to_owned(),
-                });
-                None
+                })
             });
 
         let gdtf = Gdtf {
@@ -54,19 +53,15 @@ impl TryFrom<&str> for Gdtf {
             fixture_type_id: ft
                 .and_then(|n| {
                     n.attribute("FixtureTypeID").or_else(|| {
-                        problems.push(GdtfProblem::AttributeMissing {
+                        problems.addn(GdtfProblem::AttributeMissing {
                             attr: "FixtureTypeId".to_owned(),
                             node: "FixtureType".to_owned(),
-                        });
-                        None
+                        })
                     })
                 })
                 .and_then(|s| match Uuid::try_from(s) {
                     Ok(v) => Some(v),
-                    Err(e) => {
-                        problems.push(GdtfProblem::UuidError(e, "FixtureTypeId".to_owned()));
-                        None
-                    }
+                    Err(e) => problems.addn(GdtfProblem::UuidError(e, "FixtureTypeId".to_owned())),
                 })
                 .unwrap_or(Uuid::nil()),
             ref_ft: ft
@@ -75,10 +70,7 @@ impl TryFrom<&str> for Gdtf {
                     "" => None,
                     _ => match Uuid::try_from(s) {
                         Ok(v) => Some(v),
-                        Err(e) => {
-                            problems.push(GdtfProblem::UuidError(e, "RefFT".to_owned()));
-                            None
-                        }
+                        Err(e) => problems.addn(GdtfProblem::UuidError(e, "RefFT".to_owned())),
                     },
                 }),
             can_have_children: ft
@@ -86,13 +78,10 @@ impl TryFrom<&str> for Gdtf {
                 .and_then(|s| match s {
                     "Yes" => Some(true),
                     "No" => Some(false),
-                    _ => {
-                        problems.push(GdtfProblem::InvalidYesNoEnum(
-                            s.to_owned(),
-                            "CanHaveChildren".to_owned(),
-                        ));
-                        None
-                    }
+                    _ => problems.addn(GdtfProblem::InvalidYesNoEnum(
+                        s.to_owned(),
+                        "CanHaveChildren".to_owned(),
+                    )),
                 })
                 .unwrap_or(true),
             name: get_string_attribute(&ft, "Name", &mut problems),
@@ -107,19 +96,27 @@ impl TryFrom<&str> for Gdtf {
     }
 }
 
-fn get_string_attribute(
-    nopt: &Option<Node>,
-    attr: &str,
-    problems: &mut Vec<GdtfProblem>,
-) -> String {
+type ProblemVector = Vec<GdtfProblem>;
+
+trait ProblemAdd {
+    /// Push a Problem and Return None
+    fn addn<T>(&mut self, e: GdtfProblem) -> Option<T>;
+}
+
+impl ProblemAdd for ProblemVector {
+    fn addn<T>(&mut self, e: GdtfProblem) -> Option<T> {
+        self.push(e);
+        None
+    }
+}
+
+fn get_string_attribute(nopt: &Option<Node>, attr: &str, problems: &mut ProblemVector) -> String {
     nopt.and_then(|n| {
         n.attribute(attr).or_else(|| {
-            problems.push(GdtfProblem::AttributeMissing {
+            problems.addn(GdtfProblem::AttributeMissing {
                 attr: attr.to_owned(),
                 node: n.tag_name().name().to_owned(), // TODO this might not be very useful if the node name occurs often
-            });
-
-            None
+            })
         })
     })
     .unwrap_or("")

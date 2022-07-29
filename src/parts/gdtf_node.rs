@@ -1,10 +1,10 @@
 use roxmltree::{Document, Node};
 
-use crate::errors::{GdtfCompleteFailure, GdtfProblem};
+use crate::{errors::{GdtfCompleteFailure, GdtfProblem}, ProblemVector};
 
 pub fn parse_gdtf_node<'a>(
     doc: &'a Document,
-    problems: &mut Vec<GdtfProblem>,
+    problems: &mut ProblemVector,
 ) -> Result<(Node<'a, 'a>, String), GdtfCompleteFailure> {
     let root_node = doc
         .descendants()
@@ -33,13 +33,13 @@ pub fn parse_gdtf_node<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::{errors::GdtfProblem, parts::gdtf_node};
+    use crate::{errors::GdtfProblem, parts::gdtf_node, ProblemVector};
 
     #[test]
     fn data_version_missing() {
         let invalid_xml = "<GDTF></GDTF>";
         let doc = roxmltree::Document::parse(invalid_xml).unwrap();
-        let mut problems: Vec<GdtfProblem> = vec![];
+        let mut problems: ProblemVector = vec![];
 
         let (_root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems).unwrap();
 
@@ -54,7 +54,7 @@ mod tests {
     fn data_version_invalid_value() {
         let invalid_xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
         let doc = roxmltree::Document::parse(invalid_xml).unwrap();
-        let mut problems: Vec<GdtfProblem> = vec![];
+        let mut problems: ProblemVector = vec![];
 
         let (_root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems).unwrap();
 
