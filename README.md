@@ -9,7 +9,7 @@ hi :wave:
 ## Short-term goals
 
 - [x] Parse GDTF XML with roxmltree
-- [ ] Metadata
+- [x] Metadata
 - [ ] Channel List
 - [ ] Testing Strategy
 - [ ] C Binding

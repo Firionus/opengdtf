@@ -7,6 +7,7 @@ use std::path::Path;
 
 use crate::parts::gdtf_node;
 use errors::{GdtfCompleteFailure, GdtfProblem};
+use parts::geometries::GeometryVector;
 use roxmltree::Node;
 use uuid::Uuid;
 
@@ -23,6 +24,9 @@ pub struct Gdtf {
     pub long_name: String,
     pub manufacturer: String,
     pub description: String,
+
+    pub geometries: GeometryVector,
+
     // Library Related
     pub problems: ProblemVector,
 }
@@ -89,6 +93,7 @@ impl TryFrom<&str> for Gdtf {
             long_name: get_string_attribute(&ft, "LongName", &mut problems),
             description: get_string_attribute(&ft, "Description", &mut problems),
             manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems),
+            geometries: vec![],
             problems,
         };
 
