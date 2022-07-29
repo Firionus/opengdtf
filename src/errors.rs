@@ -33,5 +33,7 @@ pub enum GdtfProblem {
     #[error("attribute '{attr}' missing on node '{node}'")]
     AttributeMissing { attr: String, node: String },
     #[error("UUID error in {1}: {0}")]
-    UuidError (uuid::Error, String),
+    UuidError(uuid::Error, String),
+    #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")]
+    InvalidYesNoEnum(String, String),
 }

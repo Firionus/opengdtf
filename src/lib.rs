@@ -5,9 +5,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use crate::parts::gdtf_node;
 use errors::{GdtfCompleteFailure, GdtfProblem};
 use uuid::Uuid;
-use crate::parts::gdtf_node;
 
 #[derive(Debug)]
 pub struct Gdtf {
@@ -15,7 +15,7 @@ pub struct Gdtf {
     pub data_version: String,
     pub fixture_type_id: Uuid,
     pub ref_ft: Option<Uuid>,
-    // pub can_have_children: bool,
+    pub can_have_children: bool,
     // Metadata
     // pub name: String,
     // pub short_name: String,
@@ -37,15 +37,15 @@ impl TryFrom<&str> for Gdtf {
         let (root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems)?;
 
         let ft = root_node
-        .descendants()
-        .find(|n| n.has_tag_name("FixtureType"))
-        .or_else(|| {
-            problems.push(GdtfProblem::NodeMissing {
-                missing: "FixtureType".to_owned(),
-                parent: "GDTF".to_owned(),
+            .descendants()
+            .find(|n| n.has_tag_name("FixtureType"))
+            .or_else(|| {
+                problems.push(GdtfProblem::NodeMissing {
+                    missing: "FixtureType".to_owned(),
+                    parent: "GDTF".to_owned(),
+                });
+                None
             });
-            None
-        });
 
         let gdtf = Gdtf {
             data_version,
@@ -77,8 +77,22 @@ impl TryFrom<&str> for Gdtf {
                             problems.push(GdtfProblem::UuidError(e, "RefFT".to_owned()));
                             None
                         }
-                    }
+                    },
                 }),
+            can_have_children: ft
+                .and_then(|n| n.attribute("CanHaveChildren"))
+                .and_then(|s| match s {
+                    "Yes" => Some(true),
+                    "No" => Some(false),
+                    _ => {
+                        problems.push(GdtfProblem::InvalidYesNoEnum(
+                            s.to_owned(),
+                            "CanHaveChildren".to_owned(),
+                        ));
+                        None
+                    }
+                })
+                .unwrap_or(true),
             problems,
         };
 
@@ -144,7 +158,6 @@ mod tests {
         let e = res.unwrap_err();
         assert!(matches!(&e, GdtfCompleteFailure::NoRootNode));
     }
-
 
     #[test]
     fn file_not_found() {
