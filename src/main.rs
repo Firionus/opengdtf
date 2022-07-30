@@ -7,7 +7,7 @@ fn main() {
     let path =
         Path::new("test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf");
     let gdtf = Gdtf::try_from(path).unwrap();
-    println!("{:?}", gdtf);
+    println!("{:#?}", gdtf);
 
     let path =
         Path::new("this_really_shouldnt_exist");
@@ -20,4 +20,6 @@ fn main() {
     let gdtf = Gdtf::try_from(path).unwrap_err();
     println!("{:?}", gdtf);
     println!("{}", gdtf);
+
+
 }

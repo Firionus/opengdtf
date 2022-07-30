@@ -7,7 +7,8 @@ use std::path::Path;
 
 use crate::parts::gdtf_node;
 use errors::{GdtfCompleteFailure, GdtfProblem};
-use parts::geometries::GeometryVector;
+use indextree::Arena;
+use parts::geometries::{GeometryType, parse_geometries};
 use roxmltree::Node;
 use uuid::Uuid;
 
@@ -25,7 +26,7 @@ pub struct Gdtf {
     pub manufacturer: String,
     pub description: String,
 
-    pub geometries: GeometryVector,
+    pub geometries: Arena<GeometryType>,
 
     // Library Related
     pub problems: ProblemVector,
@@ -41,6 +42,8 @@ impl TryFrom<&str> for Gdtf {
 
         let (root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems)?;
 
+        root_node.descendants().for_each(|n| println!("{:#?}", n));
+
         let ft = root_node
             .descendants()
             .find(|n| n.has_tag_name("FixtureType"))
@@ -50,6 +53,13 @@ impl TryFrom<&str> for Gdtf {
                     parent: "GDTF".to_owned(),
                 })
             });
+
+        let mut geometries = Arena::new();
+
+        match ft {
+            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems),
+            None => (),
+        }
 
         let gdtf = Gdtf {
             data_version,
@@ -93,7 +103,7 @@ impl TryFrom<&str> for Gdtf {
             long_name: get_string_attribute(&ft, "LongName", &mut problems),
             description: get_string_attribute(&ft, "Description", &mut problems),
             manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems),
-            geometries: vec![],
+            geometries,
             problems,
         };
 

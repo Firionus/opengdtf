@@ -36,4 +36,6 @@ pub enum GdtfProblem {
     UuidError(uuid::Error, String),
     #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")]
     InvalidYesNoEnum(String, String),
+    #[error("error with Geometry tree: {0}")]
+    GeometryTreeError(String),
 }

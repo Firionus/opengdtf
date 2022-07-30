@@ -171,6 +171,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indextree"
+version = "4.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42b4b46b3311ebd8e5cd44f6b03b36e0f48a70552cf6b036afcebc5626794066"
+
+[[package]]
 name = "itoa"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -225,6 +231,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 name = "opengdtf"
 version = "0.1.0"
 dependencies = [
+ "indextree",
  "roxmltree",
  "thiserror",
  "uuid",
