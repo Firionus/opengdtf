@@ -8,14 +8,12 @@ hi :wave:
 
 ## Short-term goals
 
-- [x] Parse GDTF XML with roxmltree
-- [x] Metadata
-- [ ] Channel List
-- [ ] Testing Strategy
-- [ ] C Binding
-- [ ] JS Binding via C API (See if it can be made useful to OFL)
-- [ ] Documentation to help other developers chime in
-- [ ] Build community support
+- Parse some fundamental data from GDTF files
+- Show it can be bound to other languages (e.g. try a JS binding with [Neon](https://github.com/neon-bindings/neon) for [OFL](https://github.com/OpenLightingProject/open-fixture-library))
+- Documentation around GDTF and how this library handles it to help other developers chime in
+- Build community support
+
+ToDo's are kept in [Issues](https://github.com/Firionus/opengdtf/issues).
 
 ## Principles
 
@@ -57,4 +55,4 @@ However, it should be validated and errors indicated in the error vector.
 
 ## Long-term goals
 
-- [ ] Serialize GDTF XML, e.g. with quick-xml
+- Serialize GDTF XML, e.g. with quick-xml
