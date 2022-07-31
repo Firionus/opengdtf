@@ -1,6 +1,6 @@
 use roxmltree::{Document, Node};
 
-use crate::{errors::{Error, Problem}};
+use crate::{Error, Problem};
 
 pub fn parse_gdtf_node<'a>(
     doc: &'a Document,

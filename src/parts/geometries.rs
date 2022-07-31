@@ -1,7 +1,7 @@
 use indextree::{Arena, NodeId};
 use roxmltree::Node;
 
-use crate::{errors::Problem};
+use crate::Problem;
 
 #[derive(Debug)]
 pub enum GeometryType {

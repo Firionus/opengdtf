@@ -1,4 +1,5 @@
-pub mod errors;
+mod errors;
+pub use errors::*;
 mod parts;
 
 use std::fs::File;
@@ -6,7 +7,6 @@ use std::io::Read;
 use std::path::Path;
 
 use crate::parts::gdtf_node;
-use errors::{Error, Problem};
 use indextree::Arena;
 use parts::geometries::{GeometryType, parse_geometries};
 use roxmltree::Node;
