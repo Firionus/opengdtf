@@ -3,8 +3,6 @@ use std::{io, path::Path};
 use thiserror::Error;
 use zip::result::ZipError;
 
-// TODO make this be at crate level, accessible as crate::{CompleteFailure, Problem}
-
 /// An unrecoverable GDTF Error.
 #[derive(Error, Debug)]
 pub enum Error {
