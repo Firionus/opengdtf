@@ -1,7 +1,7 @@
 use indextree::{Arena, NodeId};
 use roxmltree::Node;
 
-use crate::{errors::GdtfProblem, ProblemVector};
+use crate::{errors::Problem};
 
 #[derive(Debug)]
 pub enum GeometryType {
@@ -19,12 +19,12 @@ pub enum GeometryType {
 pub fn parse_geometries(
     geometries: &mut Arena<GeometryType>,
     ft: &Node,
-    problems: &mut ProblemVector,
+    problems: &mut Vec<Problem>,
 ) {
     let g = match ft.children().find(|n| n.has_tag_name("Geometries")) {
         Some(g) => g,
         None => {
-            problems.push(GdtfProblem::NodeMissing {
+            problems.push(Problem::NodeMissing {
                 missing: "Geometries".to_owned(),
                 parent: "FixtureType".to_owned(),
             });
@@ -63,7 +63,7 @@ fn add_nodes(
     parent_xml_node: &Node,
     parent_tree_node: &NodeId,
     geometries: &mut Arena<GeometryType>,
-    problems: &mut ProblemVector,
+    problems: &mut Vec<Problem>,
 ) {
     println!("starting XML node {:#?}", parent_xml_node);
     parent_xml_node
@@ -90,6 +90,6 @@ fn add_nodes(
             let new = geometries.new_node(geometry);
             parent_tree_node
                 .checked_append(new, geometries)
-                .unwrap_or_else(|e| problems.push(GdtfProblem::GeometryTreeError(e.to_string())));
+                .unwrap_or_else(|e| problems.push(Problem::GeometryTreeError(e.to_string())));
         });
 }

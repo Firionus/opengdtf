@@ -3,11 +3,11 @@ use std::{io, path::Path};
 use thiserror::Error;
 use zip::result::ZipError;
 
-// TODO rename to "CompleteFailure" and "Problem" - Gdtf is implicit
 // TODO make this be at crate level, accessible as crate::{CompleteFailure, Problem}
 
+/// An unrecoverable GDTF Error.
 #[derive(Error, Debug)]
-pub enum GdtfCompleteFailure {
+pub enum Error {
     #[error("invalid XML: {0}")]
     XmlError(#[from] roxmltree::Error),
     #[error("root node 'GDTF' not found")]
@@ -22,8 +22,9 @@ pub enum GdtfCompleteFailure {
     DescriptionXmlReadError(io::Error),
 }
 
+/// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug, PartialEq)]
-pub enum GdtfProblem {
+pub enum Problem {
     #[error("missing attribute 'DataVersion' on 'GDTF' node")]
     NoDataVersion,
     #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")]
