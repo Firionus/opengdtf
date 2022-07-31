@@ -3,6 +3,9 @@ use std::{io, path::Path};
 use thiserror::Error;
 use zip::result::ZipError;
 
+// TODO these errors could report positions in the input files, like shown here:
+// https://github.com/RazrFalcon/roxmltree/blob/master/examples/print_pos.rs
+
 /// An unrecoverable GDTF Error.
 #[derive(Error, Debug)]
 pub enum Error {

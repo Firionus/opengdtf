@@ -1,12 +1,12 @@
 mod errors;
 pub use errors::*;
+use petgraph::Graph;
 mod parts;
 
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use indextree::Arena;
 use parts::gdtf_node::*;
 use parts::geometries::*;
 use roxmltree::Node;
@@ -26,7 +26,7 @@ pub struct Gdtf {
     pub manufacturer: String,
     pub description: String,
 
-    pub geometries: Arena<GeometryType>,
+    pub geometries: Geometries,
 
     // Library Related
     pub problems: Vec<Problem>,
@@ -42,7 +42,6 @@ impl TryFrom<&str> for Gdtf {
 
         let (root_node, data_version) = parse_gdtf_node(&doc, &mut problems)?;
 
-        root_node.descendants().for_each(|n| println!("{:#?}", n));
 
         let ft = root_node
             .descendants()
@@ -54,7 +53,7 @@ impl TryFrom<&str> for Gdtf {
                 })
             });
 
-        let mut geometries = Arena::new();
+        let mut geometries = Graph::new();
 
         match ft {
             Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems),
