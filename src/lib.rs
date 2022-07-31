@@ -44,7 +44,7 @@ impl TryFrom<&str> for Gdtf {
 
 
         let ft = root_node
-            .descendants()
+            .children()
             .find(|n| n.has_tag_name("FixtureType"))
             .or_else(|| {
                 problems.addn(Problem::NodeMissing {
