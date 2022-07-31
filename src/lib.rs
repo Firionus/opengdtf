@@ -6,9 +6,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use crate::parts::gdtf_node;
 use indextree::Arena;
-use parts::geometries::{GeometryType, parse_geometries};
+use parts::gdtf_node::*;
+use parts::geometries::*;
 use roxmltree::Node;
 use uuid::Uuid;
 
@@ -40,7 +40,7 @@ impl TryFrom<&str> for Gdtf {
 
         let mut problems: Vec<Problem> = vec![];
 
-        let (root_node, data_version) = gdtf_node::parse_gdtf_node(&doc, &mut problems)?;
+        let (root_node, data_version) = parse_gdtf_node(&doc, &mut problems)?;
 
         root_node.descendants().for_each(|n| println!("{:#?}", n));
 
@@ -148,8 +148,7 @@ impl TryFrom<&Path> for Gdtf {
     type Error = Error;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
-        let zipfile =
-            File::open(path).map_err(|e| Error::OpenError(path.into(), e))?;
+        let zipfile = File::open(path).map_err(|e| Error::OpenError(path.into(), e))?;
         let mut zip = zip::ZipArchive::new(zipfile)?;
         let mut file = zip
             .by_name("description.xml")
