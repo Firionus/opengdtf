@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
+use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 use roxmltree::{Document, Node};
 use uuid::Uuid;
 
-use crate::node_position;
 use crate::{get_string_attribute, Problem};
+use crate::{node_position, ProblemAdd};
 
 /// Graph representing the Geometry tree.
 ///
@@ -14,13 +15,12 @@ pub type Geometries = Graph<GeometryType, (), Directed>;
 
 #[derive(Debug)]
 pub enum GeometryType {
-    Root,
     Geometry {
         name: String,
     },
     Reference {
         name: String,
-        reference: (),
+        reference: NodeIndex,
         break_offsets: (),
     },
 }
@@ -38,13 +38,11 @@ pub fn parse_geometries(
             problems.push(Problem::XmlNodeMissing {
                 missing: "Geometries".to_owned(),
                 parent: "FixtureType".to_owned(),
-                pos: node_position(ft, doc)
+                pos: node_position(ft, doc),
             });
             return;
         }
     };
-
-    let graph_root = geometries.add_node(GeometryType::Root);
 
     let top_level_geometries: Vec<Node> = g.children().filter(|n| n.is_element()).collect();
     let mut top_level_geometry_graph_indices: Vec<NodeIndex> = vec![];
@@ -61,12 +59,16 @@ pub fn parse_geometries(
                 let new_graph_node = geometries.add_node(GeometryType::Geometry {
                     name: name.to_owned(),
                 });
-                geometries.add_edge(graph_root, new_graph_node, ());
                 top_level_geometry_graph_indices.push(new_graph_node);
                 geometry_names.insert(name, new_graph_node);
             }
-            "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(node_position(n, doc))),
-            tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), node_position(n, doc))),
+            "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
+                node_position(n, doc),
+            )),
+            tag => problems.push(Problem::UnexpectedXmlNode(
+                tag.to_owned(),
+                node_position(n, doc),
+            )),
         };
     });
 
@@ -125,15 +127,44 @@ fn add_children(
                 }
                 "GeometryReference" => {
                     let name = geometry_name(&n, problems, doc, geometry_names);
-                    let ind = geometries.add_node(GeometryType::Reference {
-                        name: name.to_owned(),
-                        reference: (),
-                        break_offsets: (),
-                    });
-                    geometries.add_edge(parent_tree, ind, ());
-                    geometry_names.insert(name, ind);
+                    if let Some(ref_ind) = get_string_attribute(&n, "Geometry", problems, doc)
+                        .and_then(|refname| {
+                            geometry_names
+                                .get(&refname)
+                                .map(|nind| (nind.to_owned(), refname.to_owned()))
+                                .or_else(|| {
+                                    problems
+                                        .addn(Problem::UnknownGeometry(refname, node_position(&n, doc)))
+                                        // TODO throws UnknownGeometry when non-top-level Geometry is referenced properly with dots... That is wrong...
+                                })
+                        })
+                        .and_then(|(ref_ind, ref_name)| {
+                            // check referenced node is top-level
+                            if geometries.edges_directed(ref_ind, Incoming).next().is_none() {
+                                // no incoming edges => top-level node is referenced
+                                Some(ref_ind)
+                            } else {
+                                problems.addn(Problem::NonTopLevelGeometryReferenced(
+                                    ref_name,
+                                    node_position(&n, doc),
+                                ))
+                            }
+                        })
+                    {
+                        let new_ind = geometries.add_node(GeometryType::Reference {
+                            name: name.to_owned(),
+                            break_offsets: (),
+                            reference: ref_ind,
+                        });
+                        geometries.add_edge(parent_tree, new_ind, ());
+                        geometry_names.insert(name, new_ind);
+                        // TODO code duplication with other geometry adds, but there's a different constructor in the middle
+                    };
                 }
-                tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), node_position(&n, doc))),
+                tag => problems.push(Problem::UnexpectedXmlNode(
+                    tag.to_owned(),
+                    node_position(&n, doc),
+                )),
             };
         });
 }
@@ -147,7 +178,6 @@ mod tests {
     impl GeometryType {
         fn name(&self) -> Option<&str> {
             match self {
-                GeometryType::Root => None,
                 GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => {
                     Some(name)
                 }
@@ -180,7 +210,7 @@ mod tests {
         let (problems, geometries, _geometry_names) = run_parse_geometries(ft_str);
 
         assert!(problems.is_empty());
-        assert_eq!(geometries.node_count(), 5)
+        assert_eq!(geometries.node_count(), 4)
     }
 
     #[test]
@@ -190,16 +220,6 @@ mod tests {
     <Geometries>
         <Geometry Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
         <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                <Break DMXBreak="1" DMXOffset="1"/>
-                <Break DMXBreak="2" DMXOffset="1"/>
-                <Break DMXBreak="1" DMXOffset="1"/>
-            </GeometryReference>
-            <GeometryReference Geometry="AbstractElement" Name="Element 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                <Break DMXBreak="1" DMXOffset="3"/>
-                <Break DMXBreak="2" DMXOffset="3"/>
-                <Break DMXBreak="1" DMXOffset="2"/>
-            </GeometryReference>
         </Geometry>
     </Geometries>
 </FixtureType>
@@ -210,14 +230,14 @@ mod tests {
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::XmlAttributeMissing { .. }));
 
-        assert_eq!(geometries.node_count(), 5);
+        assert_eq!(geometries.node_count(), 2);
 
         geometries
             .raw_nodes()
             .iter()
             .for_each(|n| assert!(n.weight.name().unwrap_or("root") != ""));
 
-        let name_of_broken_node = geometries.raw_nodes()[1].weight.name().unwrap();
+        let name_of_broken_node = geometries.raw_nodes()[0].weight.name().unwrap();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 
@@ -248,7 +268,7 @@ mod tests {
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::DuplicateGeometryName(..)));
 
-        let name_of_broken_node = geometries.raw_nodes()[4].weight.name().unwrap();
+        let name_of_broken_node = geometries.raw_nodes()[3].weight.name().unwrap();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 

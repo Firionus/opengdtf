@@ -42,6 +42,10 @@ pub enum Problem {
     DuplicateGeometryName(String, TextPos),
     #[error("unexpected 'GeometryReference' as top-level Geometry at line {0}")]
     UnexpectedTopLevelGeometryReference(TextPos),
+    #[error("Geometry '{0}' is referenced at line {1} but not found")]
+    UnknownGeometry(String, TextPos),
+    #[error("Geometry '{0}' is referenced at line {1} and was expected to be top-level but wasn't")]
+    NonTopLevelGeometryReferenced(String, TextPos),
 }
 
 pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
