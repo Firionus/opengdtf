@@ -1,9 +1,11 @@
 mod errors;
 pub use errors::*;
 use petgraph::Graph;
+use petgraph::graph::NodeIndex;
 use roxmltree::Document;
 mod parts;
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -54,9 +56,10 @@ impl TryFrom<&str> for Gdtf {
             });
 
         let mut geometries = Graph::new();
-
+        let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
+        
         match ft {
-            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems, &doc),
+            Some(ft) => parse_geometries(&mut geometries, &mut geometry_names, &ft, &mut problems, &doc),
             None => (),
         }
 
@@ -147,10 +150,8 @@ fn maybe_get_string_attribute(
     problems: &mut Vec<Problem>,
     doc: &Document,
 ) -> String {
-    nopt.and_then(|n| {
-        get_string_attribute(&n, attr, problems, doc)
-    })
-    .unwrap_or_else(|| "".to_owned())
+    nopt.and_then(|n| get_string_attribute(&n, attr, problems, doc))
+        .unwrap_or_else(|| "".to_owned())
 }
 
 impl TryFrom<&String> for Gdtf {

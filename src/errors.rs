@@ -33,14 +33,14 @@ pub enum Problem {
     InvalidDataVersion(String),
     #[error("node '{missing}' missing as child of '{parent}'")] // TODO add pos
     XmlNodeMissing { missing: String, parent: String },
-    #[error("attribute '{attr}' missing on '{tag}' node at {pos}")]
+    #[error("attribute '{attr}' missing on '{tag}' node at line {pos}")]
     XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
     #[error("UUID error in {1}: {0}")] // TODO add pos
     UuidError(uuid::Error, String),
     #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")] // TODO add pos
     InvalidYesNoEnum(String, String),
-    #[error("error with Geometry tree: {0}")] // TODO remove?
-    GeometryTreeError(String),
+    #[error("duplicate Geometry name '{0}' at line {1}")]
+    DuplicateGeometryName(String, TextPos),
 }
 
 pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
