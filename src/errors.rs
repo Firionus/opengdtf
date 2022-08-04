@@ -27,19 +27,19 @@ pub enum Error {
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug, PartialEq)]
 pub enum Problem {
-    #[error("missing attribute 'DataVersion' on 'GDTF' node")]
+    #[error("missing attribute 'DataVersion' on 'GDTF' node")] // TODO add pos
     NoDataVersion,
-    #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")]
+    #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")] // TODO add pos
     InvalidDataVersion(String),
-    #[error("node '{missing}' missing as child of '{parent}'")]
+    #[error("node '{missing}' missing as child of '{parent}'")] // TODO add pos
     XmlNodeMissing { missing: String, parent: String },
     #[error("attribute '{attr}' missing on '{tag}' node at {pos}")]
     XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
-    #[error("UUID error in {1}: {0}")]
+    #[error("UUID error in {1}: {0}")] // TODO add pos
     UuidError(uuid::Error, String),
-    #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")]
+    #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")] // TODO add pos
     InvalidYesNoEnum(String, String),
-    #[error("error with Geometry tree: {0}")]
+    #[error("error with Geometry tree: {0}")] // TODO remove?
     GeometryTreeError(String),
 }
 

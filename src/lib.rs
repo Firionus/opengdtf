@@ -43,7 +43,6 @@ impl TryFrom<&str> for Gdtf {
 
         let (root_node, data_version) = parse_gdtf_node(&doc, &mut problems)?;
 
-
         let ft = root_node
             .children()
             .find(|n| n.has_tag_name("FixtureType"))
@@ -99,11 +98,11 @@ impl TryFrom<&str> for Gdtf {
                     )),
                 })
                 .unwrap_or(true),
-            name: get_string_attribute(&ft, "Name", &mut problems, &doc),
-            short_name: get_string_attribute(&ft, "ShortName", &mut problems, &doc),
-            long_name: get_string_attribute(&ft, "LongName", &mut problems, &doc),
-            description: get_string_attribute(&ft, "Description", &mut problems, &doc),
-            manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
+            name: maybe_get_string_attribute(&ft, "Name", &mut problems, &doc),
+            short_name: maybe_get_string_attribute(&ft, "ShortName", &mut problems, &doc),
+            long_name: maybe_get_string_attribute(&ft, "LongName", &mut problems, &doc),
+            description: maybe_get_string_attribute(&ft, "Description", &mut problems, &doc),
+            manufacturer: maybe_get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
             geometries,
             problems,
         };
@@ -124,18 +123,34 @@ impl ProblemAdd for Vec<Problem> {
     }
 }
 
-fn get_string_attribute(nopt: &Option<Node>, attr: &str, problems: &mut Vec<Problem>, doc: &Document) -> String {
-    nopt.and_then(|n| {
-        n.attribute(attr).or_else(|| {
+// TODO change to method on Node
+fn get_string_attribute(
+    n: &Node,
+    attr: &str,
+    problems: &mut Vec<Problem>,
+    doc: &Document,
+) -> Option<String> {
+    n.attribute(attr)
+        .or_else(|| {
             problems.addn(Problem::XmlAttributeMissing {
                 attr: attr.to_owned(),
                 tag: n.tag_name().name().to_owned(),
-                pos: node_position(&n, doc),
+                pos: node_position(n, doc),
             })
         })
+        .map(|s| s.to_owned())
+}
+
+fn maybe_get_string_attribute(
+    nopt: &Option<Node>,
+    attr: &str,
+    problems: &mut Vec<Problem>,
+    doc: &Document,
+) -> String {
+    nopt.and_then(|n| {
+        get_string_attribute(&n, attr, problems, doc)
     })
-    .unwrap_or("")
-    .to_owned()
+    .unwrap_or_else(|| "".to_owned())
 }
 
 impl TryFrom<&String> for Gdtf {

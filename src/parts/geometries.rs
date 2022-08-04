@@ -1,7 +1,7 @@
-use petgraph::{graph::{NodeIndex}, visit::EdgeRef, Directed, Graph};
-use roxmltree::{Node, Document};
+use petgraph::{graph::NodeIndex, visit::EdgeRef, Directed, Graph};
+use roxmltree::{Document, Node};
 
-use crate::{Problem, node_position};
+use crate::{get_string_attribute, Problem};
 
 /// Graph representing the Geometry tree.
 ///
@@ -53,7 +53,12 @@ const GEOMETRY_TAGS: [&str; 18] = [
 
 // TODO remove things that throw: todo!, unwrap, etc.
 
-pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Vec<Problem>, doc: &Document) {
+pub fn parse_geometries(
+    geometries: &mut Geometries,
+    ft: &Node,
+    problems: &mut Vec<Problem>,
+    doc: &Document,
+) {
     let g = match ft.children().find(|n| n.has_tag_name("Geometries")) {
         Some(g) => g,
         None => {
@@ -71,23 +76,12 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
     // later on can be linked to a NodeIndex.
     g.children().filter(|n| n.is_element()).for_each(|n| {
         match n.tag_name().name() {
-            tag @ ("Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
-            | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
-            | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
-            | "Structure" | "Support" | "Magnet") => {
+            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
+            | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
+            | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
+            | "Magnet" => {
                 let new_graph_node = geometries.add_node(GeometryType::Geometry {
-                    name: n
-                        .attribute("Name")
-                        .unwrap_or_else(|| {
-                            problems.push(Problem::XmlAttributeMissing {
-                                attr: "Name".to_owned(),
-                                tag: tag.to_owned(), // TODO test this...
-                                pos: node_position(&n, doc),
-                            });
-                            "" // TODO if the node has no name attr, maybe it should at least be given a unique identifier. Maybe "No Name {uuid}"?
-                            // Without a name, it can't be referenced anyway
-                        })
-                        .to_owned(),
+                    name: geometry_name(&n, problems, doc), // TODO test this error handling
                 });
                 geometries.add_edge(graph_root, new_graph_node, ());
             }
@@ -102,7 +96,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
             .edges(graph_root)
             .map(|edge| edge.target())
             // TODO matching an element based on a default name of "" is stupid. Is there no way we can know the associated XML node without searching for it like this?
-            .find(|child_ind| geometries[*child_ind].name() == n.attribute("Name").unwrap_or("")) 
+            .find(|child_ind| geometries[*child_ind].name() == n.attribute("Name").unwrap_or(""))
             .unwrap();
         add_children(&n, graph_index, geometries, problems, doc);
     });
@@ -114,51 +108,38 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
     // what to do if a name is duplicate? Add Problem and change to "{duplicate name} {uuid}"?
 }
 
+fn geometry_name(n: &Node, problems: &mut Vec<Problem>, doc: &Document) -> String {
+    get_string_attribute(n, "Name", problems, doc).unwrap_or_else(|| "".to_owned())
+    // TODO if the node has no name attr, maybe it should at least be given a unique identifier. Maybe "No Name {uuid}"?
+    // Without a name, it can't be referenced anyway
+    // This also applies to the other times we get the Name of a Geometry below!
+}
+
 fn add_children(
     parent_xml: &Node,
     parent_tree: NodeIndex,
     geometries: &mut Geometries,
     problems: &mut Vec<Problem>,
-    doc: &Document
+    doc: &Document,
 ) {
     parent_xml
         .children()
         .filter(|n| n.is_element())
         .for_each(|n| {
             match n.tag_name().name() {
-                tag @ ("Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
+                "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
                 | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
-                | "MediaServerMaster" | "Display" | "Laser" | "WiringObject"
-                | "Inventory" | "Structure" | "Support" | "Magnet") => {
+                | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
+                | "Structure" | "Support" | "Magnet" => {
                     let ind = geometries.add_node(GeometryType::Geometry {
-                        name: n
-                            .attribute("Name")
-                            .unwrap_or_else(|| {
-                                problems.push(Problem::XmlAttributeMissing {
-                                    attr: "Name".to_owned(),
-                                    tag: tag.to_owned(), // TODO test this
-                                    pos: node_position(&n, doc),
-                                });
-                                ""
-                            })
-                            .to_owned(),
+                        name: geometry_name(&n, problems, doc), // TODO test this error handling
                     });
                     geometries.add_edge(parent_tree, ind, ());
                     add_children(&n, ind, geometries, problems, doc);
                 }
-                tag @ "GeometryReference" => {
+                "GeometryReference" => {
                     let ind = geometries.add_node(GeometryType::Reference {
-                        name: n // TODO code duplication with other Geometry Types
-                            .attribute("Name")
-                            .unwrap_or_else(|| {
-                                problems.push(Problem::XmlAttributeMissing {
-                                    attr: "Name".to_owned(),
-                                    tag: tag.to_owned(), // TODO test this
-                                    pos: node_position(&n, doc),
-                                });
-                                ""
-                            })
-                            .to_owned(),
+                        name: geometry_name(&n, problems, doc), // TODO test this error handling
                         reference: (),
                         break_offsets: (),
                     });
