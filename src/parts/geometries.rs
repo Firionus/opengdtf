@@ -1,7 +1,7 @@
 use petgraph::{graph::{NodeIndex}, visit::EdgeRef, Directed, Graph};
-use roxmltree::Node;
+use roxmltree::{Node, Document};
 
-use crate::{Problem};
+use crate::{Problem, node_position};
 
 /// Graph representing the Geometry tree.
 ///
@@ -53,7 +53,7 @@ const GEOMETRY_TAGS: [&str; 18] = [
 
 // TODO remove things that throw: todo!, unwrap, etc.
 
-pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Vec<Problem>) {
+pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Vec<Problem>, doc: &Document) {
     let g = match ft.children().find(|n| n.has_tag_name("Geometries")) {
         Some(g) => g,
         None => {
@@ -81,7 +81,8 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
                         .unwrap_or_else(|| {
                             problems.push(Problem::XmlAttributeMissing {
                                 attr: "Name".to_owned(),
-                                node: format! {"Geometries/{}", tag}, // TODO test this...
+                                tag: tag.to_owned(), // TODO test this...
+                                pos: node_position(&n, doc),
                             });
                             "" // TODO if the node has no name attr, maybe it should at least be given a unique identifier. Maybe "No Name {uuid}"?
                             // Without a name, it can't be referenced anyway
@@ -103,7 +104,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
             // TODO matching an element based on a default name of "" is stupid. Is there no way we can know the associated XML node without searching for it like this?
             .find(|child_ind| geometries[*child_ind].name() == n.attribute("Name").unwrap_or("")) 
             .unwrap();
-        add_children(&n, graph_index, geometries, problems);
+        add_children(&n, graph_index, geometries, problems, doc);
     });
 
     // TODO we must validate that geometry names are unique, it's required in
@@ -118,6 +119,7 @@ fn add_children(
     parent_tree: NodeIndex,
     geometries: &mut Geometries,
     problems: &mut Vec<Problem>,
+    doc: &Document
 ) {
     parent_xml
         .children()
@@ -134,14 +136,15 @@ fn add_children(
                             .unwrap_or_else(|| {
                                 problems.push(Problem::XmlAttributeMissing {
                                     attr: "Name".to_owned(),
-                                    node: format! {"Geometries//*[@'{}']/{}", geometries[parent_tree].name(), tag}, // TODO test this
+                                    tag: tag.to_owned(), // TODO test this
+                                    pos: node_position(&n, doc),
                                 });
                                 ""
                             })
                             .to_owned(),
                     });
                     geometries.add_edge(parent_tree, ind, ());
-                    add_children(&n, ind, geometries, problems);
+                    add_children(&n, ind, geometries, problems, doc);
                 }
                 tag @ "GeometryReference" => {
                     let ind = geometries.add_node(GeometryType::Reference {
@@ -150,7 +153,8 @@ fn add_children(
                             .unwrap_or_else(|| {
                                 problems.push(Problem::XmlAttributeMissing {
                                     attr: "Name".to_owned(),
-                                    node: format! {"Geometries//*[@'{}']/{}", geometries[parent_tree].name(), tag}, // TODO test this
+                                    tag: tag.to_owned(), // TODO test this
+                                    pos: node_position(&n, doc),
                                 });
                                 ""
                             })
@@ -195,7 +199,7 @@ mod tests {
         let ft = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
         let mut geometries = Graph::new();
-        parse_geometries(&mut geometries, &ft, &mut problems);
+        parse_geometries(&mut geometries, &ft, &mut problems, &doc);
 
         assert!(problems.is_empty());
         assert_eq!(geometries.node_count(), 5)
@@ -227,7 +231,7 @@ mod tests {
         let ft = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
         let mut geometries = Graph::new();
-        parse_geometries(&mut geometries, &ft, &mut problems);
+        parse_geometries(&mut geometries, &ft, &mut problems, &doc);
 
         println!("{}", problems[0]);
 

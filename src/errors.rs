@@ -1,5 +1,6 @@
 use std::{io, path::Path};
 
+use roxmltree::{Document, TextPos};
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -32,12 +33,16 @@ pub enum Problem {
     InvalidDataVersion(String),
     #[error("node '{missing}' missing as child of '{parent}'")]
     XmlNodeMissing { missing: String, parent: String },
-    #[error("attribute '{attr}' missing on node '{node}'")]
-    XmlAttributeMissing { attr: String, node: String },
+    #[error("attribute '{attr}' missing on '{tag}' node at {pos}")]
+    XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
     #[error("UUID error in {1}: {0}")]
     UuidError(uuid::Error, String),
     #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")]
     InvalidYesNoEnum(String, String),
     #[error("error with Geometry tree: {0}")]
     GeometryTreeError(String),
+}
+
+pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
+    doc.text_pos_at(node.range().start)
 }

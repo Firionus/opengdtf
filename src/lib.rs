@@ -1,6 +1,7 @@
 mod errors;
 pub use errors::*;
 use petgraph::Graph;
+use roxmltree::Document;
 mod parts;
 
 use std::fs::File;
@@ -56,7 +57,7 @@ impl TryFrom<&str> for Gdtf {
         let mut geometries = Graph::new();
 
         match ft {
-            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems),
+            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems, &doc),
             None => (),
         }
 
@@ -68,7 +69,8 @@ impl TryFrom<&str> for Gdtf {
                     n.attribute("FixtureTypeID").or_else(|| {
                         problems.addn(Problem::XmlAttributeMissing {
                             attr: "FixtureTypeId".to_owned(),
-                            node: "FixtureType".to_owned(),
+                            tag: "FixtureType".to_owned(),
+                            pos: node_position(&n, &doc),
                         })
                     })
                 })
@@ -97,11 +99,11 @@ impl TryFrom<&str> for Gdtf {
                     )),
                 })
                 .unwrap_or(true),
-            name: get_string_attribute(&ft, "Name", &mut problems),
-            short_name: get_string_attribute(&ft, "ShortName", &mut problems),
-            long_name: get_string_attribute(&ft, "LongName", &mut problems),
-            description: get_string_attribute(&ft, "Description", &mut problems),
-            manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems),
+            name: get_string_attribute(&ft, "Name", &mut problems, &doc),
+            short_name: get_string_attribute(&ft, "ShortName", &mut problems, &doc),
+            long_name: get_string_attribute(&ft, "LongName", &mut problems, &doc),
+            description: get_string_attribute(&ft, "Description", &mut problems, &doc),
+            manufacturer: get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
             geometries,
             problems,
         };
@@ -122,12 +124,13 @@ impl ProblemAdd for Vec<Problem> {
     }
 }
 
-fn get_string_attribute(nopt: &Option<Node>, attr: &str, problems: &mut Vec<Problem>) -> String {
+fn get_string_attribute(nopt: &Option<Node>, attr: &str, problems: &mut Vec<Problem>, doc: &Document) -> String {
     nopt.and_then(|n| {
         n.attribute(attr).or_else(|| {
             problems.addn(Problem::XmlAttributeMissing {
                 attr: attr.to_owned(),
-                node: n.tag_name().name().to_owned(), // TODO this might not be very useful if the node tag name occurs often
+                tag: n.tag_name().name().to_owned(),
+                pos: node_position(&n, doc),
             })
         })
     })
