@@ -1,7 +1,7 @@
 use petgraph::{graph::{NodeIndex}, visit::EdgeRef, Directed, Graph};
 use roxmltree::Node;
 
-use crate::Problem;
+use crate::{Problem};
 
 /// Graph representing the Geometry tree.
 ///
@@ -57,7 +57,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
     let g = match ft.children().find(|n| n.has_tag_name("Geometries")) {
         Some(g) => g,
         None => {
-            problems.push(Problem::NodeMissing {
+            problems.push(Problem::XmlNodeMissing {
                 missing: "Geometries".to_owned(),
                 parent: "FixtureType".to_owned(),
             });
@@ -79,7 +79,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut V
                     name: n
                         .attribute("Name")
                         .unwrap_or_else(|| {
-                            problems.push(Problem::AttributeMissing {
+                            problems.push(Problem::XmlAttributeMissing {
                                 attr: "Name".to_owned(),
                                 node: format! {"Geometries/{}", tag}, // TODO test this...
                             });
@@ -132,7 +132,7 @@ fn add_children(
                         name: n
                             .attribute("Name")
                             .unwrap_or_else(|| {
-                                problems.push(Problem::AttributeMissing {
+                                problems.push(Problem::XmlAttributeMissing {
                                     attr: "Name".to_owned(),
                                     node: format! {"Geometries//*[@'{}']/{}", geometries[parent_tree].name(), tag}, // TODO test this
                                 });
@@ -148,7 +148,7 @@ fn add_children(
                         name: n // TODO code duplication with other Geometry Types
                             .attribute("Name")
                             .unwrap_or_else(|| {
-                                problems.push(Problem::AttributeMissing {
+                                problems.push(Problem::XmlAttributeMissing {
                                     attr: "Name".to_owned(),
                                     node: format! {"Geometries//*[@'{}']/{}", geometries[parent_tree].name(), tag}, // TODO test this
                                 });
@@ -163,4 +163,75 @@ fn add_children(
                 tag => todo!("Unknown Geometry type tag {}", tag),
             };
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn geometries_smoke_test() {
+        let ft_str = r#"
+<FixtureType>
+    <Geometries>
+        <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+        <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Break DMXBreak="1" DMXOffset="1"/>
+                <Break DMXBreak="2" DMXOffset="1"/>
+                <Break DMXBreak="1" DMXOffset="1"/>
+            </GeometryReference>
+            <GeometryReference Geometry="AbstractElement" Name="Element 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Break DMXBreak="1" DMXOffset="3"/>
+                <Break DMXBreak="2" DMXOffset="3"/>
+                <Break DMXBreak="1" DMXOffset="2"/>
+            </GeometryReference>
+        </Geometry>
+    </Geometries>
+</FixtureType>
+        "#;
+
+        let doc = roxmltree::Document::parse(ft_str).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Vec<Problem> = vec![];
+        let mut geometries = Graph::new();
+        parse_geometries(&mut geometries, &ft, &mut problems);
+
+        assert!(problems.is_empty());
+        assert_eq!(geometries.node_count(), 5)
+    }
+
+    #[test]
+    fn geometries_top_level_name_missing() {
+        let ft_str = r#"
+<FixtureType>
+    <Geometries>
+        <Geometry Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+        <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Break DMXBreak="1" DMXOffset="1"/>
+                <Break DMXBreak="2" DMXOffset="1"/>
+                <Break DMXBreak="1" DMXOffset="1"/>
+            </GeometryReference>
+            <GeometryReference Geometry="AbstractElement" Name="Element 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Break DMXBreak="1" DMXOffset="3"/>
+                <Break DMXBreak="2" DMXOffset="3"/>
+                <Break DMXBreak="1" DMXOffset="2"/>
+            </GeometryReference>
+        </Geometry>
+    </Geometries>
+</FixtureType>
+        "#;
+
+        let doc = roxmltree::Document::parse(ft_str).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Vec<Problem> = vec![];
+        let mut geometries = Graph::new();
+        parse_geometries(&mut geometries, &ft, &mut problems);
+
+        println!("{}", problems[0]);
+
+        assert_eq!(problems.len(), 1);
+        assert_eq!(geometries.node_count(), 5);
+    }
 }

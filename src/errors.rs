@@ -3,9 +3,6 @@ use std::{io, path::Path};
 use thiserror::Error;
 use zip::result::ZipError;
 
-// TODO these errors could report positions in the input files, like shown here:
-// https://github.com/RazrFalcon/roxmltree/blob/master/examples/print_pos.rs
-
 /// An unrecoverable GDTF Error.
 #[derive(Error, Debug)]
 pub enum Error {
@@ -23,6 +20,9 @@ pub enum Error {
     DescriptionXmlReadError(io::Error),
 }
 
+// TODO these problems could report positions in the input files, like shown here:
+// https://github.com/RazrFalcon/roxmltree/blob/master/examples/print_pos.rs
+
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug, PartialEq)]
 pub enum Problem {
@@ -31,9 +31,9 @@ pub enum Problem {
     #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")]
     InvalidDataVersion(String),
     #[error("node '{missing}' missing as child of '{parent}'")]
-    NodeMissing { missing: String, parent: String },
+    XmlNodeMissing { missing: String, parent: String },
     #[error("attribute '{attr}' missing on node '{node}'")]
-    AttributeMissing { attr: String, node: String },
+    XmlAttributeMissing { attr: String, node: String },
     #[error("UUID error in {1}: {0}")]
     UuidError(uuid::Error, String),
     #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")]

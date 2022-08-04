@@ -47,7 +47,7 @@ impl TryFrom<&str> for Gdtf {
             .children()
             .find(|n| n.has_tag_name("FixtureType"))
             .or_else(|| {
-                problems.addn(Problem::NodeMissing {
+                problems.addn(Problem::XmlNodeMissing {
                     missing: "FixtureType".to_owned(),
                     parent: "GDTF".to_owned(),
                 })
@@ -66,7 +66,7 @@ impl TryFrom<&str> for Gdtf {
             fixture_type_id: ft
                 .and_then(|n| {
                     n.attribute("FixtureTypeID").or_else(|| {
-                        problems.addn(Problem::AttributeMissing {
+                        problems.addn(Problem::XmlAttributeMissing {
                             attr: "FixtureTypeId".to_owned(),
                             node: "FixtureType".to_owned(),
                         })
@@ -125,9 +125,9 @@ impl ProblemAdd for Vec<Problem> {
 fn get_string_attribute(nopt: &Option<Node>, attr: &str, problems: &mut Vec<Problem>) -> String {
     nopt.and_then(|n| {
         n.attribute(attr).or_else(|| {
-            problems.addn(Problem::AttributeMissing {
+            problems.addn(Problem::XmlAttributeMissing {
                 attr: attr.to_owned(),
-                node: n.tag_name().name().to_owned(), // TODO this might not be very useful if the node name occurs often
+                node: n.tag_name().name().to_owned(), // TODO this might not be very useful if the node tag name occurs often
             })
         })
     })
