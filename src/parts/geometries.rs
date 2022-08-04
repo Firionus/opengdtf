@@ -25,8 +25,6 @@ pub enum GeometryType {
     },
 }
 
-// TODO remove things that throw: todo!, unwrap, etc.
-
 pub fn parse_geometries(
     geometries: &mut Geometries,
     geometry_names: &mut HashMap<String, NodeIndex>,
@@ -66,8 +64,8 @@ pub fn parse_geometries(
                 top_level_geometry_graph_indices.push(new_graph_node);
                 geometry_names.insert(name, new_graph_node);
             }
-            "GeometryReference" => todo!("GeometryReference not allowed at top level"),
-            _ => todo!("Unknown Geometry type"),
+            "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(node_position(n, doc))),
+            tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), node_position(n, doc))),
         };
     });
 
@@ -134,7 +132,7 @@ fn add_children(
                     geometries.add_edge(parent_tree, ind, ());
                     geometry_names.insert(name, ind);
                 }
-                tag => todo!("Unknown Geometry type tag {}", tag),
+                tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), node_position(&n, doc))),
             };
         });
 }
