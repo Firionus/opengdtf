@@ -21,26 +21,23 @@ pub enum Error {
     DescriptionXmlReadError(io::Error),
 }
 
-// TODO these problems could report positions in the input files, like shown here:
-// https://github.com/RazrFalcon/roxmltree/blob/master/examples/print_pos.rs
-
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug, PartialEq)]
 pub enum Problem {
-    #[error("missing attribute 'DataVersion' on 'GDTF' node")] // TODO add pos
-    NoDataVersion,
-    #[error("attribute 'DataVersion' of 'GDTF' node is invalid. Got '{0}'.")] // TODO add pos
-    InvalidDataVersion(String),
-    #[error("node '{missing}' missing as child of '{parent}'")] // TODO add pos
-    XmlNodeMissing { missing: String, parent: String },
+    #[error("missing attribute 'DataVersion' on 'GDTF' node at line {0}")]
+    NoDataVersion(TextPos),
+    #[error("attribute 'DataVersion' of 'GDTF' node at line {1} is invalid. Got '{0}'.")]
+    InvalidDataVersion(String, TextPos),
+    #[error("node '{missing}' missing as child of '{parent}' at line {pos}")]
+    XmlNodeMissing { missing: String, parent: String, pos: TextPos },
     #[error("attribute '{attr}' missing on '{tag}' node at line {pos}")]
     XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
     #[error("unexpected XML node '{0}' at line {1}")]
     UnexpectedXmlNode(String, TextPos),
-    #[error("UUID error in {1}: {0}")] // TODO add pos
-    UuidError(uuid::Error, String),
-    #[error("invalid enum string in {1}. Expected one of ['Yes', 'No']. Got {0}")] // TODO add pos
-    InvalidYesNoEnum(String, String),
+    #[error("UUID error in '{1}' at line {2}: {0}")]
+    UuidError(uuid::Error, String, TextPos),
+    #[error("invalid enum string in {1} at line {2}. Expected one of ['Yes', 'No']. Got {0}")]
+    InvalidYesNoEnum(String, String, TextPos),
     #[error("duplicate Geometry name '{0}' at line {1}")]
     DuplicateGeometryName(String, TextPos),
     #[error("unexpected 'GeometryReference' as top-level Geometry at line {0}")]

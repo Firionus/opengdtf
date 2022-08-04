@@ -1,8 +1,9 @@
 mod errors;
 pub use errors::*;
-use petgraph::Graph;
 use petgraph::graph::NodeIndex;
+use petgraph::Graph;
 use roxmltree::Document;
+use roxmltree::TextPos;
 mod parts;
 
 use std::collections::HashMap;
@@ -52,14 +53,21 @@ impl TryFrom<&str> for Gdtf {
                 problems.addn(Problem::XmlNodeMissing {
                     missing: "FixtureType".to_owned(),
                     parent: "GDTF".to_owned(),
+                    pos: node_position(&root_node, &doc),
                 })
             });
 
         let mut geometries = Graph::new();
         let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
-        
+
         match ft {
-            Some(ft) => parse_geometries(&mut geometries, &mut geometry_names, &ft, &mut problems, &doc),
+            Some(ft) => parse_geometries(
+                &mut geometries,
+                &mut geometry_names,
+                &ft,
+                &mut problems,
+                &doc,
+            ),
             None => (),
         }
 
@@ -78,7 +86,12 @@ impl TryFrom<&str> for Gdtf {
                 })
                 .and_then(|s| match Uuid::try_from(s) {
                     Ok(v) => Some(v),
-                    Err(e) => problems.addn(Problem::UuidError(e, "FixtureTypeId".to_owned())),
+                    Err(e) => problems.addn(Problem::UuidError(
+                        e,
+                        "FixtureTypeId".to_owned(),
+                        ft.map(|n| node_position(&n, &doc))
+                            .unwrap_or_else(|| TextPos::new(0, 0)),
+                    )),
                 })
                 .unwrap_or(Uuid::nil()),
             ref_ft: ft
@@ -87,7 +100,14 @@ impl TryFrom<&str> for Gdtf {
                     "" => None,
                     _ => match Uuid::try_from(s) {
                         Ok(v) => Some(v),
-                        Err(e) => problems.addn(Problem::UuidError(e, "RefFT".to_owned())),
+                        Err(e) => problems.addn(
+                            Problem::UuidError(
+                                e, 
+                                "RefFT".to_owned(),
+                                ft.map(|n| node_position(&n, &doc))
+                                    .unwrap_or_else(|| TextPos::new(0, 0)),
+                            )
+                        ),
                     },
                 }),
             can_have_children: ft
@@ -98,6 +118,7 @@ impl TryFrom<&str> for Gdtf {
                     _ => problems.addn(Problem::InvalidYesNoEnum(
                         s.to_owned(),
                         "CanHaveChildren".to_owned(),
+                        ft.map(|n| node_position(&n, &doc)).unwrap_or_else(|| TextPos::new(0,0)),
                     )),
                 })
                 .unwrap_or(true),

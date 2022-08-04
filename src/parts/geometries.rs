@@ -38,6 +38,7 @@ pub fn parse_geometries(
             problems.push(Problem::XmlNodeMissing {
                 missing: "Geometries".to_owned(),
                 parent: "FixtureType".to_owned(),
+                pos: node_position(ft, doc)
             });
             return;
         }
