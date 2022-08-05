@@ -1,10 +1,10 @@
 use strum::EnumString;
 
-#[derive(Debug, EnumString, PartialEq, Default)]
+#[derive(Debug, EnumString, PartialEq, Default, strum::Display)]
 pub enum DataVersion {
-    #[strum(serialize = "1.1")]
+    #[strum(to_string = "1.1")]
     V1_1,
-    #[strum(serialize = "1.2")]
+    #[strum(to_string = "1.2")]
     V1_2,
     #[default]
     Unknown,
@@ -35,5 +35,6 @@ mod tests {
         let dv: Option<DataVersion> = root_node.get_attribute("DataVersion", &mut problems, &doc);
         assert_eq!(problems.len(), 0);
         assert_eq!(dv, Some(DataVersion::V1_1));
+        assert_eq!(format!("{}", dv.unwrap()), "1.1");
     }
 }
