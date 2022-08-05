@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-use parts::gdtf_node::*;
+use parts::data_version::*;
 use parts::geometries::*;
 use uuid::Uuid;
 
@@ -60,11 +60,14 @@ impl TryFrom<&str> for Gdtf {
 
         let problems = &mut gdtf.problems;
 
-        // let mut problems: Vec<Problem> = vec![];
+        let root_node = doc
+            .descendants()
+            .find(|n| n.has_tag_name("GDTF"))
+            .ok_or(Error::NoRootNode)?;
 
-        let (root_node, data_version) = parse_gdtf_node(&doc, problems)?;
-
-        gdtf.data_version = data_version; // TODO we might be able to do this more nicely with the new utils
+        if let Some(val) = root_node.get_attribute("DataVersion", problems, &doc) {
+            gdtf.data_version = val;
+        };
 
         let ft = root_node
             .children()
@@ -184,7 +187,7 @@ impl TryFrom<&Path> for Gdtf {
 mod tests {
     use std::path::Path;
 
-    use crate::{errors::Error, Gdtf, parts::gdtf_node::DataVersion};
+    use crate::{errors::Error, parts::data_version::DataVersion, Gdtf};
 
     #[test]
     fn data_version_parsing() {
