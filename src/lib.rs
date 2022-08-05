@@ -110,7 +110,7 @@ impl TryFrom<&str> for Gdtf {
                     )),
                 })
                 .unwrap_or(true),
-            name: utils::maybe_get_string_attribute(&ft, "Name", &mut problems, &doc),
+            name: utils::maybe_get_string_attribute(&ft, "Name", &mut problems, &doc), // TODO we can maybe remove this horribly named function when we untangled ft
             short_name: utils::maybe_get_string_attribute(&ft, "ShortName", &mut problems, &doc),
             long_name: utils::maybe_get_string_attribute(&ft, "LongName", &mut problems, &doc),
             description: utils::maybe_get_string_attribute(&ft, "Description", &mut problems, &doc),
