@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Index;
 
 use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
@@ -23,6 +24,16 @@ pub enum GeometryType {
         reference: NodeIndex,
         break_offsets: (),
     },
+}
+
+impl GeometryType {
+    fn name(&self) -> &str {
+        match self {
+            GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => {
+                name
+            }
+        }
+    }
 }
 
 pub fn parse_geometries(
@@ -169,20 +180,80 @@ fn add_children(
         });
 }
 
+fn find_geometry(name: &str, geometries: &Geometries, geometry_names: &HashMap<String, NodeIndex>) -> Option<NodeIndex> {
+    let mut rev_path = name.split('.').rev();
+
+    rev_path
+        .next()
+        .and_then(|element_name| {
+            geometry_names.get(element_name)
+        })
+        .map(|i| i.to_owned())
+        .and_then(|i| { // validate path by going backwards up the graph
+            let mut current_ind = i;
+            loop {
+                let mut parents = geometries.neighbors_directed(current_ind, Incoming);
+                match parents.next() {
+                    None => match rev_path.next() {
+                        None => break Some(i),
+                        Some(_parent_name) => break None,
+                    },
+                    Some(parent_ind) => {
+                        let parent_name = geometries.index(parent_ind).name();
+                        if Some(parent_name) != rev_path.next() {
+                            return None
+                        }
+                        current_ind = parent_ind;
+                    },
+                };
+                // assert!(parents.next() == None) // Graph is tree, so each node only has one parent
+            }
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use regex::Regex;
 
     use super::*;
 
-    impl GeometryType {
-        fn name(&self) -> Option<&str> {
-            match self {
-                GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => {
-                    Some(name)
-                }
-            }
-        }
+    #[test]
+    fn find_geometry_works() {
+        let mut geometries: Geometries = Graph::new();
+        let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
+
+        // TODO this kind of setup should be moved to an impl Gdtf (gdtf.add_geometry(geom, parent_index)) 
+        // together with its error handling that is currently in the parsing code
+        let a = geometries.add_node(GeometryType::Geometry { name: "a".to_owned() });
+        let b = geometries.add_node(GeometryType::Geometry { name: "b".to_owned() });
+        let b1 = geometries.add_node(GeometryType::Geometry { name: "b1".to_owned() });
+        let b1a = geometries.add_node(GeometryType::Geometry { name: "b1a".to_owned() });
+        geometries.add_edge(b, b1, ());
+        geometries.add_edge(b1, b1a, ());
+        geometry_names.insert("a".to_owned(), a);
+        geometry_names.insert("b".to_owned(), b);
+        geometry_names.insert("b1".to_owned(), b1);
+        geometry_names.insert("b1a".to_owned(), b1a);
+
+        assert_eq!(find_geometry("a", &geometries, &geometry_names), Some(a));
+        assert_eq!(find_geometry("b", &geometries, &geometry_names), Some(b));
+        assert_eq!(find_geometry("b.b1", &geometries, &geometry_names), Some(b1));
+        assert_eq!(find_geometry("b.b1.b1a", &geometries, &geometry_names), Some(b1a));
+
+        // can't reference directly without parent, even though it's clear which element it would be
+        assert_eq!(find_geometry("b1", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("b1a", &geometries, &geometry_names), None);
+
+        // nonexistent elements
+        assert_eq!(find_geometry("c", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("a.c", &geometries, &geometry_names), None);
+
+        // nonexistent paths, though end element exists
+        assert_eq!(find_geometry("a.a", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("c.a", &geometries, &geometry_names), None);
+
+        // parent missing in path
+        assert_eq!(find_geometry("b1.b1a", &geometries, &geometry_names), None);
     }
 
     #[test]
@@ -235,9 +306,9 @@ mod tests {
         geometries
             .raw_nodes()
             .iter()
-            .for_each(|n| assert!(n.weight.name().unwrap_or("root") != ""));
+            .for_each(|n| assert!(n.weight.name() != ""));
 
-        let name_of_broken_node = geometries.raw_nodes()[0].weight.name().unwrap();
+        let name_of_broken_node = geometries.raw_nodes()[0].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 
@@ -268,7 +339,7 @@ mod tests {
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::DuplicateGeometryName(..)));
 
-        let name_of_broken_node = geometries.raw_nodes()[3].weight.name().unwrap();
+        let name_of_broken_node = geometries.raw_nodes()[3].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 
