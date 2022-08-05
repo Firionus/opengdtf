@@ -22,7 +22,7 @@ impl Geometries {
     ///
     /// If you want to add a top-level geometry, set parent_index to `None`.
     ///
-    /// If a geometry of the same name is already present, does not do anything and returns None.
+    /// If a geometry of the same name is already present, does not do anything and returns `None`.
     pub fn add(
         &mut self,
         geometry: GeometryType,
@@ -93,12 +93,11 @@ pub fn parse_geometries(
             | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
             | "Magnet" => {
                 let name = geometry_name(n, problems, doc, &geometries.names);
-                let geometry = GeometryType::Geometry {
-                    name: name.to_owned(),
-                };
-                let new_graph_node = geometries.graph.add_node(geometry);
-                top_level_geometry_graph_indices.push(new_graph_node);
-                geometries.names.insert(name, new_graph_node);
+                let geometry = GeometryType::Geometry { name };
+                let i = geometries
+                    .add(geometry, None)
+                    .expect("Geometry Names must be unique at this point");
+                top_level_geometry_graph_indices.push(i);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
                 node_position(n, doc),
@@ -155,12 +154,13 @@ fn add_children(
                 | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
                 | "Structure" | "Support" | "Magnet" => {
                     let name = geometry_name(&n, problems, doc, &geometries.names);
-                    let ind = geometries.graph.add_node(GeometryType::Geometry {
-                        name: name.to_owned(),
-                    });
-                    geometries.graph.add_edge(parent_tree, ind, ());
-                    geometries.names.insert(name, ind);
-                    add_children(&n, ind, geometries, problems, doc);
+                    let geometry = GeometryType::Geometry {
+                        name,
+                    };
+                    let i = geometries
+                        .add(geometry, Some(parent_tree))
+                        .expect("Geometry Names must be unique at this point");
+                    add_children(&n, i, geometries, problems, doc);
                 }
                 "GeometryReference" => {
                     let name = geometry_name(&n, problems, doc, &geometries.names);
@@ -184,14 +184,14 @@ fn add_children(
                             })
                         })
                     {
-                        let new_ind = geometries.graph.add_node(GeometryType::Reference {
-                            name: name.to_owned(),
+                        let geometry = GeometryType::Reference {
+                            name,
                             break_offsets: (),
                             reference: ref_ind,
-                        });
-                        geometries.graph.add_edge(parent_tree, new_ind, ());
-                        geometries.names.insert(name, new_ind);
-                        // TODO code duplication with other geometry adds, but there's a different constructor in the middle
+                        };
+                        geometries
+                            .add(geometry, Some(parent_tree))
+                            .expect("Geometry Names must be unique at this point");
                     };
                 }
                 tag => problems.push(Problem::UnexpectedXmlNode(
