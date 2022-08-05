@@ -6,8 +6,8 @@ use roxmltree::{Document, Node};
 use uuid::Uuid;
 
 use crate::utils::GetAttribute;
-use crate::{node_position, ProblemAdd};
 use crate::Problem;
+use crate::{node_position, ProblemAdd};
 
 #[derive(Debug, Default)]
 pub struct Geometries {
@@ -145,7 +145,8 @@ fn geometry_name(
     doc: &Document,
     geometry_names: &HashMap<String, NodeIndex>,
 ) -> String {
-    let mut name = n.get_attribute("Name", problems, doc)
+    let mut name = n
+        .get_attribute("Name", problems, doc)
         .unwrap_or_else(|| format!("No Name {}", Uuid::new_v4()));
 
     if geometry_names.contains_key(&name) {
@@ -184,7 +185,8 @@ fn add_children(
                 }
                 "GeometryReference" => {
                     let name = geometry_name(&n, problems, doc, &geometries.names);
-                    let ref_ind = n.get_attribute::<String>("Geometry", problems, doc)
+                    let ref_ind = n
+                        .get_attribute::<String>("Geometry", problems, doc)
                         .and_then(|refname| {
                             if refname.contains('.') {
                                 problems.push_then_none(Problem::NonTopLevelGeometryReferenced(

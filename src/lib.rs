@@ -1,6 +1,6 @@
 mod errors;
 pub use errors::*;
-use roxmltree::TextPos;
+use utils::GetAttribute;
 mod parts;
 
 use std::fs::File;
@@ -14,7 +14,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct Gdtf {
     // File Information
-    pub data_version: String,
+    pub data_version: String, // TODO Let's be honest, this should be an enum
     pub fixture_type_id: Uuid,
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
@@ -32,15 +32,39 @@ pub struct Gdtf {
     pub problems: Vec<Problem>,
 }
 
+impl Default for Gdtf {
+    fn default() -> Self {
+        Self {
+            data_version: Default::default(),
+            fixture_type_id: Uuid::nil(),
+            ref_ft: None,
+            can_have_children: true,
+            name: Default::default(),
+            short_name: Default::default(),
+            long_name: Default::default(),
+            manufacturer: Default::default(),
+            description: Default::default(),
+            geometries: Default::default(),
+            problems: Default::default(),
+        }
+    }
+}
+
 impl TryFrom<&str> for Gdtf {
     type Error = Error;
 
     fn try_from(description_content: &str) -> Result<Self, Self::Error> {
         let doc = roxmltree::Document::parse(description_content)?;
 
-        let mut problems: Vec<Problem> = vec![];
+        let mut gdtf = Gdtf::default();
 
-        let (root_node, data_version) = parse_gdtf_node(&doc, &mut problems)?;
+        let problems = &mut gdtf.problems;
+
+        // let mut problems: Vec<Problem> = vec![];
+
+        let (root_node, data_version) = parse_gdtf_node(&doc, problems)?;
+
+        gdtf.data_version = data_version; // TODO we might be able to do this more nicely with the new utils
 
         let ft = root_node
             .children()
@@ -53,24 +77,18 @@ impl TryFrom<&str> for Gdtf {
                 })
             });
 
-        let mut geometries = Geometries::default();
+        let geometries = &mut gdtf.geometries;
 
-        match ft {
-            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems, &doc),
-            None => (),
-        }
+        if let Some(ft) = ft {
+            parse_geometries(geometries, &ft, problems, &doc);
 
-        let gdtf = Gdtf {
-            data_version,
-            // TODO all of this would be one level less nested if ft could be unwrapped - how to architect that?
-            fixture_type_id: ft
-                .and_then(|n| {
-                    n.attribute("FixtureTypeID").or_else(|| {
-                        problems.push_then_none(Problem::XmlAttributeMissing {
-                            attr: "FixtureTypeId".to_owned(),
-                            tag: "FixtureType".to_owned(),
-                            pos: node_position(&n, &doc),
-                        })
+            gdtf.fixture_type_id = ft
+                .attribute("FixtureTypeID")
+                .or_else(|| {
+                    problems.push_then_none(Problem::XmlAttributeMissing {
+                        attr: "FixtureTypeId".to_owned(),
+                        tag: "FixtureType".to_owned(),
+                        pos: node_position(&ft, &doc),
                     })
                 })
                 .and_then(|s| match Uuid::try_from(s) {
@@ -78,13 +96,14 @@ impl TryFrom<&str> for Gdtf {
                     Err(e) => problems.push_then_none(Problem::UuidError(
                         e,
                         "FixtureTypeId".to_owned(),
-                        ft.map(|n| node_position(&n, &doc))
-                            .unwrap_or_else(|| TextPos::new(0, 0)),
+                        node_position(&ft, &doc),
                     )),
                 })
-                .unwrap_or(Uuid::nil()),
-            ref_ft: ft
-                .and_then(|n| n.attribute("RefFT")) // I think it's okay to not have this
+                .unwrap_or(Uuid::nil());
+
+            gdtf.ref_ft = ft
+                .attribute("RefFT")
+                // no handling if missing, I don't think it's important to have it present when empty
                 .and_then(|s| match s {
                     "" => None,
                     _ => match Uuid::try_from(s) {
@@ -92,32 +111,43 @@ impl TryFrom<&str> for Gdtf {
                         Err(e) => problems.push_then_none(Problem::UuidError(
                             e,
                             "RefFT".to_owned(),
-                            ft.map(|n| node_position(&n, &doc))
-                                .unwrap_or_else(|| TextPos::new(0, 0)),
+                            node_position(&ft, &doc),
                         )),
                     },
-                }),
-            can_have_children: ft
-                .and_then(|n| n.attribute("CanHaveChildren"))
-                .and_then(|s| match s {
-                    "Yes" => Some(true),
-                    "No" => Some(false),
-                    _ => problems.push_then_none(Problem::InvalidYesNoEnum(
-                        s.to_owned(),
-                        "CanHaveChildren".to_owned(),
-                        ft.map(|n| node_position(&n, &doc))
-                            .unwrap_or_else(|| TextPos::new(0, 0)),
-                    )),
-                })
-                .unwrap_or(true),
-            name: utils::maybe_get_string_attribute(&ft, "Name", &mut problems, &doc), // TODO we can maybe remove this horribly named function when we untangled ft
-            short_name: utils::maybe_get_string_attribute(&ft, "ShortName", &mut problems, &doc),
-            long_name: utils::maybe_get_string_attribute(&ft, "LongName", &mut problems, &doc),
-            description: utils::maybe_get_string_attribute(&ft, "Description", &mut problems, &doc),
-            manufacturer: utils::maybe_get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
-            geometries,
-            problems,
-        };
+                });
+
+            if let Some(can_have_children) = ft.attribute("CanHaveChildren").and_then(|s| match s {
+                "Yes" => Some(true),
+                "No" => Some(false),
+                _ => problems.push_then_none(Problem::InvalidYesNoEnum(
+                    s.to_owned(),
+                    "CanHaveChildren".to_owned(),
+                    node_position(&ft, &doc),
+                )),
+            }) {
+                gdtf.can_have_children = can_have_children;
+            };
+
+            if let Some(val) = ft.get_attribute("Name", problems, &doc) {
+                gdtf.name = val;
+            };
+
+            if let Some(val) = ft.get_attribute("ShortName", problems, &doc) {
+                gdtf.short_name = val;
+            };
+
+            if let Some(val) = ft.get_attribute("LongName", problems, &doc) {
+                gdtf.long_name = val;
+            };
+
+            if let Some(val) = ft.get_attribute("Description", problems, &doc) {
+                gdtf.description = val;
+            };
+
+            if let Some(val) = ft.get_attribute("Manufacturer", problems, &doc) {
+                gdtf.manufacturer = val;
+            };
+        }
 
         Ok(gdtf)
     }

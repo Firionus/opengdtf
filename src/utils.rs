@@ -9,16 +9,6 @@ use roxmltree::Node;
 use crate::node_position;
 use crate::Problem;
 
-pub(crate) fn maybe_get_string_attribute(
-    nopt: &Option<Node>,
-    attr: &str,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> String {
-    nopt.and_then(|n| n.get_attribute(attr, problems, doc))
-        .unwrap_or_else(|| "".to_owned())
-}
-
 pub(crate) trait GetAttribute {
     fn get_attribute<T: FromStr>(&self, attr: &str, problems: &mut Vec<Problem>, doc: &Document) -> Option<T> where
     <T as FromStr>::Err: std::error::Error + 'static;
@@ -53,7 +43,6 @@ impl GetAttribute for Node<'_, '_> {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
