@@ -1,4 +1,7 @@
 Mode 1 (20 ch)
+--------------
+
+```
 1.1 Main_Dimmer
 1.2
 1.3 Element 1 -> AbstractElement_Pan
@@ -19,8 +22,9 @@ Mode 1 (20 ch)
 2.7 Element 1 -> AbstractElement_XYZ_Z (2/2)
 2.8 Element 2 -> AbstractElement_XYZ_Z (1/2)
 2.9 Element 2 -> AbstractElement_XYZ_Z (2/2)
+```
 
-(Format is: <Break>.<Offset> <Channel Name>)
+(Format is: `<Break>.<Offset> <Channel Name>`)
 
 GDTF 1.1 and GDTF 1.2 versions provided
 

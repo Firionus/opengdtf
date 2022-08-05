@@ -244,7 +244,10 @@ fn parse_reference_offsets(
     let overwrite_dmx_break = get_u32_attribute(&last_break, "DMXBreak", problems, doc)?;
     let overwrite_offset = get_u32_attribute(&last_break, "DMXOffset", problems, doc)?;
 
-    let overwrite = Offset { dmx_break: overwrite_dmx_break, offset: overwrite_offset };
+    let overwrite = Offset {
+        dmx_break: overwrite_dmx_break,
+        offset: overwrite_offset,
+    };
 
     let mut offsets = Offsets::new(overwrite);
 
@@ -253,7 +256,10 @@ fn parse_reference_offsets(
         let offset = get_u32_attribute(&element, "DMXOffset", problems, doc)?;
 
         if offsets.normal.contains_key(&dmx_break) {
-            problems.push(Problem::DuplicateDmxBreak(dmx_break, node_position(&element, doc)));
+            problems.push(Problem::DuplicateDmxBreak(
+                dmx_break,
+                node_position(&element, doc),
+            ));
         }
 
         offsets.normal.insert(dmx_break, offset); // overwrite whether occupied or vacant
@@ -338,7 +344,7 @@ mod tests {
         let mut problems: Vec<Problem> = vec![];
         let offsets = parse_reference_offsets(&n, &mut problems, &doc).unwrap();
         assert_eq!(problems.len(), 1);
-        assert!(matches!(problems[0], Problem::DuplicateDmxBreak( .. )));
+        assert!(matches!(problems[0], Problem::DuplicateDmxBreak(..)));
         assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
     }
 
@@ -446,13 +452,21 @@ mod tests {
         assert_eq!(geometries.graph.node_count(), 4);
 
         let element_2 = &geometries.graph[geometries.names["Element 2"]];
-        if let GeometryType::Reference { name, reference, offsets } = element_2 {
+        if let GeometryType::Reference {
+            name,
+            reference,
+            offsets,
+        } = element_2
+        {
             assert_eq!(name, "Element 2");
             assert_eq!(offsets.overwrite.dmx_break, 1);
             assert_eq!(offsets.overwrite.offset, 2);
             assert_eq!(offsets.normal[&1], 3);
             assert_eq!(offsets.normal[&2], 4);
-            assert_eq!(geometries.graph[reference.to_owned()].name(), "AbstractElement");
+            assert_eq!(
+                geometries.graph[reference.to_owned()].name(),
+                "AbstractElement"
+            );
         } else {
             panic!("shouldn't happen")
         };

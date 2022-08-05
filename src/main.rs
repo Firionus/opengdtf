@@ -6,7 +6,7 @@ fn main() {
 
     let path =
         Path::new("test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf");
-    
+
     print_gdtf(path);
 }
 

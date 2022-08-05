@@ -57,12 +57,7 @@ impl TryFrom<&str> for Gdtf {
         let mut geometries = Geometries::default();
 
         match ft {
-            Some(ft) => parse_geometries(
-                &mut geometries,
-                &ft,
-                &mut problems,
-                &doc,
-            ),
+            Some(ft) => parse_geometries(&mut geometries, &ft, &mut problems, &doc),
             None => (),
         }
 

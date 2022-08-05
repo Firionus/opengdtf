@@ -1,4 +1,4 @@
-use std::{io, path::Path, num::ParseIntError};
+use std::{io, num::ParseIntError, path::Path};
 
 use roxmltree::{Document, TextPos};
 use thiserror::Error;
@@ -29,11 +29,24 @@ pub enum Problem {
     #[error("attribute 'DataVersion' of 'GDTF' node at line {1} is invalid. Got '{0}'.")]
     InvalidDataVersion(String, TextPos),
     #[error("node '{missing}' missing as child of '{parent}' at line {pos}")]
-    XmlNodeMissing { missing: String, parent: String, pos: TextPos },
+    XmlNodeMissing {
+        missing: String,
+        parent: String,
+        pos: TextPos,
+    },
     #[error("attribute '{attr}' missing on '{tag}' node at line {pos}")]
-    XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
+    XmlAttributeMissing {
+        attr: String,
+        tag: String,
+        pos: TextPos,
+    },
     #[error("attribute '{attr}' on '{tag}' at line {pos} could not be parsed as integer: {err}")]
-    InvalidInteger { attr: String, tag: String, pos: TextPos, err: ParseIntError },
+    InvalidInteger {
+        attr: String,
+        tag: String,
+        pos: TextPos,
+        err: ParseIntError,
+    },
     #[error("unexpected XML node '{0}' at line {1}")]
     UnexpectedXmlNode(String, TextPos),
     #[error("UUID error in '{1}' at line {2}: {0}")]
@@ -48,7 +61,9 @@ pub enum Problem {
     UnexpectedTopLevelGeometryReference(TextPos),
     #[error("Geometry '{0}' is referenced at line {1} but not found")]
     UnknownGeometry(String, TextPos),
-    #[error("Geometry '{0}' is referenced at line {1} and was expected to be top-level but wasn't")]
+    #[error(
+        "Geometry '{0}' is referenced at line {1} and was expected to be top-level but wasn't"
+    )]
     NonTopLevelGeometryReferenced(String, TextPos),
 }
 

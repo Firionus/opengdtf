@@ -1,6 +1,6 @@
 use roxmltree::{Document, Node};
 
-use crate::{Error, Problem, node_position};
+use crate::{node_position, Error, Problem};
 
 pub fn parse_gdtf_node<'a>(
     doc: &'a Document,
@@ -17,7 +17,10 @@ pub fn parse_gdtf_node<'a>(
             // validate
             match s {
                 "1.1" | "1.2" => (),
-                _ => problems.push(Problem::InvalidDataVersion(s.to_owned(), node_position(&root_node, doc))),
+                _ => problems.push(Problem::InvalidDataVersion(
+                    s.to_owned(),
+                    node_position(&root_node, doc),
+                )),
             };
             s
         })
@@ -46,7 +49,7 @@ mod tests {
         assert!(data_version.is_empty()); // Default value (empty string) should be applied
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::NoDataVersion(..)));
-        
+
         let msg = format!("{}", &problems[0]);
         assert!(msg.contains("missing attribute 'DataVersion' on 'GDTF' node"));
     }
@@ -62,7 +65,7 @@ mod tests {
         assert!(&data_version == "1.0"); // Wrong value should be output
 
         assert_eq!(problems.len(), 1);
-        assert!(matches!(problems[0], Problem::InvalidDataVersion( .. )));
+        assert!(matches!(problems[0], Problem::InvalidDataVersion(..)));
         let msg = format!("{}", &problems[0]);
         assert!(msg.contains("attribute 'DataVersion' of 'GDTF' node"));
     }
