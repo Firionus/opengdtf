@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Index;
 
 use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
@@ -9,10 +8,40 @@ use uuid::Uuid;
 use crate::{get_string_attribute, Problem};
 use crate::{node_position, ProblemAdd};
 
-/// Graph representing the Geometry tree.
-///
-/// Edges point from parent to child.
-pub type Geometries = Graph<GeometryType, (), Directed>;
+#[derive(Debug, Default)] // TODO test default
+pub struct Geometries {
+    /// Graph representing the Geometry tree.
+    ///
+    /// Edges point from parent to child.
+    pub graph: Graph<GeometryType, (), Directed>,
+    pub names: HashMap<String, NodeIndex>,
+}
+
+impl Geometries {
+    /// Adds a Geometry and returns the NodeIndex of the new geometry
+    ///
+    /// If you want to add a top-level geometry, set parent_index to `None`.
+    ///
+    /// If a geometry of the same name is already present, does not do anything and returns None.
+    pub fn add(
+        &mut self,
+        geometry: GeometryType,
+        parent_index: Option<NodeIndex>,
+    ) -> Option<NodeIndex> {
+        let new_name = geometry.name().to_owned();
+
+        if self.names.contains_key(&new_name) {
+            return None;
+        }
+
+        let new_ind = self.graph.add_node(geometry);
+        if let Some(parent_index) = parent_index {
+            self.graph.add_edge(parent_index, new_ind, ());
+        };
+        self.names.insert(new_name, new_ind);
+        Some(new_ind)
+    }
+}
 
 #[derive(Debug)]
 pub enum GeometryType {
@@ -27,7 +56,7 @@ pub enum GeometryType {
 }
 
 impl GeometryType {
-    fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match self {
             GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => name,
         }
@@ -36,7 +65,6 @@ impl GeometryType {
 
 pub fn parse_geometries(
     geometries: &mut Geometries,
-    geometry_names: &mut HashMap<String, NodeIndex>,
     ft: &Node,
     problems: &mut Vec<Problem>,
     doc: &Document,
@@ -64,12 +92,13 @@ pub fn parse_geometries(
             | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
             | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
             | "Magnet" => {
-                let name = geometry_name(n, problems, doc, geometry_names);
-                let new_graph_node = geometries.add_node(GeometryType::Geometry {
+                let name = geometry_name(n, problems, doc, &geometries.names);
+                let geometry = GeometryType::Geometry {
                     name: name.to_owned(),
-                });
+                };
+                let new_graph_node = geometries.graph.add_node(geometry);
                 top_level_geometry_graph_indices.push(new_graph_node);
-                geometry_names.insert(name, new_graph_node);
+                geometries.names.insert(name, new_graph_node);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
                 node_position(n, doc),
@@ -84,7 +113,7 @@ pub fn parse_geometries(
     // Next, add non-top-level geometries.
     top_level_geometries.iter().enumerate().for_each(|(i, n)| {
         let graph_index = top_level_geometry_graph_indices[i];
-        add_children(n, graph_index, geometries, problems, doc, geometry_names);
+        add_children(n, graph_index, geometries, problems, doc);
     });
 }
 
@@ -115,7 +144,6 @@ fn add_children(
     geometries: &mut Geometries,
     problems: &mut Vec<Problem>,
     doc: &Document,
-    geometry_names: &mut HashMap<String, NodeIndex>,
 ) {
     parent_xml
         .children()
@@ -126,16 +154,16 @@ fn add_children(
                 | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
                 | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
                 | "Structure" | "Support" | "Magnet" => {
-                    let name = geometry_name(&n, problems, doc, geometry_names);
-                    let ind = geometries.add_node(GeometryType::Geometry {
+                    let name = geometry_name(&n, problems, doc, &geometries.names);
+                    let ind = geometries.graph.add_node(GeometryType::Geometry {
                         name: name.to_owned(),
                     });
-                    geometries.add_edge(parent_tree, ind, ());
-                    geometry_names.insert(name, ind);
-                    add_children(&n, ind, geometries, problems, doc, geometry_names);
+                    geometries.graph.add_edge(parent_tree, ind, ());
+                    geometries.names.insert(name, ind);
+                    add_children(&n, ind, geometries, problems, doc);
                 }
                 "GeometryReference" => {
-                    let name = geometry_name(&n, problems, doc, geometry_names);
+                    let name = geometry_name(&n, problems, doc, &geometries.names);
                     if let Some(ref_ind) = get_string_attribute(&n, "Geometry", problems, doc)
                         .and_then(|refname| {
                             if refname.contains('.') {
@@ -148,7 +176,7 @@ fn add_children(
                             }
                         })
                         .and_then(|refname| {
-                            find_geometry(&refname, geometries, geometry_names).or_else(|| {
+                            find_geometry(&refname, geometries).or_else(|| {
                                 problems.push_then_none(Problem::UnknownGeometry(
                                     refname,
                                     node_position(&n, doc),
@@ -156,13 +184,13 @@ fn add_children(
                             })
                         })
                     {
-                        let new_ind = geometries.add_node(GeometryType::Reference {
+                        let new_ind = geometries.graph.add_node(GeometryType::Reference {
                             name: name.to_owned(),
                             break_offsets: (),
                             reference: ref_ind,
                         });
-                        geometries.add_edge(parent_tree, new_ind, ());
-                        geometry_names.insert(name, new_ind);
+                        geometries.graph.add_edge(parent_tree, new_ind, ());
+                        geometries.names.insert(name, new_ind);
                         // TODO code duplication with other geometry adds, but there's a different constructor in the middle
                     };
                 }
@@ -174,29 +202,25 @@ fn add_children(
         });
 }
 
-fn find_geometry(
-    name: &str,
-    geometries: &Geometries,
-    geometry_names: &HashMap<String, NodeIndex>,
-) -> Option<NodeIndex> {
+fn find_geometry(name: &str, geometries: &Geometries) -> Option<NodeIndex> {
     let mut rev_path = name.split('.').rev();
 
     rev_path
         .next()
-        .and_then(|element_name| geometry_names.get(element_name))
+        .and_then(|element_name| geometries.names.get(element_name))
         .map(|i| i.to_owned())
         .and_then(|i| {
             // validate path by going backwards up the graph
             let mut current_ind = i;
             loop {
-                let mut parents = geometries.neighbors_directed(current_ind, Incoming);
+                let mut parents = geometries.graph.neighbors_directed(current_ind, Incoming);
                 match parents.next() {
                     None => match rev_path.next() {
                         None => break Some(i),
                         Some(_parent_name) => break None,
                     },
                     Some(parent_ind) => {
-                        let parent_name = geometries.index(parent_ind).name();
+                        let parent_name = geometries.graph[parent_ind].name();
                         if Some(parent_name) != rev_path.next() {
                             return None;
                         }
@@ -216,55 +240,60 @@ mod tests {
 
     #[test]
     fn find_geometry_works() {
-        let mut geometries: Geometries = Graph::new();
-        let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
+        let mut geometries = Geometries::default();
 
-        // TODO this kind of setup should be moved to an impl Gdtf (gdtf.add_geometry(geom, parent_index))
-        // together with its error handling that is currently in the parsing code
-        let a = geometries.add_node(GeometryType::Geometry {
-            name: "a".to_owned(),
-        });
-        let b = geometries.add_node(GeometryType::Geometry {
-            name: "b".to_owned(),
-        });
-        let b1 = geometries.add_node(GeometryType::Geometry {
-            name: "b1".to_owned(),
-        });
-        let b1a = geometries.add_node(GeometryType::Geometry {
-            name: "b1a".to_owned(),
-        });
-        geometries.add_edge(b, b1, ());
-        geometries.add_edge(b1, b1a, ());
-        geometry_names.insert("a".to_owned(), a);
-        geometry_names.insert("b".to_owned(), b);
-        geometry_names.insert("b1".to_owned(), b1);
-        geometry_names.insert("b1a".to_owned(), b1a);
+        let a = geometries
+            .add(
+                GeometryType::Geometry {
+                    name: "a".to_owned(),
+                },
+                None,
+            )
+            .unwrap();
+        let b = geometries
+            .add(
+                GeometryType::Geometry {
+                    name: "b".to_owned(),
+                },
+                None,
+            )
+            .unwrap();
+        let b1 = geometries
+            .add(
+                GeometryType::Geometry {
+                    name: "b1".to_owned(),
+                },
+                Some(b),
+            )
+            .unwrap();
+        let b1a = geometries
+            .add(
+                GeometryType::Geometry {
+                    name: "b1a".to_owned(),
+                },
+                Some(b1),
+            )
+            .unwrap();
 
-        assert_eq!(find_geometry("a", &geometries, &geometry_names), Some(a));
-        assert_eq!(find_geometry("b", &geometries, &geometry_names), Some(b));
-        assert_eq!(
-            find_geometry("b.b1", &geometries, &geometry_names),
-            Some(b1)
-        );
-        assert_eq!(
-            find_geometry("b.b1.b1a", &geometries, &geometry_names),
-            Some(b1a)
-        );
+        assert_eq!(find_geometry("a", &geometries), Some(a));
+        assert_eq!(find_geometry("b", &geometries), Some(b));
+        assert_eq!(find_geometry("b.b1", &geometries), Some(b1));
+        assert_eq!(find_geometry("b.b1.b1a", &geometries), Some(b1a));
 
         // can't reference directly without parent, even though it's clear which element it would be
-        assert_eq!(find_geometry("b1", &geometries, &geometry_names), None);
-        assert_eq!(find_geometry("b1a", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("b1", &geometries), None);
+        assert_eq!(find_geometry("b1a", &geometries), None);
 
         // nonexistent elements
-        assert_eq!(find_geometry("c", &geometries, &geometry_names), None);
-        assert_eq!(find_geometry("a.c", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("c", &geometries), None);
+        assert_eq!(find_geometry("a.c", &geometries), None);
 
         // nonexistent paths, though end element exists
-        assert_eq!(find_geometry("a.a", &geometries, &geometry_names), None);
-        assert_eq!(find_geometry("c.a", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("a.a", &geometries), None);
+        assert_eq!(find_geometry("c.a", &geometries), None);
 
         // parent missing in path
-        assert_eq!(find_geometry("b1.b1a", &geometries, &geometry_names), None);
+        assert_eq!(find_geometry("b1.b1a", &geometries), None);
     }
 
     #[test]
@@ -289,10 +318,10 @@ mod tests {
 </FixtureType>
         "#;
 
-        let (problems, geometries, _geometry_names) = run_parse_geometries(ft_str);
+        let (problems, geometries) = run_parse_geometries(ft_str);
 
         assert!(problems.is_empty());
-        assert_eq!(geometries.node_count(), 4)
+        assert_eq!(geometries.graph.node_count(), 4)
     }
 
     #[test]
@@ -307,19 +336,20 @@ mod tests {
 </FixtureType>
         "#;
 
-        let (problems, geometries, _geometry_names) = run_parse_geometries(ft_str);
+        let (problems, geometries) = run_parse_geometries(ft_str);
 
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::XmlAttributeMissing { .. }));
 
-        assert_eq!(geometries.node_count(), 2);
+        assert_eq!(geometries.graph.node_count(), 2);
 
         geometries
+            .graph
             .raw_nodes()
             .iter()
             .for_each(|n| assert!(n.weight.name() != ""));
 
-        let name_of_broken_node = geometries.raw_nodes()[0].weight.name();
+        let name_of_broken_node = geometries.graph.raw_nodes()[0].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 
@@ -345,35 +375,22 @@ mod tests {
 </FixtureType>
         "#;
 
-        let (problems, geometries, _geometry_names) = run_parse_geometries(ft_str);
+        let (problems, geometries) = run_parse_geometries(ft_str);
 
         assert_eq!(problems.len(), 1);
         assert!(matches!(problems[0], Problem::DuplicateGeometryName(..)));
 
-        let name_of_broken_node = geometries.raw_nodes()[3].weight.name();
+        let name_of_broken_node = geometries.graph.raw_nodes()[3].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
     }
 
-    fn run_parse_geometries(
-        ft_str: &str,
-    ) -> (
-        Vec<Problem>,
-        Graph<GeometryType, ()>,
-        HashMap<String, NodeIndex>,
-    ) {
+    fn run_parse_geometries(ft_str: &str) -> (Vec<Problem>, Geometries) {
         let doc = roxmltree::Document::parse(ft_str).unwrap();
         let ft = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
-        let mut geometries = Graph::new();
-        let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
-        parse_geometries(
-            &mut geometries,
-            &mut geometry_names,
-            &ft,
-            &mut problems,
-            &doc,
-        );
-        (problems, geometries, geometry_names)
+        let mut geometries = Geometries::default();
+        parse_geometries(&mut geometries, &ft, &mut problems, &doc);
+        (problems, geometries)
     }
 
     fn assert_is_uuid_and_not_nil(s: &str) {

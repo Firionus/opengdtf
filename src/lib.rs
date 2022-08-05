@@ -1,12 +1,9 @@
 mod errors;
 pub use errors::*;
-use petgraph::graph::NodeIndex;
-use petgraph::Graph;
 use roxmltree::Document;
 use roxmltree::TextPos;
 mod parts;
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -57,13 +54,11 @@ impl TryFrom<&str> for Gdtf {
                 })
             });
 
-        let mut geometries = Graph::new();
-        let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
+        let mut geometries = Geometries::default();
 
         match ft {
             Some(ft) => parse_geometries(
                 &mut geometries,
-                &mut geometry_names,
                 &ft,
                 &mut problems,
                 &doc,
