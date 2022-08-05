@@ -1,4 +1,4 @@
-use std::{io, path::Path};
+use std::{io, path::Path, num::ParseIntError};
 
 use roxmltree::{Document, TextPos};
 use thiserror::Error;
@@ -32,6 +32,8 @@ pub enum Problem {
     XmlNodeMissing { missing: String, parent: String, pos: TextPos },
     #[error("attribute '{attr}' missing on '{tag}' node at line {pos}")]
     XmlAttributeMissing { attr: String, tag: String, pos: TextPos },
+    #[error("attribute '{attr}' on '{tag}' at line {pos} could not be parsed as integer: {err}")]
+    InvalidInteger { attr: String, tag: String, pos: TextPos, err: ParseIntError },
     #[error("unexpected XML node '{0}' at line {1}")]
     UnexpectedXmlNode(String, TextPos),
     #[error("UUID error in '{1}' at line {2}: {0}")]
