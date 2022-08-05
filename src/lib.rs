@@ -141,7 +141,7 @@ impl ProblemAdd for Vec<Problem> {
     }
 }
 
-// TODO change to method on Node
+// TODO change to method on Node?
 fn get_string_attribute(
     n: &Node,
     attr: &str,

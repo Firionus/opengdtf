@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::{get_string_attribute, Problem};
 use crate::{node_position, ProblemAdd};
 
-#[derive(Debug, Default)] // TODO test default
+#[derive(Debug, Default)]
 pub struct Geometries {
     /// Graph representing the Geometry tree.
     ///
@@ -237,6 +237,13 @@ mod tests {
     use regex::Regex;
 
     use super::*;
+
+    #[test]
+    fn geometries_default_is_empty() {
+        let geometries = Geometries::default();
+        assert_eq!(geometries.graph.node_count(), 0);
+        assert_eq!(geometries.names.len(), 0);
+    }
 
     #[test]
     fn find_geometry_works() {
