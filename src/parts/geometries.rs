@@ -29,9 +29,7 @@ pub enum GeometryType {
 impl GeometryType {
     fn name(&self) -> &str {
         match self {
-            GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => {
-                name
-            }
+            GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => name,
         }
     }
 }
@@ -140,26 +138,22 @@ fn add_children(
                     let name = geometry_name(&n, problems, doc, geometry_names);
                     if let Some(ref_ind) = get_string_attribute(&n, "Geometry", problems, doc)
                         .and_then(|refname| {
-                            geometry_names
-                                .get(&refname)
-                                .map(|nind| (nind.to_owned(), refname.to_owned()))
-                                .or_else(|| {
-                                    problems
-                                        .addn(Problem::UnknownGeometry(refname, node_position(&n, doc)))
-                                        // TODO throws UnknownGeometry when non-top-level Geometry is referenced properly with dots... That is wrong...
-                                })
-                        })
-                        .and_then(|(ref_ind, ref_name)| {
-                            // check referenced node is top-level
-                            if geometries.edges_directed(ref_ind, Incoming).next().is_none() {
-                                // no incoming edges => top-level node is referenced
-                                Some(ref_ind)
-                            } else {
-                                problems.addn(Problem::NonTopLevelGeometryReferenced(
-                                    ref_name,
+                            if refname.contains('.') {
+                                problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
+                                    refname,
                                     node_position(&n, doc),
                                 ))
+                            } else {
+                                Some(refname)
                             }
+                        })
+                        .and_then(|refname| {
+                            find_geometry(&refname, geometries, geometry_names).or_else(|| {
+                                problems.push_then_none(Problem::UnknownGeometry(
+                                    refname,
+                                    node_position(&n, doc),
+                                ))
+                            })
                         })
                     {
                         let new_ind = geometries.add_node(GeometryType::Reference {
@@ -180,16 +174,19 @@ fn add_children(
         });
 }
 
-fn find_geometry(name: &str, geometries: &Geometries, geometry_names: &HashMap<String, NodeIndex>) -> Option<NodeIndex> {
+fn find_geometry(
+    name: &str,
+    geometries: &Geometries,
+    geometry_names: &HashMap<String, NodeIndex>,
+) -> Option<NodeIndex> {
     let mut rev_path = name.split('.').rev();
 
     rev_path
         .next()
-        .and_then(|element_name| {
-            geometry_names.get(element_name)
-        })
+        .and_then(|element_name| geometry_names.get(element_name))
         .map(|i| i.to_owned())
-        .and_then(|i| { // validate path by going backwards up the graph
+        .and_then(|i| {
+            // validate path by going backwards up the graph
             let mut current_ind = i;
             loop {
                 let mut parents = geometries.neighbors_directed(current_ind, Incoming);
@@ -201,10 +198,10 @@ fn find_geometry(name: &str, geometries: &Geometries, geometry_names: &HashMap<S
                     Some(parent_ind) => {
                         let parent_name = geometries.index(parent_ind).name();
                         if Some(parent_name) != rev_path.next() {
-                            return None
+                            return None;
                         }
                         current_ind = parent_ind;
-                    },
+                    }
                 };
                 // assert!(parents.next() == None) // Graph is tree, so each node only has one parent
             }
@@ -222,12 +219,20 @@ mod tests {
         let mut geometries: Geometries = Graph::new();
         let mut geometry_names: HashMap<String, NodeIndex> = HashMap::new();
 
-        // TODO this kind of setup should be moved to an impl Gdtf (gdtf.add_geometry(geom, parent_index)) 
+        // TODO this kind of setup should be moved to an impl Gdtf (gdtf.add_geometry(geom, parent_index))
         // together with its error handling that is currently in the parsing code
-        let a = geometries.add_node(GeometryType::Geometry { name: "a".to_owned() });
-        let b = geometries.add_node(GeometryType::Geometry { name: "b".to_owned() });
-        let b1 = geometries.add_node(GeometryType::Geometry { name: "b1".to_owned() });
-        let b1a = geometries.add_node(GeometryType::Geometry { name: "b1a".to_owned() });
+        let a = geometries.add_node(GeometryType::Geometry {
+            name: "a".to_owned(),
+        });
+        let b = geometries.add_node(GeometryType::Geometry {
+            name: "b".to_owned(),
+        });
+        let b1 = geometries.add_node(GeometryType::Geometry {
+            name: "b1".to_owned(),
+        });
+        let b1a = geometries.add_node(GeometryType::Geometry {
+            name: "b1a".to_owned(),
+        });
         geometries.add_edge(b, b1, ());
         geometries.add_edge(b1, b1a, ());
         geometry_names.insert("a".to_owned(), a);
@@ -237,8 +242,14 @@ mod tests {
 
         assert_eq!(find_geometry("a", &geometries, &geometry_names), Some(a));
         assert_eq!(find_geometry("b", &geometries, &geometry_names), Some(b));
-        assert_eq!(find_geometry("b.b1", &geometries, &geometry_names), Some(b1));
-        assert_eq!(find_geometry("b.b1.b1a", &geometries, &geometry_names), Some(b1a));
+        assert_eq!(
+            find_geometry("b.b1", &geometries, &geometry_names),
+            Some(b1)
+        );
+        assert_eq!(
+            find_geometry("b.b1.b1a", &geometries, &geometry_names),
+            Some(b1a)
+        );
 
         // can't reference directly without parent, even though it's clear which element it would be
         assert_eq!(find_geometry("b1", &geometries, &geometry_names), None);

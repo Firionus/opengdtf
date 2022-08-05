@@ -50,7 +50,7 @@ impl TryFrom<&str> for Gdtf {
             .children()
             .find(|n| n.has_tag_name("FixtureType"))
             .or_else(|| {
-                problems.addn(Problem::XmlNodeMissing {
+                problems.push_then_none(Problem::XmlNodeMissing {
                     missing: "FixtureType".to_owned(),
                     parent: "GDTF".to_owned(),
                     pos: node_position(&root_node, &doc),
@@ -77,7 +77,7 @@ impl TryFrom<&str> for Gdtf {
             fixture_type_id: ft
                 .and_then(|n| {
                     n.attribute("FixtureTypeID").or_else(|| {
-                        problems.addn(Problem::XmlAttributeMissing {
+                        problems.push_then_none(Problem::XmlAttributeMissing {
                             attr: "FixtureTypeId".to_owned(),
                             tag: "FixtureType".to_owned(),
                             pos: node_position(&n, &doc),
@@ -86,7 +86,7 @@ impl TryFrom<&str> for Gdtf {
                 })
                 .and_then(|s| match Uuid::try_from(s) {
                     Ok(v) => Some(v),
-                    Err(e) => problems.addn(Problem::UuidError(
+                    Err(e) => problems.push_then_none(Problem::UuidError(
                         e,
                         "FixtureTypeId".to_owned(),
                         ft.map(|n| node_position(&n, &doc))
@@ -100,14 +100,12 @@ impl TryFrom<&str> for Gdtf {
                     "" => None,
                     _ => match Uuid::try_from(s) {
                         Ok(v) => Some(v),
-                        Err(e) => problems.addn(
-                            Problem::UuidError(
-                                e, 
-                                "RefFT".to_owned(),
-                                ft.map(|n| node_position(&n, &doc))
-                                    .unwrap_or_else(|| TextPos::new(0, 0)),
-                            )
-                        ),
+                        Err(e) => problems.push_then_none(Problem::UuidError(
+                            e,
+                            "RefFT".to_owned(),
+                            ft.map(|n| node_position(&n, &doc))
+                                .unwrap_or_else(|| TextPos::new(0, 0)),
+                        )),
                     },
                 }),
             can_have_children: ft
@@ -115,10 +113,11 @@ impl TryFrom<&str> for Gdtf {
                 .and_then(|s| match s {
                     "Yes" => Some(true),
                     "No" => Some(false),
-                    _ => problems.addn(Problem::InvalidYesNoEnum(
+                    _ => problems.push_then_none(Problem::InvalidYesNoEnum(
                         s.to_owned(),
                         "CanHaveChildren".to_owned(),
-                        ft.map(|n| node_position(&n, &doc)).unwrap_or_else(|| TextPos::new(0,0)),
+                        ft.map(|n| node_position(&n, &doc))
+                            .unwrap_or_else(|| TextPos::new(0, 0)),
                     )),
                 })
                 .unwrap_or(true),
@@ -137,11 +136,11 @@ impl TryFrom<&str> for Gdtf {
 
 trait ProblemAdd {
     /// Push a Problem and Return None
-    fn addn<T>(&mut self, e: Problem) -> Option<T>;
+    fn push_then_none<T>(&mut self, e: Problem) -> Option<T>;
 }
 
 impl ProblemAdd for Vec<Problem> {
-    fn addn<T>(&mut self, e: Problem) -> Option<T> {
+    fn push_then_none<T>(&mut self, e: Problem) -> Option<T> {
         self.push(e);
         None
     }
@@ -156,7 +155,7 @@ fn get_string_attribute(
 ) -> Option<String> {
     n.attribute(attr)
         .or_else(|| {
-            problems.addn(Problem::XmlAttributeMissing {
+            problems.push_then_none(Problem::XmlAttributeMissing {
                 attr: attr.to_owned(),
                 tag: n.tag_name().name().to_owned(),
                 pos: node_position(n, doc),
