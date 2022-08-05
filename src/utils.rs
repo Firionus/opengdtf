@@ -9,8 +9,7 @@ use roxmltree::Node;
 use crate::node_position;
 use crate::Problem;
 
-// TODO change to method on Node?
-// TODO integrate into get_attribute?
+// TODO integrate into get_attribute
 pub(crate) fn get_string_attribute(
     n: &Node,
     attr: &str,
@@ -55,26 +54,34 @@ pub(crate) fn maybe_get_string_attribute(
 //     }
 // }
 
-pub(crate) fn get_attribute<T: FromStr>(
-    n: &Node,
-    attr: &str,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> Option<T> where
-<T as FromStr>::Err: std::error::Error + 'static {
-    let content = get_string_attribute(n, attr, problems, doc)?;
-    match content.parse::<T>() {
-        Ok(v) => Some(v),
-        Err(err) => problems.push_then_none(Problem::InvalidAttribute {
-            attr: attr.to_owned(),
-            tag: n.tag_name().name().to_owned(),
-            pos: node_position(n, doc),
-            content,
-            err: Box::new(err),
-            expected_type: type_name::<T>().to_owned(),
-        }),
+pub(crate) trait GetAttribute {
+    fn get_attribute<T: FromStr>(&self, attr: &str, problems: &mut Vec<Problem>, doc: &Document) -> Option<T> where
+    <T as FromStr>::Err: std::error::Error + 'static;
+}
+
+impl GetAttribute for Node<'_, '_> {
+    fn get_attribute<T: FromStr>(
+        &self,
+        attr: &str,
+        problems: &mut Vec<Problem>,
+        doc: &Document,
+    ) -> Option<T> where
+    <T as FromStr>::Err: std::error::Error + 'static {
+        let content = get_string_attribute(self, attr, problems, doc)?;
+        match content.parse::<T>() {
+            Ok(v) => Some(v),
+            Err(err) => problems.push_then_none(Problem::InvalidAttribute {
+                attr: attr.to_owned(),
+                tag: self.tag_name().name().to_owned(),
+                pos: node_position(self, doc),
+                content,
+                err: Box::new(err),
+                expected_type: type_name::<T>().to_owned(),
+            }),
+        }
     }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -86,8 +93,8 @@ mod tests {
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
-        assert_eq!(get_attribute(&n, "attr", &mut problems, &doc), Some(300u32));
-        assert_eq!(get_attribute::<u8>(&n, "attr", &mut problems, &doc), None);
+        assert_eq!(n.get_attribute("attr", &mut problems, &doc), Some(300u32));
+        assert_eq!(n.get_attribute::<u8>("attr", &mut problems, &doc), None);
         assert_eq!(problems.len(), 1);
     }
 
@@ -97,8 +104,8 @@ mod tests {
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
-        assert_eq!(get_attribute(&n, "pos", &mut problems, &doc), Some("not_a_number".to_string()));
-        assert_eq!(get_attribute::<i16>(&n, "pos", &mut problems, &doc), None);
+        assert_eq!(n.get_attribute("pos", &mut problems, &doc), Some("not_a_number".to_string()));
+        assert_eq!(n.get_attribute::<i16>("pos", &mut problems, &doc), None);
         assert_eq!(problems.len(), 1);
         println!("{}", problems[0]);
     }

@@ -5,7 +5,7 @@ use petgraph::{graph::NodeIndex, Directed, Graph};
 use roxmltree::{Document, Node};
 use uuid::Uuid;
 
-use crate::utils::get_attribute;
+use crate::utils::GetAttribute;
 use crate::{node_position, ProblemAdd};
 use crate::{utils::get_string_attribute, Problem};
 
@@ -242,8 +242,8 @@ fn parse_reference_offsets(
         })
     })?;
 
-    let overwrite_dmx_break = get_attribute(&last_break, "DMXBreak", problems, doc)?;
-    let overwrite_offset = get_attribute(&last_break, "DMXOffset", problems, doc)?;
+    let overwrite_dmx_break = last_break.get_attribute("DMXBreak", problems, doc)?;
+    let overwrite_offset = last_break.get_attribute("DMXOffset", problems, doc)?;
 
     let overwrite = Offset {
         dmx_break: overwrite_dmx_break,
@@ -253,8 +253,8 @@ fn parse_reference_offsets(
     let mut offsets = Offsets::new(overwrite);
 
     for element in nodes {
-        let dmx_break = get_attribute(&element, "DMXBreak", problems, doc)?;
-        let offset = get_attribute(&element, "DMXOffset", problems, doc)?;
+        let dmx_break = element.get_attribute("DMXBreak", problems, doc)?;
+        let offset = element.get_attribute("DMXOffset", problems, doc)?;
 
         if offsets.normal.contains_key(&dmx_break) {
             problems.push(Problem::DuplicateDmxBreak(
