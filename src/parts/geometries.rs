@@ -241,24 +241,22 @@ fn parse_reference_offsets(
         })
     })?;
 
-    let mut dmx_break = get_u32_attribute(&last_break, "DMXBreak", problems, doc)?;
-    let mut offset = get_u32_attribute(&last_break, "DMXOffset", problems, doc)?;
+    let overwrite_dmx_break = get_u32_attribute(&last_break, "DMXBreak", problems, doc)?;
+    let overwrite_offset = get_u32_attribute(&last_break, "DMXOffset", problems, doc)?;
 
-    let overwrite = Offset { dmx_break, offset };
+    let overwrite = Offset { dmx_break: overwrite_dmx_break, offset: overwrite_offset };
 
     let mut offsets = Offsets::new(overwrite);
 
-    loop {
-        offsets.normal.insert(dmx_break, offset); // lower breaks are overwritten by higher ones, being inserted later
-        // TODO if a break occurs twice, except in the last one defining overwrite, there should be a problem
+    for element in nodes {
+        let dmx_break = get_u32_attribute(&element, "DMXBreak", problems, doc)?;
+        let offset = get_u32_attribute(&element, "DMXOffset", problems, doc)?;
 
-        let current_element = match nodes.next() {
-            Some(e) => e,
-            None => break,
-        };
+        if offsets.normal.contains_key(&dmx_break) {
+            problems.push(Problem::DuplicateDmxBreak(dmx_break, node_position(&element, doc)));
+        }
 
-        dmx_break = get_u32_attribute(&current_element, "DMXBreak", problems, doc)?;
-        offset = get_u32_attribute(&current_element, "DMXOffset", problems, doc)?;
+        offsets.normal.insert(dmx_break, offset); // overwrite whether occupied or vacant
     }
 
     Some(offsets)
@@ -324,6 +322,24 @@ mod tests {
         let n = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
         assert_eq!(get_u32_attribute(&n, "attr", &mut problems, &doc), Some(3));
+    }
+
+    #[test]
+    fn parse_reference_offsets_duplicate_break() {
+        let xml = r#"
+<GeometryReference>
+    <Break DMXBreak="1" DMXOffset="1"/>
+    <Break DMXBreak="2" DMXOffset="2"/>
+    <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
+    <Break DMXBreak="1" DMXOffset="4"/>  <!-- This is not a duplicate break, since it occurs in the last element, which is overwrite -->
+</GeometryReference>"#;
+        let doc = roxmltree::Document::parse(xml).unwrap();
+        let n = doc.root_element();
+        let mut problems: Vec<Problem> = vec![];
+        let offsets = parse_reference_offsets(&n, &mut problems, &doc).unwrap();
+        assert_eq!(problems.len(), 1);
+        assert!(matches!(problems[0], Problem::DuplicateDmxBreak( .. )));
+        assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
     }
 
     #[test]

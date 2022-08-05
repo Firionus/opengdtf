@@ -42,6 +42,8 @@ pub enum Problem {
     InvalidYesNoEnum(String, String, TextPos),
     #[error("duplicate Geometry name '{0}' at line {1}")]
     DuplicateGeometryName(String, TextPos),
+    #[error("duplicate DMXBreak attribute '{0}' at line {1}")]
+    DuplicateDmxBreak(u32, TextPos),
     #[error("unexpected 'GeometryReference' as top-level Geometry at line {0}")]
     UnexpectedTopLevelGeometryReference(TextPos),
     #[error("Geometry '{0}' is referenced at line {1} but not found")]
