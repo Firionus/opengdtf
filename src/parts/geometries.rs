@@ -80,7 +80,7 @@ impl Geometries {
 
 #[derive(Debug)]
 pub struct Offsets {
-    normal: HashMap<u32, u32>, // dmx_break => offset
+    normal: HashMap<u16, u16>, // dmx_break => offset
     overwrite: Offset,
 }
 
@@ -95,8 +95,8 @@ impl Offsets {
 
 #[derive(Debug)]
 pub struct Offset {
-    dmx_break: u32,
-    offset: u32,
+    dmx_break: u16,
+    offset: u16,
 }
 
 #[derive(Debug)]
