@@ -1,4 +1,4 @@
-use std::{io, num::ParseIntError, path::Path};
+use std::{io, path::Path};
 
 use roxmltree::{Document, TextPos};
 use thiserror::Error;
@@ -22,7 +22,7 @@ pub enum Error {
 }
 
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
-#[derive(Error, Debug, PartialEq)]
+#[derive(Error, Debug)]
 pub enum Problem {
     #[error("missing attribute 'DataVersion' on 'GDTF' node at line {0}")]
     NoDataVersion(TextPos),
@@ -40,12 +40,14 @@ pub enum Problem {
         tag: String,
         pos: TextPos,
     },
-    #[error("attribute '{attr}' on '{tag}' at line {pos} could not be parsed as integer: {err}")]
-    InvalidInteger {
+    #[error("attribute '{attr}' on '{tag}' at line {pos} could not be parsed as {expected_type}. Value '{content}' caused error: {err}")]
+    InvalidAttribute {
         attr: String,
         tag: String,
         pos: TextPos,
-        err: ParseIntError,
+        content: String,
+        err: Box<dyn std::error::Error>,
+        expected_type: String,
     },
     #[error("unexpected XML node '{0}' at line {1}")]
     UnexpectedXmlNode(String, TextPos),
@@ -69,4 +71,16 @@ pub enum Problem {
 
 pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
     doc.text_pos_at(node.range().start)
+}
+
+pub(crate) trait ProblemAdd {
+    /// Push a Problem and Return None
+    fn push_then_none<T>(&mut self, e: Problem) -> Option<T>;
+}
+
+impl ProblemAdd for Vec<Problem> {
+    fn push_then_none<T>(&mut self, e: Problem) -> Option<T> {
+        self.push(e);
+        None
+    }
 }

@@ -1,6 +1,5 @@
 mod errors;
 pub use errors::*;
-use roxmltree::Document;
 use roxmltree::TextPos;
 mod parts;
 
@@ -10,7 +9,6 @@ use std::path::Path;
 
 use parts::gdtf_node::*;
 use parts::geometries::*;
-use roxmltree::Node;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -20,6 +18,7 @@ pub struct Gdtf {
     pub fixture_type_id: Uuid,
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
+
     // Metadata
     pub name: String,
     pub short_name: String,
@@ -29,7 +28,7 @@ pub struct Gdtf {
 
     pub geometries: Geometries,
 
-    // Library Related
+    // Parsing
     pub problems: Vec<Problem>,
 }
 
@@ -111,11 +110,11 @@ impl TryFrom<&str> for Gdtf {
                     )),
                 })
                 .unwrap_or(true),
-            name: maybe_get_string_attribute(&ft, "Name", &mut problems, &doc),
-            short_name: maybe_get_string_attribute(&ft, "ShortName", &mut problems, &doc),
-            long_name: maybe_get_string_attribute(&ft, "LongName", &mut problems, &doc),
-            description: maybe_get_string_attribute(&ft, "Description", &mut problems, &doc),
-            manufacturer: maybe_get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
+            name: utils::maybe_get_string_attribute(&ft, "Name", &mut problems, &doc),
+            short_name: utils::maybe_get_string_attribute(&ft, "ShortName", &mut problems, &doc),
+            long_name: utils::maybe_get_string_attribute(&ft, "LongName", &mut problems, &doc),
+            description: utils::maybe_get_string_attribute(&ft, "Description", &mut problems, &doc),
+            manufacturer: utils::maybe_get_string_attribute(&ft, "Manufacturer", &mut problems, &doc),
             geometries,
             problems,
         };
@@ -124,45 +123,7 @@ impl TryFrom<&str> for Gdtf {
     }
 }
 
-trait ProblemAdd {
-    /// Push a Problem and Return None
-    fn push_then_none<T>(&mut self, e: Problem) -> Option<T>;
-}
-
-impl ProblemAdd for Vec<Problem> {
-    fn push_then_none<T>(&mut self, e: Problem) -> Option<T> {
-        self.push(e);
-        None
-    }
-}
-
-// TODO change to method on Node?
-fn get_string_attribute(
-    n: &Node,
-    attr: &str,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> Option<String> {
-    n.attribute(attr)
-        .or_else(|| {
-            problems.push_then_none(Problem::XmlAttributeMissing {
-                attr: attr.to_owned(),
-                tag: n.tag_name().name().to_owned(),
-                pos: node_position(n, doc),
-            })
-        })
-        .map(|s| s.to_owned())
-}
-
-fn maybe_get_string_attribute(
-    nopt: &Option<Node>,
-    attr: &str,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> String {
-    nopt.and_then(|n| get_string_attribute(&n, attr, problems, doc))
-        .unwrap_or_else(|| "".to_owned())
-}
+mod utils;
 
 impl TryFrom<&String> for Gdtf {
     type Error = Error;

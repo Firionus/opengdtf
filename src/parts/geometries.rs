@@ -5,8 +5,9 @@ use petgraph::{graph::NodeIndex, Directed, Graph};
 use roxmltree::{Document, Node};
 use uuid::Uuid;
 
-use crate::{get_string_attribute, Problem};
+use crate::utils::get_attribute;
 use crate::{node_position, ProblemAdd};
+use crate::{utils::get_string_attribute, Problem};
 
 #[derive(Debug, Default)]
 pub struct Geometries {
@@ -241,8 +242,8 @@ fn parse_reference_offsets(
         })
     })?;
 
-    let overwrite_dmx_break = get_u32_attribute(&last_break, "DMXBreak", problems, doc)?;
-    let overwrite_offset = get_u32_attribute(&last_break, "DMXOffset", problems, doc)?;
+    let overwrite_dmx_break = get_attribute(&last_break, "DMXBreak", problems, doc)?;
+    let overwrite_offset = get_attribute(&last_break, "DMXOffset", problems, doc)?;
 
     let overwrite = Offset {
         dmx_break: overwrite_dmx_break,
@@ -252,8 +253,8 @@ fn parse_reference_offsets(
     let mut offsets = Offsets::new(overwrite);
 
     for element in nodes {
-        let dmx_break = get_u32_attribute(&element, "DMXBreak", problems, doc)?;
-        let offset = get_u32_attribute(&element, "DMXOffset", problems, doc)?;
+        let dmx_break = get_attribute(&element, "DMXBreak", problems, doc)?;
+        let offset = get_attribute(&element, "DMXOffset", problems, doc)?;
 
         if offsets.normal.contains_key(&dmx_break) {
             problems.push(Problem::DuplicateDmxBreak(
@@ -266,23 +267,6 @@ fn parse_reference_offsets(
     }
 
     Some(offsets)
-}
-
-fn get_u32_attribute(
-    n: &Node,
-    attr: &str,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> Option<u32> {
-    match get_string_attribute(n, attr, problems, doc)?.parse() {
-        Ok(v) => Some(v),
-        Err(err) => problems.push_then_none(Problem::InvalidInteger {
-            attr: attr.to_owned(),
-            tag: n.tag_name().name().to_owned(),
-            pos: node_position(n, doc),
-            err,
-        }),
-    }
 }
 
 fn find_geometry(name: &str, geometries: &Geometries) -> Option<NodeIndex> {
@@ -320,15 +304,6 @@ mod tests {
     use regex::Regex;
 
     use super::*;
-
-    #[test]
-    fn get_u32_attribute_works() {
-        let xml = r#"<tag attr="3" />"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        let n = doc.root_element();
-        let mut problems: Vec<Problem> = vec![];
-        assert_eq!(get_u32_attribute(&n, "attr", &mut problems, &doc), Some(3));
-    }
 
     #[test]
     fn parse_reference_offsets_duplicate_break() {
