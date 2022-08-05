@@ -21,9 +21,9 @@ pub struct Geometries {
 impl Geometries {
     /// Adds a Geometry and returns the NodeIndex of the new geometry
     ///
-    /// If you want to add a top-level geometry, set parent_index to `None`.
-    ///
-    /// If a geometry of the same name is already present, does not do anything and returns `None`.
+    /// If you want to add a top-level geometry, set parent_index to `None`. If
+    /// a geometry of the same name is already present, does not do anything and
+    /// returns `None`.
     pub fn add(
         &mut self,
         geometry: GeometryType,
@@ -41,6 +41,40 @@ impl Geometries {
         };
         self.names.insert(new_name, new_ind);
         Some(new_ind)
+    }
+
+    /// Find the NodeIndex of a Geometry by its Name.
+    ///
+    /// Name is the GDTF-typical dot-separated path like
+    /// "Parent.Child.Grandchild".
+    pub fn find_path(&self, path: &str) -> Option<NodeIndex> {
+        let mut rev_path = path.split('.').rev();
+
+        rev_path
+            .next()
+            .and_then(|element_name| self.names.get(element_name))
+            .map(|i| i.to_owned())
+            .and_then(|i| {
+                // validate path by going backwards up the graph
+                let mut current_ind = i;
+                loop {
+                    let mut parents = self.graph.neighbors_directed(current_ind, Incoming);
+                    match parents.next() {
+                        None => match rev_path.next() {
+                            None => break Some(i),
+                            Some(_parent_name) => break None,
+                        },
+                        Some(parent_ind) => {
+                            let parent_name = self.graph[parent_ind].name();
+                            if Some(parent_name) != rev_path.next() {
+                                return None;
+                            }
+                            current_ind = parent_ind;
+                        }
+                    };
+                    // assert!(parents.next() == None) // Graph is tree, so each node only has one parent
+                }
+            })
     }
 }
 
@@ -198,7 +232,7 @@ fn add_children(
                             }
                         })
                         .and_then(|refname| {
-                            find_geometry(&refname, geometries).or_else(|| {
+                            geometries.find_path(&refname).or_else(|| {
                                 problems.push_then_none(Problem::UnknownGeometry(
                                     refname,
                                     node_position(&n, doc),
@@ -269,36 +303,6 @@ fn parse_reference_offsets(
     }
 
     Some(offsets)
-}
-
-fn find_geometry(name: &str, geometries: &Geometries) -> Option<NodeIndex> {
-    let mut rev_path = name.split('.').rev();
-
-    rev_path
-        .next()
-        .and_then(|element_name| geometries.names.get(element_name))
-        .map(|i| i.to_owned())
-        .and_then(|i| {
-            // validate path by going backwards up the graph
-            let mut current_ind = i;
-            loop {
-                let mut parents = geometries.graph.neighbors_directed(current_ind, Incoming);
-                match parents.next() {
-                    None => match rev_path.next() {
-                        None => break Some(i),
-                        Some(_parent_name) => break None,
-                    },
-                    Some(parent_ind) => {
-                        let parent_name = geometries.graph[parent_ind].name();
-                        if Some(parent_name) != rev_path.next() {
-                            return None;
-                        }
-                        current_ind = parent_ind;
-                    }
-                };
-                // assert!(parents.next() == None) // Graph is tree, so each node only has one parent
-            }
-        })
 }
 
 #[cfg(test)]
@@ -380,25 +384,25 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(find_geometry("a", &geometries), Some(a));
-        assert_eq!(find_geometry("b", &geometries), Some(b));
-        assert_eq!(find_geometry("b.b1", &geometries), Some(b1));
-        assert_eq!(find_geometry("b.b1.b1a", &geometries), Some(b1a));
+        assert_eq!(geometries.find_path("a"), Some(a));
+        assert_eq!(geometries.find_path("b"), Some(b));
+        assert_eq!(geometries.find_path("b.b1"), Some(b1));
+        assert_eq!(geometries.find_path("b.b1.b1a"), Some(b1a));
 
         // can't reference directly without parent, even though it's clear which element it would be
-        assert_eq!(find_geometry("b1", &geometries), None);
-        assert_eq!(find_geometry("b1a", &geometries), None);
+        assert_eq!(geometries.find_path("b1"), None);
+        assert_eq!(geometries.find_path("b1a"), None);
 
         // nonexistent elements
-        assert_eq!(find_geometry("c", &geometries), None);
-        assert_eq!(find_geometry("a.c", &geometries), None);
+        assert_eq!(geometries.find_path("c"), None);
+        assert_eq!(geometries.find_path("a.c"), None);
 
         // nonexistent paths, though end element exists
-        assert_eq!(find_geometry("a.a", &geometries), None);
-        assert_eq!(find_geometry("c.a", &geometries), None);
+        assert_eq!(geometries.find_path("a.a"), None);
+        assert_eq!(geometries.find_path("c.a"), None);
 
         // parent missing in path
-        assert_eq!(find_geometry("b1.b1a", &geometries), None);
+        assert_eq!(geometries.find_path("b1.b1a"), None);
     }
 
     #[test]

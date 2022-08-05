@@ -15,6 +15,10 @@ pub(crate) trait GetAttribute {
 }
 
 impl GetAttribute for Node<'_, '_> {
+    /// Get the value of an XML attribute and parse it to the output type `T`. 
+    /// 
+    /// If the attribute is missing or it can't be parsed to `T`, a `Problem` is
+    /// pushed onto `problems and `None` is returned. 
     fn get_attribute<T: FromStr>(
         &self,
         attr: &str,
