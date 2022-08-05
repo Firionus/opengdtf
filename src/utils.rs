@@ -68,6 +68,5 @@ mod tests {
         assert_eq!(n.get_attribute("pos", &mut problems, &doc), Some("not_a_number".to_string()));
         assert_eq!(n.get_attribute::<i16>("pos", &mut problems, &doc), None);
         assert_eq!(problems.len(), 1);
-        println!("{}", problems[0]);
     }
 }

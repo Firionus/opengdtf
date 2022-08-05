@@ -14,7 +14,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct Gdtf {
     // File Information
-    pub data_version: String, // TODO Let's be honest, this should be an enum
+    pub data_version: DataVersion,
     pub fixture_type_id: Uuid,
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
@@ -103,7 +103,7 @@ impl TryFrom<&str> for Gdtf {
 
             gdtf.ref_ft = ft
                 .attribute("RefFT")
-                // no handling if missing, I don't think it's important to have it present when empty
+                // no handling if missing, I don't think it's important to have the node present when the value is empty
                 .and_then(|s| match s {
                     "" => None,
                     _ => match Uuid::try_from(s) {
@@ -184,7 +184,7 @@ impl TryFrom<&Path> for Gdtf {
 mod tests {
     use std::path::Path;
 
-    use crate::{errors::Error, Gdtf};
+    use crate::{errors::Error, Gdtf, parts::gdtf_node::DataVersion};
 
     #[test]
     fn data_version_parsing() {
@@ -192,7 +192,7 @@ mod tests {
             "test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
         );
         let gdtf = Gdtf::try_from(path).unwrap();
-        assert_eq!(gdtf.data_version, "1.1");
+        assert_eq!(gdtf.data_version, DataVersion::V1_1);
     }
 
     #[test]
