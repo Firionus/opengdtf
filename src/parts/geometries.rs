@@ -1,6 +1,7 @@
 use std::collections::hash_map::Entry::Vacant;
 use std::collections::HashMap;
 
+use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 use roxmltree::{Document, Node};
 use uuid::Uuid;
@@ -46,6 +47,16 @@ impl Geometries {
     /// Find the NodeIndex of a Geometry by its unique `Name`.
     pub fn find(&self, name: &str) -> Option<NodeIndex> {
         self.names.get(name).map(|i| i.to_owned())
+    }
+
+    /// Checks if the Geometry with given `NodeIndex` `i` is a top-level geometry.
+    ///
+    /// If geometry with index `i` doesn't exist, `true` is returned.
+    pub fn is_top_level(&self, i: NodeIndex) -> bool {
+        match self.graph.edges_directed(i, Incoming).next() {
+            None => true,
+            Some(_) => false,
+        }
     }
 }
 
@@ -167,6 +178,10 @@ fn geometry_name(
 
     if geometry_names.contains_key(&name) {
         problems.push(Problem::DuplicateGeometryName(
+            // TODO GDTF Share contains files with duplicate Geometry names, e.g. Robe Tetra 2
+            // It seems like "Unique Geometry Name" was only applied relative to a top-level Geometry of a certain DMX Mode?
+            // Nowadays, the builder seems to disallow duplicate Geometry Names
+            // if you try entering them, but doesn't complain about legacy files.
             name.to_owned(),
             node_position(n, doc),
         ));
@@ -204,25 +219,22 @@ fn add_children(
                     let ref_ind = n
                         .parse_required_attribute::<String>("Geometry", problems, doc)
                         .and_then(|refname| {
-                            if refname.contains('.') {
-                                problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
-                                    // TODO this doesn't work, as Geometries are NEVER referenced with a dot in the
-                                    // path, so we have to check top-level reference separately
-                                    // TODO write a test for this...
-                                    refname,
-                                    node_position(&n, doc),
-                                ))
-                            } else {
-                                Some(refname)
-                            }
-                        })
-                        .and_then(|refname| {
                             geometries.find(&refname).or_else(|| {
                                 problems.push_then_none(Problem::UnknownGeometry(
                                     refname,
                                     node_position(&n, doc),
                                 ))
                             })
+                        })
+                        .and_then(|i| {
+                            if !geometries.is_top_level(i) {
+                                problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
+                                    geometries.graph[i].name().to_owned(),
+                                    node_position(&n, doc),
+                                ))
+                            } else {
+                                Some(i)
+                            }
                         });
                     let offsets = parse_reference_offsets(&n, problems, doc);
 
@@ -288,6 +300,8 @@ fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Documen
 
 #[cfg(test)]
 mod tests {
+    use std::ops::Not;
+
     use regex::Regex;
 
     use super::*;
@@ -576,6 +590,33 @@ mod tests {
 
         let name_of_broken_node = geometries.graph.raw_nodes()[3].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
+    }
+
+    #[test]
+    fn geometry_reference_to_non_top_level_geometry() {
+        let ft_str = r#"
+<FixtureType>
+    <Geometries>
+        <Geometry Name="Main 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+            <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+        </Geometry>
+        <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}" />
+        </Geometry>
+    </Geometries>
+</FixtureType>
+        "#;
+
+        let (problems, geometries) = run_parse_geometries(ft_str);
+
+        assert_eq!(problems.len(), 1);
+        assert!(matches!(
+            problems[0],
+            Problem::NonTopLevelGeometryReferenced(..)
+        ));
+
+        assert_eq!(geometries.graph.node_count(), 3);
+        assert!(geometries.names.contains_key("Element 1").not());
     }
 
     fn run_parse_geometries(ft_str: &str) -> (Vec<Problem>, Geometries) {
