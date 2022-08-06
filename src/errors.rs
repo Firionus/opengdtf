@@ -21,6 +21,12 @@ pub enum Error {
     DescriptionXmlReadError(io::Error),
 }
 
+// TODO Do all of these Problems indicate what action was taken? Like "Renamed to
+// 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we
+// might have different actions depending on the context, e.g. with
+// XmlAttributeMissing, sometimes we abort parsing an element, sometimes we
+// insert a default, sometimes we indicate missing, ...
+
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug)]
 pub enum Problem {
