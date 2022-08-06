@@ -65,7 +65,7 @@ impl Offsets {
 
 #[derive(Debug)]
 pub struct Offset {
-    dmx_break: u16, // TODO 0 disallowed
+    dmx_break: u16, // TODO 0 disallowed, is there an upper limit on breaks?
     offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
@@ -194,6 +194,9 @@ fn add_children(
                         .and_then(|refname| {
                             if refname.contains('.') {
                                 problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
+                                    // TODO this doesn't work, as Geometries are NEVER referenced with a dot in the 
+                                    // path, so we have to check top-level reference separately
+                                    // TODO write a test for this...
                                     refname,
                                     node_position(&n, doc),
                                 ))
@@ -242,6 +245,14 @@ fn parse_reference_offsets(
 
     let last_break = nodes.next().or_else(|| {
         problems.push_then_none(Problem::XmlNodeMissing {
+            // TODO the number of required Break children of a GeometryReference depends on the channels that reference it
+            // (see standard for that)
+            // in fact, Overwrite only needs to be defined if there's a channel that needs it
+            // You can have a GeometryReference without Break children if there is no channel that 
+            // references the referenced Geometry. The Robe Tetra 2 is provided as example in the test folder.
+
+            // idea: just parse breaks into a vector and provide overwrite as method that defaults to last element in vec or errors if vec empty
+            // TODO there's already an intergration test, write a unit test
             missing: "Break".to_owned(),
             parent: "GeometryReference".to_owned(),
             pos: node_position(&n, doc),

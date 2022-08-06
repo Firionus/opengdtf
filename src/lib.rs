@@ -194,12 +194,23 @@ mod tests {
     use crate::{errors::Error, parts::data_version::DataVersion, Gdtf};
 
     #[test]
-    fn data_version_parsing() {
+    fn channel_layout_test() {
         let path = Path::new(
             "test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
         );
         let gdtf = Gdtf::try_from(path).unwrap();
         assert_eq!(gdtf.data_version, DataVersion::V1_1);
+        assert!(gdtf.problems.is_empty());
+    }
+
+    #[test]
+    fn robe_tetra2() {
+        let path = Path::new(
+            "test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf",
+        );
+        let gdtf = Gdtf::try_from(path).unwrap();
+        assert_eq!(gdtf.data_version, DataVersion::V1_1);
+        assert!(gdtf.problems.is_empty());
     }
 
     #[test]
