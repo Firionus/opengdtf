@@ -9,6 +9,7 @@ use std::path::Path;
 
 use parts::data_version::*;
 use parts::geometries::*;
+use parts::dmx_modes::*;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -28,6 +29,8 @@ pub struct Gdtf {
 
     pub geometries: Geometries,
 
+    pub dmx_modes: Vec<DmxMode>,
+
     // Parsing
     pub problems: Vec<Problem>,
 }
@@ -45,6 +48,7 @@ impl Default for Gdtf {
             manufacturer: Default::default(),
             description: Default::default(),
             geometries: Default::default(),
+            dmx_modes: Default::default(),
             problems: Default::default(),
         }
     }

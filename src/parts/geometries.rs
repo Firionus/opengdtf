@@ -80,7 +80,7 @@ impl Geometries {
 
 #[derive(Debug)]
 pub struct Offsets {
-    normal: HashMap<u16, u16>, // dmx_break => offset
+    normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
     overwrite: Offset,
 }
 
@@ -95,8 +95,8 @@ impl Offsets {
 
 #[derive(Debug)]
 pub struct Offset {
-    dmx_break: u16,
-    offset: u16,
+    dmx_break: u16, // TODO 0 disallowed
+    offset: u16, // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
 #[derive(Debug)]
