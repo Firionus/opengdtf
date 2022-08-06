@@ -191,7 +191,7 @@ impl TryFrom<&Path> for Gdtf {
 mod tests {
     use std::path::Path;
 
-    use crate::{errors::Error, parts::data_version::DataVersion, Gdtf};
+    use super::*;
 
     #[test]
     fn channel_layout_test() {
@@ -204,13 +204,19 @@ mod tests {
     }
 
     #[test]
-    fn robe_tetra2() {
+    fn robe_tetra2_slightly_broken() {
         let path = Path::new(
             "test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf",
         );
         let gdtf = Gdtf::try_from(path).unwrap();
         assert_eq!(gdtf.data_version, DataVersion::V1_1);
-        assert!(gdtf.problems.is_empty());
+        // Problems with duplicate Geometry Names
+        assert_eq!(gdtf.problems.len(), 18);
+        gdtf.problems.iter().for_each(|prob| {
+            assert!(matches!(prob, Problem::DuplicateGeometryName( .. )))
+        });
+        // TODO assert all channels properly find their geometries even with
+        // duplicate geometry names
     }
 
     #[test]
