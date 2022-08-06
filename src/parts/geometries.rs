@@ -1,3 +1,4 @@
+use std::collections::hash_map::Entry::Vacant;
 use std::collections::HashMap;
 
 use petgraph::{graph::NodeIndex, Directed, Graph};
@@ -48,22 +49,33 @@ impl Geometries {
     }
 }
 
-#[derive(Debug)]
+// TODO When Channel parsing is implemented, there needs to be a validation that
+// each `Offsets` in a `GeometryReference` contains the breaks required by
+// channels operating on the referenced geometry. No more breaks are allowed to
+// be serialized (see GDTF 1.2 page 39), but I think having them in the struct
+// isn't bad.
+#[derive(Debug, PartialEq)]
 pub struct Offsets {
     normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
-    overwrite: Offset,
+    overwrite: Option<Offset>,
 }
 
 impl Offsets {
-    pub fn new(overwrite: Offset) -> Self {
+    pub fn new() -> Self {
         Offsets {
             normal: HashMap::new(),
-            overwrite,
+            overwrite: None,
         }
     }
 }
 
-#[derive(Debug)]
+impl Default for Offsets {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Offset {
     dmx_break: u16, // TODO 0 disallowed, is there an upper limit on breaks?
     offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
@@ -194,7 +206,7 @@ fn add_children(
                         .and_then(|refname| {
                             if refname.contains('.') {
                                 problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
-                                    // TODO this doesn't work, as Geometries are NEVER referenced with a dot in the 
+                                    // TODO this doesn't work, as Geometries are NEVER referenced with a dot in the
                                     // path, so we have to check top-level reference separately
                                     // TODO write a test for this...
                                     refname,
@@ -214,7 +226,7 @@ fn add_children(
                         });
                     let offsets = parse_reference_offsets(&n, problems, doc);
 
-                    if let (Some(ref_ind), Some(offsets)) = (ref_ind, offsets) {
+                    if let Some(ref_ind) = ref_ind {
                         let geometry = GeometryType::Reference {
                             name,
                             offsets,
@@ -233,57 +245,45 @@ fn add_children(
         });
 }
 
-fn parse_reference_offsets(
-    &n: &Node,
-    problems: &mut Vec<Problem>,
-    doc: &Document,
-) -> Option<Offsets> {
+fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Document) -> Offsets {
     let mut nodes = n
         .children()
         .filter(|n| n.tag_name().name() == "Break")
-        .rev(); // start at last element, which we assume provides the Overwrite offset
+        .rev(); // start at last element, which provides the Overwrite offset if present
 
-    let last_break = nodes.next().or_else(|| {
-        problems.push_then_none(Problem::XmlNodeMissing {
-            // TODO the number of required Break children of a GeometryReference depends on the channels that reference it
-            // (see standard for that)
-            // in fact, Overwrite only needs to be defined if there's a channel that needs it
-            // You can have a GeometryReference without Break children if there is no channel that 
-            // references the referenced Geometry. The Robe Tetra 2 is provided as example in the test folder.
+    let mut offsets = Offsets::new();
 
-            // idea: just parse breaks into a vector and provide overwrite as method that defaults to last element in vec or errors if vec empty
-            // TODO there's already an intergration test, write a unit test
-            missing: "Break".to_owned(),
-            parent: "GeometryReference".to_owned(),
-            pos: node_position(&n, doc),
-        })
-    })?;
-
-    let overwrite_dmx_break = last_break.parse_required_attribute("DMXBreak", problems, doc)?;
-    let overwrite_offset = last_break.parse_required_attribute("DMXOffset", problems, doc)?;
-
-    let overwrite = Offset {
-        dmx_break: overwrite_dmx_break,
-        offset: overwrite_offset,
-    };
-
-    let mut offsets = Offsets::new(overwrite);
+    nodes.next().and_then(|last_break| {
+        let dmx_break = last_break.parse_required_attribute("DMXBreak", problems, doc)?;
+        let offset = last_break.parse_required_attribute("DMXOffset", problems, doc)?;
+        offsets.overwrite = Some(Offset { dmx_break, offset });
+        Some(())
+    });
 
     for element in nodes {
-        let dmx_break = element.parse_required_attribute("DMXBreak", problems, doc)?;
-        let offset = element.parse_required_attribute("DMXOffset", problems, doc)?;
+        if let (Some(dmx_break), Some(offset)) = (
+            element.parse_required_attribute("DMXBreak", problems, doc),
+            element.parse_required_attribute("DMXOffset", problems, doc),
+        ) {
+            if offsets.normal.contains_key(&dmx_break) {
+                problems.push(Problem::DuplicateDmxBreak(
+                    dmx_break,
+                    node_position(&element, doc),
+                ));
+            }
 
-        if offsets.normal.contains_key(&dmx_break) {
-            problems.push(Problem::DuplicateDmxBreak(
-                dmx_break,
-                node_position(&element, doc),
-            ));
-        }
-
-        offsets.normal.insert(dmx_break, offset); // overwrite whether occupied or vacant
+            offsets.normal.insert(dmx_break, offset); // overwrite whether occupied or vacant
+        };
     }
 
-    Some(offsets)
+    // add overwrite to normal if break not present
+    if let Some(Offset { dmx_break, offset }) = offsets.overwrite {
+        if let Vacant(entry) = offsets.normal.entry(dmx_break) {
+            entry.insert(offset);
+        }
+    }
+
+    offsets
 }
 
 #[cfg(test)]
@@ -292,33 +292,123 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn parse_reference_offsets_duplicate_break() {
-        let xml = r#"
-<GeometryReference>
-    <Break DMXBreak="1" DMXOffset="1"/>
-    <Break DMXBreak="2" DMXOffset="2"/>
-    <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
-    <Break DMXBreak="1" DMXOffset="4"/>  <!-- This is not a duplicate break, since it occurs in the last element, which is overwrite -->
-</GeometryReference>"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        let n = doc.root_element();
-        let mut problems: Vec<Problem> = vec![];
-        let offsets = parse_reference_offsets(&n, &mut problems, &doc).unwrap();
-        assert_eq!(problems.len(), 1);
-        assert!(matches!(problems[0], Problem::DuplicateDmxBreak(..)));
-        assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
-    }
+    #[cfg(test)]
+    mod parse_reference_offsets {
+        use super::*;
 
-    #[test]
-    fn reference_offsets() {
-        let offsets = Offsets::new(Offset {
-            dmx_break: 1,
-            offset: 1,
-        });
-        assert_eq!(offsets.normal.len(), 0);
-        assert_eq!(offsets.overwrite.dmx_break, 1);
-        assert_eq!(offsets.overwrite.offset, 1);
+        #[test]
+        fn basic_test() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="1"/>
+        <Break DMXBreak="2" DMXOffset="2"/>
+        <Break DMXBreak="1" DMXOffset="4"/>
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 0);
+            assert_eq!(
+                offsets.overwrite,
+                Some(Offset {
+                    dmx_break: 1,
+                    offset: 4
+                })
+            );
+            assert_eq!(offsets.normal.len(), 2);
+            assert_eq!(offsets.normal[&1], 1);
+            assert_eq!(offsets.normal[&2], 2);
+        }
+
+        #[test]
+        fn non_overlapping_break_overwrite() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="6"/>
+        <Break DMXBreak="2" DMXOffset="5"/>
+        <Break DMXBreak="3" DMXOffset="4"/>
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 0);
+            assert_eq!(
+                offsets.overwrite,
+                Some(Offset {
+                    dmx_break: 3,
+                    offset: 4
+                })
+            );
+            assert_eq!(offsets.normal.len(), 3);
+            assert_eq!(offsets.normal[&1], 6);
+            assert_eq!(offsets.normal[&2], 5);
+            assert_eq!(offsets.normal[&3], 4);
+        }
+
+        #[test]
+        fn must_not_skip_nodes_around_bad_one() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="6"/>
+        <Break MissingDMXBreak="2" DMXOffset="5"/>
+        <Break DMXBreak="3" DMXOffset="4"/>
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 1);
+            assert_eq!(
+                offsets.overwrite,
+                Some(Offset {
+                    dmx_break: 3,
+                    offset: 4
+                })
+            );
+            assert_eq!(offsets.normal.len(), 2);
+            assert_eq!(offsets.normal[&1], 6);
+            assert_eq!(offsets.normal[&3], 4);
+        }
+
+        #[test]
+        fn handles_broken_overwrite() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="6"/>
+        <Break DMXBreak="2" DMXOffset="5"/>
+        <Break MissingDMXBreak="3" DMXOffset="4"/>
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 1);
+            assert_eq!(offsets.overwrite, None);
+            assert_eq!(offsets.normal.len(), 2);
+            assert_eq!(offsets.normal[&1], 6);
+            assert_eq!(offsets.normal[&2], 5);
+        }
+
+        #[test]
+        fn duplicate_break() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="1"/>
+        <Break DMXBreak="2" DMXOffset="2"/>
+        <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
+        <Break DMXBreak="1" DMXOffset="4"/>  <!-- This is not a duplicate break, since it occurs in the last element, which is overwrite -->
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 1);
+            assert!(matches!(problems[0], Problem::DuplicateDmxBreak(..)));
+            assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
+        }
+
+        #[test]
+        fn empty_reference_offsets() {
+            let xml = r#"<GeometryReference />"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 0);
+            assert_eq!(offsets, Offsets::new());
+        }
+
+        fn run_parse_reference_offsets(xml: &str) -> (Vec<Problem>, Offsets) {
+            let doc = roxmltree::Document::parse(xml).unwrap();
+            let n = doc.root_element();
+            let mut problems: Vec<Problem> = vec![];
+            let offsets = parse_reference_offsets(&n, &mut problems, &doc);
+            (problems, offsets)
+        }
     }
 
     #[test]
@@ -410,8 +500,13 @@ mod tests {
         } = element_2
         {
             assert_eq!(name, "Element 2");
-            assert_eq!(offsets.overwrite.dmx_break, 1);
-            assert_eq!(offsets.overwrite.offset, 2);
+            assert_eq!(
+                offsets.overwrite,
+                Some(Offset {
+                    dmx_break: 1,
+                    offset: 2
+                })
+            );
             assert_eq!(offsets.normal[&1], 3);
             assert_eq!(offsets.normal[&2], 4);
             assert_eq!(
