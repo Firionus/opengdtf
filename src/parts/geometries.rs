@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 use roxmltree::{Document, Node};
 use uuid::Uuid;
@@ -43,38 +42,9 @@ impl Geometries {
         Some(new_ind)
     }
 
-    /// Find the NodeIndex of a Geometry by its Name.
-    ///
-    /// Name is the GDTF-typical dot-separated path like
-    /// "Parent.Child.Grandchild".
-    pub fn find_path(&self, path: &str) -> Option<NodeIndex> {
-        let mut rev_path = path.split('.').rev();
-
-        rev_path
-            .next()
-            .and_then(|element_name| self.names.get(element_name))
-            .map(|i| i.to_owned())
-            .and_then(|i| {
-                // validate path by going backwards up the graph
-                let mut current_ind = i;
-                loop {
-                    let mut parents = self.graph.neighbors_directed(current_ind, Incoming);
-                    match parents.next() {
-                        None => match rev_path.next() {
-                            None => break Some(i),
-                            Some(_parent_name) => break None,
-                        },
-                        Some(parent_ind) => {
-                            let parent_name = self.graph[parent_ind].name();
-                            if Some(parent_name) != rev_path.next() {
-                                return None;
-                            }
-                            current_ind = parent_ind;
-                        }
-                    };
-                    // assert!(parents.next() == None) // Graph is tree, so each node only has one parent
-                }
-            })
+    /// Find the NodeIndex of a Geometry by its unique `Name`.
+    pub fn find(&self, name: &str) -> Option<NodeIndex> {
+        self.names.get(name).map(|i| i.to_owned())
     }
 }
 
@@ -232,7 +202,7 @@ fn add_children(
                             }
                         })
                         .and_then(|refname| {
-                            geometries.find_path(&refname).or_else(|| {
+                            geometries.find(&refname).or_else(|| {
                                 problems.push_then_none(Problem::UnknownGeometry(
                                     refname,
                                     node_position(&n, doc),
@@ -384,25 +354,14 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(geometries.find_path("a"), Some(a));
-        assert_eq!(geometries.find_path("b"), Some(b));
-        assert_eq!(geometries.find_path("b.b1"), Some(b1));
-        assert_eq!(geometries.find_path("b.b1.b1a"), Some(b1a));
-
-        // can't reference directly without parent, even though it's clear which element it would be
-        assert_eq!(geometries.find_path("b1"), None);
-        assert_eq!(geometries.find_path("b1a"), None);
+        assert_eq!(geometries.find("a"), Some(a));
+        assert_eq!(geometries.find("b"), Some(b));
+        assert_eq!(geometries.find("b1"), Some(b1));
+        assert_eq!(geometries.find("b1a"), Some(b1a));
 
         // nonexistent elements
-        assert_eq!(geometries.find_path("c"), None);
-        assert_eq!(geometries.find_path("a.c"), None);
-
-        // nonexistent paths, though end element exists
-        assert_eq!(geometries.find_path("a.a"), None);
-        assert_eq!(geometries.find_path("c.a"), None);
-
-        // parent missing in path
-        assert_eq!(geometries.find_path("b1.b1a"), None);
+        assert_eq!(geometries.find("c"), None);
+        assert_eq!(geometries.find("a.a"), None);
     }
 
     #[test]
