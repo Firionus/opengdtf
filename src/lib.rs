@@ -8,8 +8,8 @@ use std::io::Read;
 use std::path::Path;
 
 use parts::data_version::*;
-use parts::geometries::*;
 use parts::dmx_modes::*;
+use parts::geometries::*;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -69,7 +69,7 @@ impl TryFrom<&str> for Gdtf {
             .find(|n| n.has_tag_name("GDTF"))
             .ok_or(Error::NoRootNode)?;
 
-        if let Some(val) = root_node.get_attribute("DataVersion", problems, &doc) {
+        if let Some(val) = root_node.parse_required_attribute("DataVersion", problems, &doc) {
             gdtf.data_version = val;
         };
 
@@ -135,23 +135,23 @@ impl TryFrom<&str> for Gdtf {
                 gdtf.can_have_children = can_have_children;
             };
 
-            if let Some(val) = ft.get_attribute("Name", problems, &doc) {
+            if let Some(val) = ft.parse_required_attribute("Name", problems, &doc) {
                 gdtf.name = val;
             };
 
-            if let Some(val) = ft.get_attribute("ShortName", problems, &doc) {
+            if let Some(val) = ft.parse_required_attribute("ShortName", problems, &doc) {
                 gdtf.short_name = val;
             };
 
-            if let Some(val) = ft.get_attribute("LongName", problems, &doc) {
+            if let Some(val) = ft.parse_required_attribute("LongName", problems, &doc) {
                 gdtf.long_name = val;
             };
 
-            if let Some(val) = ft.get_attribute("Description", problems, &doc) {
+            if let Some(val) = ft.parse_required_attribute("Description", problems, &doc) {
                 gdtf.description = val;
             };
 
-            if let Some(val) = ft.get_attribute("Manufacturer", problems, &doc) {
+            if let Some(val) = ft.parse_required_attribute("Manufacturer", problems, &doc) {
                 gdtf.manufacturer = val;
             };
         }

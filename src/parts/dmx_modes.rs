@@ -1,4 +1,4 @@
-use petgraph::{graph::NodeIndex, Graph, Directed};
+use petgraph::{graph::NodeIndex, Directed, Graph};
 
 #[derive(Debug)]
 pub struct DmxMode {
@@ -13,11 +13,7 @@ pub struct DmxMode {
 }
 
 #[derive(Debug)]
-pub struct ChannelFunction {
-
-}
+pub struct ChannelFunction {}
 
 #[derive(Debug)]
-pub struct ModeMaster {
-    
-}
+pub struct ModeMaster {}

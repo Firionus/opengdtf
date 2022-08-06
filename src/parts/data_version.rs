@@ -23,7 +23,8 @@ mod tests {
         let mut problems: Vec<Problem> = vec![];
         let root_node = doc.root_element();
 
-        let dv: Option<DataVersion> = root_node.get_attribute("DataVersion", &mut problems, &doc);
+        let dv: Option<DataVersion> =
+            root_node.parse_required_attribute("DataVersion", &mut problems, &doc);
         assert_eq!(problems.len(), 1);
         assert_eq!(dv, None);
 
@@ -32,7 +33,8 @@ mod tests {
         let mut problems: Vec<Problem> = vec![];
         let root_node = doc.root_element();
 
-        let dv: Option<DataVersion> = root_node.get_attribute("DataVersion", &mut problems, &doc);
+        let dv: Option<DataVersion> =
+            root_node.parse_required_attribute("DataVersion", &mut problems, &doc);
         assert_eq!(problems.len(), 0);
         assert_eq!(dv, Some(DataVersion::V1_1));
         assert_eq!(format!("{}", dv.unwrap()), "1.1");

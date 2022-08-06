@@ -96,7 +96,7 @@ impl Offsets {
 #[derive(Debug)]
 pub struct Offset {
     dmx_break: u16, // TODO 0 disallowed
-    offset: u16, // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
+    offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
 #[derive(Debug)]
@@ -180,7 +180,7 @@ fn geometry_name(
     geometry_names: &HashMap<String, NodeIndex>,
 ) -> String {
     let mut name = n
-        .get_attribute("Name", problems, doc)
+        .parse_required_attribute("Name", problems, doc)
         .unwrap_or_else(|| format!("No Name {}", Uuid::new_v4()));
 
     if geometry_names.contains_key(&name) {
@@ -220,7 +220,7 @@ fn add_children(
                 "GeometryReference" => {
                     let name = geometry_name(&n, problems, doc, &geometries.names);
                     let ref_ind = n
-                        .get_attribute::<String>("Geometry", problems, doc)
+                        .parse_required_attribute::<String>("Geometry", problems, doc)
                         .and_then(|refname| {
                             if refname.contains('.') {
                                 problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
@@ -278,8 +278,8 @@ fn parse_reference_offsets(
         })
     })?;
 
-    let overwrite_dmx_break = last_break.get_attribute("DMXBreak", problems, doc)?;
-    let overwrite_offset = last_break.get_attribute("DMXOffset", problems, doc)?;
+    let overwrite_dmx_break = last_break.parse_required_attribute("DMXBreak", problems, doc)?;
+    let overwrite_offset = last_break.parse_required_attribute("DMXOffset", problems, doc)?;
 
     let overwrite = Offset {
         dmx_break: overwrite_dmx_break,
@@ -289,8 +289,8 @@ fn parse_reference_offsets(
     let mut offsets = Offsets::new(overwrite);
 
     for element in nodes {
-        let dmx_break = element.get_attribute("DMXBreak", problems, doc)?;
-        let offset = element.get_attribute("DMXOffset", problems, doc)?;
+        let dmx_break = element.parse_required_attribute("DMXBreak", problems, doc)?;
+        let offset = element.parse_required_attribute("DMXOffset", problems, doc)?;
 
         if offsets.normal.contains_key(&dmx_break) {
             problems.push(Problem::DuplicateDmxBreak(
