@@ -20,6 +20,8 @@ pub enum Error {
     #[error("'description.xml' could not be read: {0}")]
     DescriptionXmlReadError(io::Error),
 }
+// TODO Add InternalError/UnexpectedError Type for things that should not go wrong and the user
+// should open a bug report when they get itex
 
 // TODO Do all of these Problems indicate what action was taken? Like "Renamed to
 // 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we
@@ -75,6 +77,7 @@ pub enum Problem {
     NonTopLevelGeometryReferenced(String, TextPos),
 }
 
+// TODO should be method `position` on Node
 pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
     doc.text_pos_at(node.range().start)
 }

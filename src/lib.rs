@@ -32,6 +32,7 @@ pub struct Gdtf {
     pub dmx_modes: Vec<DmxMode>,
 
     // Parsing
+    // TODO should not be part of gdtf domain but of parser
     pub problems: Vec<Problem>,
 }
 

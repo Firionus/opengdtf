@@ -145,7 +145,7 @@ pub fn parse_geometries(
                 let geometry = GeometryType::Geometry { name };
                 let i = geometries
                     .add(geometry, None)
-                    .expect("Geometry Names must be unique at this point");
+                    .expect("Geometry Names must be unique at this point"); // TODO replace with Error
                 top_level_geometry_graph_indices.push(i);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
@@ -211,7 +211,7 @@ fn add_children(
                     let geometry = GeometryType::Geometry { name };
                     let i = geometries
                         .add(geometry, Some(parent_tree))
-                        .expect("Geometry Names must be unique at this point");
+                        .expect("Geometry Names must be unique at this point"); // TODO replace with error
                     add_children(&n, i, geometries, problems, doc);
                 }
                 "GeometryReference" => {
@@ -246,7 +246,7 @@ fn add_children(
                         };
                         geometries
                             .add(geometry, Some(parent_tree))
-                            .expect("Geometry Names must be unique at this point");
+                            .expect("Geometry Names must be unique at this point"); // TODO replace with error
                     };
                 }
                 tag => problems.push(Problem::UnexpectedXmlNode(
