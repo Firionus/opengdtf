@@ -12,7 +12,7 @@ pub enum Error {
     #[error("root node 'GDTF' not found")]
     NoRootNode,
     #[error("could not open file '{0}': {1}")]
-    OpenError(Box<Path>, io::Error),
+    OpenError(Box<Path>, io::Error), // TODO unused?
     #[error("zip error: {0}")]
     ZipError(#[from] ZipError),
     #[error("'description.xml' not found in GDTF zip archive: {0}")]
@@ -21,7 +21,7 @@ pub enum Error {
     DescriptionXmlReadError(io::Error),
 }
 // TODO Add InternalError/UnexpectedError Type for things that should not go wrong and the user
-// should open a bug report when they get itex
+// should open a bug report when they get it
 
 // TODO Do all of these Problems indicate what action was taken? Like "Renamed to
 // 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we
@@ -75,11 +75,6 @@ pub enum Problem {
         "Geometry '{0}' is referenced at line {1} and was expected to be top-level but wasn't"
     )]
     NonTopLevelGeometryReferenced(String, TextPos),
-}
-
-// TODO should be method `position` on Node
-pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
-    doc.text_pos_at(node.range().start)
 }
 
 pub(crate) trait ProblemAdd {

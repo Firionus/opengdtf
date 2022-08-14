@@ -1,14 +1,15 @@
 use std::any::type_name;
 use std::str::FromStr;
 
-use crate::errors::*;
 use roxmltree::Document;
 
 use roxmltree::Node;
+use roxmltree::TextPos;
 
-use crate::node_position;
-use crate::Problem;
+use super::errors::*;
 
+
+// TODO is name accurate?
 pub(crate) trait GetAttribute {
     fn parse_required_attribute<T: FromStr>(
         &self,
@@ -53,6 +54,11 @@ impl GetAttribute for Node<'_, '_> {
             }),
         }
     }
+}
+
+// TODO should be method `position` on Node
+pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
+    doc.text_pos_at(node.range().start)
 }
 
 #[cfg(test)]

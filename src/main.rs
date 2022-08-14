@@ -1,5 +1,5 @@
-use opengdtf::Gdtf;
-use std::path::Path;
+use opengdtf::{Gdtf, parse};
+use std::{path::Path, fs::File};
 
 fn main() {
     println!("This parses a GDTF file and outputs the result to the console");
@@ -13,7 +13,8 @@ fn main() {
 }
 
 fn print_gdtf(path: &Path) {
-    let gdtf = Gdtf::try_from(path).unwrap();
+    let file = File::open(path).unwrap();
+    let gdtf = parse(file).unwrap();
     println!("{:#?}", gdtf);
     gdtf.problems.iter().for_each(|problem| println!("{}", problem));
 }
