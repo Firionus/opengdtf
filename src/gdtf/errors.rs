@@ -1,1 +1,1 @@
-// TODO separate doamain errors from parser to here
+// domain errors go here

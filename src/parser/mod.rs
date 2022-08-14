@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::Gdtf;
 
-use self::{utils::{GetAttribute, node_position}, geometries::parse_geometries, errors::{Error, Problem, ProblemAdd}};
+use self::{utils::{GetAttribute, XmlPosition}, geometries::parse_geometries, errors::{Error, Problem, ProblemAdd}};
 
 #[derive(Debug)]
 pub struct ParsedGdtf {
@@ -55,7 +55,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
                 problems.push_then_none(Problem::XmlNodeMissing {
                     missing: "FixtureType".to_owned(),
                     parent: "GDTF".to_owned(),
-                    pos: node_position(&root_node, &doc),
+                    pos: root_node.position(&doc),
                 })
             });
 
@@ -70,7 +70,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
                     problems.push_then_none(Problem::XmlAttributeMissing {
                         attr: "FixtureTypeId".to_owned(),
                         tag: "FixtureType".to_owned(),
-                        pos: node_position(&ft, &doc),
+                        pos: ft.position(&doc),
                     })
                 })
                 .and_then(|s| match Uuid::try_from(s) {
@@ -78,7 +78,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
                     Err(e) => problems.push_then_none(Problem::UuidError(
                         e,
                         "FixtureTypeId".to_owned(),
-                        node_position(&ft, &doc),
+                        ft.position(&doc),
                     )),
                 })
                 .unwrap_or(Uuid::nil());
@@ -93,7 +93,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
                         Err(e) => problems.push_then_none(Problem::UuidError(
                             e,
                             "RefFT".to_owned(),
-                            node_position(&ft, &doc),
+                            ft.position(&doc),
                         )),
                     },
                 });
@@ -104,7 +104,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
                 _ => problems.push_then_none(Problem::InvalidYesNoEnum(
                     s.to_owned(),
                     "CanHaveChildren".to_owned(),
-                    node_position(&ft, &doc),
+                    ft.position(&doc),
                 )),
             }) {
                 gdtf.can_have_children = can_have_children;

@@ -38,7 +38,7 @@ impl GetAttribute for Node<'_, '_> {
             problems.push_then_none(Problem::XmlAttributeMissing {
                 attr: attr.to_owned(),
                 tag: self.tag_name().name().to_owned(),
-                pos: node_position(self, doc),
+                pos: self.position(doc),
             })
         })?;
         match content.parse::<T>() {
@@ -46,7 +46,7 @@ impl GetAttribute for Node<'_, '_> {
             Err(err) => problems.push_then_none(Problem::InvalidAttribute {
                 attr: attr.to_owned(),
                 tag: self.tag_name().name().to_owned(),
-                pos: node_position(self, doc),
+                pos: self.position(doc),
                 content: content.to_owned(),
                 err: Box::new(err),
                 expected_type: type_name::<T>().to_owned(),
@@ -55,9 +55,14 @@ impl GetAttribute for Node<'_, '_> {
     }
 }
 
-// TODO should be method `position` on Node
-pub fn node_position(node: &roxmltree::Node, doc: &Document) -> TextPos {
-    doc.text_pos_at(node.range().start)
+pub(crate) trait XmlPosition {
+    fn position(&self, doc: &Document) -> TextPos;
+}
+
+impl XmlPosition for Node<'_, '_> {
+    fn position(&self, doc: &Document) -> TextPos {
+        doc.text_pos_at(self.range().start)
+    }
 }
 
 #[cfg(test)]

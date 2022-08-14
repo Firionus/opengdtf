@@ -18,8 +18,9 @@ pub enum Error {
     #[error("'description.xml' could not be read: {0}")]
     InvalidDescriptionXml(io::Error),
 }
-// TODO Add InternalError/UnexpectedError Type for things that should not go wrong and the user
-// should open a bug report when they get it
+// TODO Add InternalError/UnexpectedError Type for things that should not go
+// wrong and the user should open a bug report when they get it (replaces
+// "expect" or "unwrap" in all asserted non-panicking cases)
 
 // TODO Do all of these Problems indicate what action was taken? Like "Renamed to
 // 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we

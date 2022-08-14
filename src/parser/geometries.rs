@@ -5,11 +5,11 @@ use petgraph::graph::NodeIndex;
 use roxmltree::{Document, Node};
 use uuid::Uuid;
 
-use super::errors::*;
+use super::{errors::*, utils::XmlPosition};
 
 use crate::geometries::{Geometries, GeometryType, Offset, Offsets};
 
-use super::utils::{node_position, GetAttribute};
+use super::utils::GetAttribute;
 
 pub fn parse_geometries(
     geometries: &mut Geometries,
@@ -23,7 +23,7 @@ pub fn parse_geometries(
             problems.push(Problem::XmlNodeMissing {
                 missing: "Geometries".to_owned(),
                 parent: "FixtureType".to_owned(),
-                pos: node_position(ft, doc),
+                pos: ft.position(doc),
             });
             return;
         }
@@ -48,11 +48,11 @@ pub fn parse_geometries(
                 top_level_geometry_graph_indices.push(i);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
-                node_position(n, doc),
+                n.position(doc),
             )),
             tag => problems.push(Problem::UnexpectedXmlNode(
                 tag.to_owned(),
-                node_position(n, doc),
+                n.position(doc),
             )),
         };
     });
@@ -82,7 +82,7 @@ fn geometry_name(
             // Nowadays, the builder seems to disallow duplicate Geometry Names
             // if you try entering them, but doesn't complain about legacy files.
             name.to_owned(),
-            node_position(n, doc),
+            n.position(doc),
         ));
         name = format!("{} {}", name, Uuid::new_v4())
     }
@@ -121,7 +121,7 @@ fn add_children(
                             geometries.find(&refname).or_else(|| {
                                 problems.push_then_none(Problem::UnknownGeometry(
                                     refname,
-                                    node_position(&n, doc),
+                                    n.position(doc),
                                 ))
                             })
                         })
@@ -129,7 +129,7 @@ fn add_children(
                             if !geometries.is_top_level(i) {
                                 problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
                                     geometries.graph[i].name().to_owned(),
-                                    node_position(&n, doc),
+                                    n.position(doc),
                                 ))
                             } else {
                                 Some(i)
@@ -151,7 +151,7 @@ fn add_children(
                 }
                 tag => problems.push(Problem::UnexpectedXmlNode(
                     tag.to_owned(),
-                    node_position(&n, doc),
+                    n.position(doc),
                 )),
             };
         });
@@ -180,7 +180,7 @@ fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Documen
             if offsets.normal.contains_key(&dmx_break) {
                 problems.push(Problem::DuplicateDmxBreak(
                     dmx_break,
-                    node_position(&element, doc),
+                    element.position(doc),
                 ));
             }
 
