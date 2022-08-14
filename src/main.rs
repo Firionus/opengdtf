@@ -1,5 +1,5 @@
-use opengdtf::{Gdtf, parse};
-use std::{path::Path, fs::File};
+use opengdtf::parse;
+use std::{fs::File, path::Path};
 
 fn main() {
     println!("This parses a GDTF file and outputs the result to the console");
@@ -9,12 +9,16 @@ fn main() {
 
     print_gdtf(path);
 
-    print_gdtf(Path::new("test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf"))
+    print_gdtf(Path::new(
+        "test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf",
+    ))
 }
 
 fn print_gdtf(path: &Path) {
     let file = File::open(path).unwrap();
     let gdtf = parse(file).unwrap();
     println!("{:#?}", gdtf);
-    gdtf.problems.iter().for_each(|problem| println!("{}", problem));
+    gdtf.problems
+        .iter()
+        .for_each(|problem| println!("{}", problem));
 }

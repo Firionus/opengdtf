@@ -2,14 +2,14 @@ use petgraph::{graph::NodeIndex, Directed, Graph};
 
 #[derive(Debug)]
 pub struct DmxMode {
-    channel_count: u32,
-    name: String,
-    description: String,
-    geometry: NodeIndex, // must be top-level
+    pub channel_count: u32,
+    pub name: String,
+    pub description: String,
+    pub geometry: NodeIndex, // must be top-level
 
-    dmx_channel_names: Vec<Vec<String>>,
+    pub dmx_channel_names: Vec<Vec<String>>,
 
-    channel_function_graph: Graph<ChannelFunction, ModeMaster, Directed>,
+    pub channel_function_graph: Graph<ChannelFunction, ModeMaster, Directed>,
 }
 
 #[derive(Debug)]

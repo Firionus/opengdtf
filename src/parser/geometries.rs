@@ -1,16 +1,15 @@
-
-use std::collections::HashMap;
 use std::collections::hash_map::Entry::Vacant;
+use std::collections::HashMap;
 
 use petgraph::graph::NodeIndex;
-use roxmltree::{Node, Document};
+use roxmltree::{Document, Node};
 use uuid::Uuid;
 
 use super::errors::*;
 
-use crate::geometries::{Geometries, GeometryType, Offsets, Offset};
+use crate::geometries::{Geometries, GeometryType, Offset, Offsets};
 
-use super::{utils::{node_position, GetAttribute}};
+use super::utils::{node_position, GetAttribute};
 
 pub fn parse_geometries(
     geometries: &mut Geometries,
@@ -146,7 +145,8 @@ fn add_children(
                         };
                         geometries
                             .add(geometry, Some(parent_tree))
-                            .expect("Geometry Names must be unique at this point"); // TODO replace with error
+                            .expect("Geometry Names must be unique at this point");
+                        // TODO replace with error
                     };
                 }
                 tag => problems.push(Problem::UnexpectedXmlNode(

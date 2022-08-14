@@ -1,7 +1,7 @@
 use strum::EnumString;
 use uuid::Uuid;
 
-use self::{geometries::Geometries, dmx_modes::DmxMode};
+use self::{dmx_modes::DmxMode, geometries::Geometries};
 
 pub mod dmx_modes;
 mod errors;

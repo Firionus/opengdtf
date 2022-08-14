@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
-use roxmltree::{Document, Node};
-use uuid::Uuid;
 
 #[derive(Debug, Default)]
 pub struct Geometries {

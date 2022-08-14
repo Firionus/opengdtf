@@ -1,6 +1,6 @@
-use std::{io, path::Path};
+use std::io;
 
-use roxmltree::{Document, TextPos};
+use roxmltree::TextPos;
 use thiserror::Error;
 use zip::result::ZipError;
 
@@ -8,17 +8,15 @@ use zip::result::ZipError;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("invalid XML: {0}")]
-    XmlError(#[from] roxmltree::Error),
+    InvalidXml(#[from] roxmltree::Error),
     #[error("root node 'GDTF' not found")]
     NoRootNode,
-    #[error("could not open file '{0}': {1}")]
-    OpenError(Box<Path>, io::Error), // TODO unused?
     #[error("zip error: {0}")]
-    ZipError(#[from] ZipError),
+    InvalidZip(#[from] ZipError),
     #[error("'description.xml' not found in GDTF zip archive: {0}")]
     DescriptionXmlMissing(ZipError),
     #[error("'description.xml' could not be read: {0}")]
-    DescriptionXmlReadError(io::Error),
+    InvalidDescriptionXml(io::Error),
 }
 // TODO Add InternalError/UnexpectedError Type for things that should not go wrong and the user
 // should open a bug report when they get it

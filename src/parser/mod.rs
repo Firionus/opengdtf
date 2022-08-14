@@ -27,7 +27,7 @@ pub fn parse<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, Error> {
         .map_err(Error::DescriptionXmlMissing)?;
     let mut content = String::new();
     file.read_to_string(&mut content)
-        .map_err(Error::DescriptionXmlReadError)?;
+        .map_err(Error::InvalidDescriptionXml)?;
 
     parse_description(&content[..])
 }
@@ -175,7 +175,7 @@ mod tests {
         let invalid_xml = "<this></that>";
         let res = parse_description(invalid_xml);
         let e = res.unwrap_err();
-        assert!(matches!(&e, Error::XmlError(..)));
+        assert!(matches!(&e, Error::InvalidXml(..)));
         let msg: String = format!("{}", e);
         assert!(msg == "invalid XML: expected 'this' tag, not 'that' at 1:7");
     }

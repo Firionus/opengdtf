@@ -8,7 +8,6 @@ use roxmltree::TextPos;
 
 use super::errors::*;
 
-
 // TODO is name accurate?
 pub(crate) trait GetAttribute {
     fn parse_required_attribute<T: FromStr>(
