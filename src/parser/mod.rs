@@ -11,28 +11,35 @@ use crate::Gdtf;
 use self::{utils::{GetAttribute, XmlPosition}, geometries::parse_geometries, errors::{Error, Problem, ProblemAdd}};
 
 #[derive(Debug)]
-pub struct ParsedGdtf {
+pub struct Parsed {
     pub gdtf: Gdtf,
     pub problems: Vec<Problem>,
 }
 
-// TODO should probably read from Buffer instead of Path, if the file is in RAM
-// also is better to separate concerns, this is not a path opening library
-pub fn parse<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, Error> {
+// TODO should this be done with TryFrom?
+// impl<T> TryFrom<T> for Parsed {c
+//     type Error = Error;
+
+//     fn try_from(value: T) -> Result<Self, Self::Error> {
+//         todo!()
+//     }
+// }
+
+pub fn parse<T: Read + Seek>(reader: T) -> Result<Parsed, Error> {
     // TODO remove line
     // let zipfile = File::open(path).map_err(|e| Error::OpenError(path.into(), e))?;
     let mut zip = zip::ZipArchive::new(reader)?;
-    let mut file = zip
+    let mut description_file = zip
         .by_name("description.xml")
         .map_err(Error::DescriptionXmlMissing)?;
-    let mut content = String::new();
-    file.read_to_string(&mut content)
+    let mut description = String::new();
+    description_file.read_to_string(&mut description)
         .map_err(Error::InvalidDescriptionXml)?;
 
-    parse_description(&content[..])
+    parse_description(&description[..])
 }
 
-fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
+fn parse_description(description_content: &str) -> Result<Parsed, Error> {
     let doc = roxmltree::Document::parse(description_content)?;
 
         let mut gdtf = Gdtf::default();
@@ -131,7 +138,7 @@ fn parse_description(description_content: &str) -> Result<ParsedGdtf, Error> {
             };
         }
 
-        Ok(ParsedGdtf{gdtf, problems})
+        Ok(Parsed{gdtf, problems})
 }
 
 #[cfg(test)]
@@ -148,7 +155,7 @@ mod tests {
             "test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
         );
         let file = File::open(path).unwrap();
-        let ParsedGdtf {gdtf, problems} = parse(file).unwrap();
+        let Parsed {gdtf, problems} = parse(file).unwrap();
         assert_eq!(gdtf.data_version, DataVersion::V1_1);
         assert!(problems.is_empty());
     }
@@ -159,7 +166,7 @@ mod tests {
             "test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf",
         );
         let file = File::open(path).unwrap();
-        let ParsedGdtf {gdtf, problems} = parse(file).unwrap();
+        let Parsed {gdtf, problems} = parse(file).unwrap();
         assert_eq!(gdtf.data_version, DataVersion::V1_1);
         // Problems with duplicate Geometry Names
         assert_eq!(problems.len(), 18);
