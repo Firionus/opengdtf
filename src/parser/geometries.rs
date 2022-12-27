@@ -198,6 +198,10 @@ fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Documen
     offsets
 }
 
+// allow unwrap/expect eplicitly, because clippy.toml config doesn't work properly yet
+// fixed in https://github.com/rust-lang/rust-clippy/pull/9686
+// TODO remove once Clippy 0.1.67 is available
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests {
     use std::ops::Not;

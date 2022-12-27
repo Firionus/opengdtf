@@ -17,10 +17,9 @@ pub enum Error {
     DescriptionXmlMissing(ZipError),
     #[error("'description.xml' could not be read: {0}")]
     InvalidDescriptionXml(io::Error),
+    #[error("unexpected condition occured. This is a fault in opengdtf. Please open an issue at https://github.com/Firionus/opengdtf/issues/new. The cause is: '{0}'")]
+    Unexpected(String),
 }
-// TODO Add InternalError/UnexpectedError Type for things that should not go
-// wrong and the user should open a bug report when they get it (replaces
-// "expect" or "unwrap" in all asserted non-panicking cases)
 
 // TODO Do all of these Problems indicate what action was taken? Like "Renamed to
 // 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we
