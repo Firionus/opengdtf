@@ -4,41 +4,28 @@ use std::{
     path::Path,
 };
 
+use example_files::examples_update_output_iter;
 use opengdtf::parse;
-use walkdir::WalkDir;
 
 #[test]
 fn test_example_files() {
-    let example_files_dir = Path::new("tests/resources/example_files");
-    let examples_dir = example_files_dir.join("examples");
-    let outputs_dir = example_files_dir.join("outputs");
-
-    // clean outputs
-    remove_dir_all(&outputs_dir).unwrap();
-    create_dir_all(&outputs_dir).unwrap();
-
-    for entry in WalkDir::new(examples_dir)
-        .into_iter()
-        .map(|e| e.unwrap())
-        .filter(|e| !e.file_type().is_dir())
-        .filter(|e| e.file_name() != ".gitignore")
-    {
-        let file = File::open(entry.path()).unwrap();
-        let parse_output = parse(file);
-
-        let file_name = entry.file_name().to_str().unwrap();
-
-        let mut output = File::create(outputs_dir.join(file_name)).unwrap();
-        write!(output, "{parse_output:#?}").unwrap();
+    for (entry, file, output) in examples_update_output_iter() {
+        println!("{entry:?}")
     }
 
     // TODO list:
+    // - [ ] implement expected output creation
     // - [ ] read list of expected outputs for files
     // - [x] read list of example files
-    // - [ ] for each file run its own smoke test:
-    //  - [x] parse it
-    //  - [x] debug-stringify the output to a file
-    //  - [ ] if there are problems, check if the output matches expected output
+    // - [x] parse GDTF
+    // - [x] debug-stringify the output to a file
+    // - [ ] if there is an expected output for the file, check if it matches. Otherwise fail test
+    // - [ ] if there is no expected output, any problem is a test failure
     // - [ ] In case of failures, provide debug info to console and how to update the expected outputs file
+    // - [ ] make output file writing optional or only do it when there is a test failure? Add evn variable for that? This might save some time during test runs
     // - [ ] Write documentation how to use in CONTRIBUTING.md
+}
+
+pub fn foo() -> String {
+    "foo".to_string()
 }

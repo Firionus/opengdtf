@@ -8,8 +8,10 @@ use uuid::Uuid;
 
 use crate::Gdtf;
 
+pub use self::errors::{Error, Problem};
+
 use self::{
-    errors::{Error, Problem, ProblemAdd},
+    errors::ProblemAdd,
     geometries::parse_geometries,
     utils::{GetAttribute, XmlPosition},
 };
