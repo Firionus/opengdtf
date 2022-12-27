@@ -1,8 +1,12 @@
 # opengdtf
 
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
+
 A starting point to build a useful open-source [GDTF](https://gdtf-share.com/)
 libary in Rust.
 
+:construction: Early initial development, not usable yet :construction:  
 If you are interested in helping out, open a thread in the Discussions and say
 hi :wave:
 
@@ -19,7 +23,7 @@ ToDo's are kept in [Issues](https://github.com/Firionus/opengdtf/issues).
 
 **Don't just parse GDTF**
 
-Provide a useful higher-level API that resembled the fixture model in a useful
+Provide a useful higher-level API that resembles the fixture model in a useful
 way. 
 
 **Never panic** 
@@ -49,7 +53,7 @@ However, it should be validated and errors indicated in the error vector.
 - GDTF files in themselves are barely useful, for example you can't even know
   how many DMX channels a mode has by looking at the file. So they must be
   processed before being presented to a library user. 
-- The GDTF cocnsortium does not have a culture of ensuring validity and a parser
+- The GDTF consortium does not have a culture of ensuring validity and a parser
   must be lenient to be useful. 
 - Noone, including me, seems to have much time left over for open source GDTF
 
