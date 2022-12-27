@@ -42,18 +42,15 @@ pub fn parse_geometries(
             | "Magnet" => {
                 let name = geometry_name(n, problems, doc, &geometries.names);
                 let geometry = GeometryType::Geometry { name };
-                let i = geometries
-                    .add(geometry, None)
-                    .ok_or(Error::Unexpected("Geometry Names must be unique once adding top level geometries".to_owned()))?;
+                let i = geometries.add(geometry, None).ok_or(Error::Unexpected(
+                    "Geometry Names must be unique once adding top level geometries".to_owned(),
+                ))?;
                 top_level_geometry_graph_indices.push(i);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
                 n.position(doc),
             )),
-            tag => problems.push(Problem::UnexpectedXmlNode(
-                tag.to_owned(),
-                n.position(doc),
-            )),
+            tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), n.position(doc))),
         };
     }
 
@@ -104,21 +101,21 @@ fn add_children(
     problems: &mut Vec<Problem>,
     doc: &Document,
 ) -> Result<(), Error> {
-    let children = parent_xml
-        .children()
-        .filter(|n| n.is_element());
+    let children = parent_xml.children().filter(|n| n.is_element());
 
     for n in children {
         match n.tag_name().name() {
-            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
-            | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
-            | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
-            | "Structure" | "Support" | "Magnet" => {
+            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
+            | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
+            | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
+            | "Magnet" => {
                 let name = geometry_name(&n, problems, doc, &geometries.names);
                 let geometry = GeometryType::Geometry { name };
                 let i = geometries
                     .add(geometry, Some(parent_tree))
-                    .ok_or(Error::Unexpected("Geometry Names must be unique when adding geometries".to_owned()))?;
+                    .ok_or(Error::Unexpected(
+                        "Geometry Names must be unique when adding geometries".to_owned(),
+                    ))?;
                 add_children(&n, i, geometries, problems, doc)?;
             }
             "GeometryReference" => {
@@ -127,10 +124,8 @@ fn add_children(
                     .parse_required_attribute::<String>("Geometry", problems, doc)
                     .and_then(|refname| {
                         geometries.find(&refname).or_else(|| {
-                            problems.push_then_none(Problem::UnknownGeometry(
-                                refname,
-                                n.position(doc),
-                            ))
+                            problems
+                                .push_then_none(Problem::UnknownGeometry(refname, n.position(doc)))
                         })
                     })
                     .and_then(|i| {
@@ -153,13 +148,13 @@ fn add_children(
                     };
                     geometries
                         .add(geometry, Some(parent_tree))
-                        .ok_or(Error::Unexpected("Geometry Names must be unique when adding geometry references".to_owned()))?;
+                        .ok_or(Error::Unexpected(
+                            "Geometry Names must be unique when adding geometry references"
+                                .to_owned(),
+                        ))?;
                 };
             }
-            tag => problems.push(Problem::UnexpectedXmlNode(
-                tag.to_owned(),
-                n.position(doc),
-            )),
+            tag => problems.push(Problem::UnexpectedXmlNode(tag.to_owned(), n.position(doc))),
         };
     }
     Ok(())
@@ -186,10 +181,7 @@ fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Documen
             element.parse_required_attribute("DMXOffset", problems, doc),
         ) {
             if offsets.normal.contains_key(&dmx_break) {
-                problems.push(Problem::DuplicateDmxBreak(
-                    dmx_break,
-                    element.position(doc),
-                ));
+                problems.push(Problem::DuplicateDmxBreak(dmx_break, element.position(doc)));
             }
 
             offsets.normal.insert(dmx_break, offset); // overwrite whether occupied or vacant
