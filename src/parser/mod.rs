@@ -65,7 +65,7 @@ fn parse_description(description_content: &str) -> Result<Parsed, Error> {
     let geometries = &mut gdtf.geometries;
 
     if let Some(ft) = ft {
-        parse_geometries(geometries, &ft, &mut problems, &doc);
+        parse_geometries(geometries, &ft, &mut problems, &doc)?;
 
         gdtf.fixture_type_id = ft
             .attribute("FixtureTypeID")

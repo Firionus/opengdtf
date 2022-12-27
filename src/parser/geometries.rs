@@ -16,7 +16,7 @@ pub fn parse_geometries(
     ft: &Node,
     problems: &mut Vec<Problem>,
     doc: &Document,
-) {
+) -> Result<(), Error> {
     let g = match ft.children().find(|n| n.has_tag_name("Geometries")) {
         Some(g) => g,
         None => {
@@ -25,7 +25,7 @@ pub fn parse_geometries(
                 parent: "FixtureType".to_owned(),
                 pos: ft.position(doc),
             });
-            return;
+            return Ok(());
         }
     };
 
@@ -34,7 +34,7 @@ pub fn parse_geometries(
 
     // First, add top-level geometries. These must exist so a GeometryReference
     // later on can be linked to a NodeIndex.
-    top_level_geometries.iter().for_each(|n| {
+    for n in top_level_geometries.iter() {
         match n.tag_name().name() {
             "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
             | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
@@ -44,7 +44,7 @@ pub fn parse_geometries(
                 let geometry = GeometryType::Geometry { name };
                 let i = geometries
                     .add(geometry, None)
-                    .expect("Geometry Names must be unique at this point"); // TODO replace with Error
+                    .ok_or(Error::Unexpected("Geometry Names must be unique once adding top level geometries".to_owned()))?;
                 top_level_geometry_graph_indices.push(i);
             }
             "GeometryReference" => problems.push(Problem::UnexpectedTopLevelGeometryReference(
@@ -55,13 +55,15 @@ pub fn parse_geometries(
                 n.position(doc),
             )),
         };
-    });
+    }
 
     // Next, add non-top-level geometries.
-    top_level_geometries.iter().enumerate().for_each(|(i, n)| {
+    for (i, n) in top_level_geometries.iter().enumerate() {
         let graph_index = top_level_geometry_graph_indices[i];
-        add_children(n, graph_index, geometries, problems, doc);
-    });
+        add_children(n, graph_index, geometries, problems, doc)?;
+    }
+
+    Ok(())
 }
 
 /// Gets a Geometry Name and provides unique default value if invalid
@@ -84,77 +86,83 @@ fn geometry_name(
             name.to_owned(),
             n.position(doc),
         ));
-        name = format!("{} {}", name, Uuid::new_v4())
+        name = make_geometry_name_unique(name);
     }
 
     name
 }
 
+fn make_geometry_name_unique(name: String) -> String {
+    format!("{} {}", name, Uuid::new_v4())
+}
+
+/// Recursively adds all children geometries of a parent to the geometries struct
 fn add_children(
     parent_xml: &Node,
     parent_tree: NodeIndex,
     geometries: &mut Geometries,
     problems: &mut Vec<Problem>,
     doc: &Document,
-) {
-    parent_xml
+) -> Result<(), Error> {
+    let children = parent_xml
         .children()
-        .filter(|n| n.is_element())
-        .for_each(|n| {
-            match n.tag_name().name() {
-                "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
-                | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
-                | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
-                | "Structure" | "Support" | "Magnet" => {
-                    let name = geometry_name(&n, problems, doc, &geometries.names);
-                    let geometry = GeometryType::Geometry { name };
-                    let i = geometries
-                        .add(geometry, Some(parent_tree))
-                        .expect("Geometry Names must be unique at this point"); // TODO replace with error
-                    add_children(&n, i, geometries, problems, doc);
-                }
-                "GeometryReference" => {
-                    let name = geometry_name(&n, problems, doc, &geometries.names);
-                    let ref_ind = n
-                        .parse_required_attribute::<String>("Geometry", problems, doc)
-                        .and_then(|refname| {
-                            geometries.find(&refname).or_else(|| {
-                                problems.push_then_none(Problem::UnknownGeometry(
-                                    refname,
-                                    n.position(doc),
-                                ))
-                            })
-                        })
-                        .and_then(|i| {
-                            if !geometries.is_top_level(i) {
-                                problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
-                                    geometries.graph[i].name().to_owned(),
-                                    n.position(doc),
-                                ))
-                            } else {
-                                Some(i)
-                            }
-                        });
-                    let offsets = parse_reference_offsets(&n, problems, doc);
+        .filter(|n| n.is_element());
 
-                    if let Some(ref_ind) = ref_ind {
-                        let geometry = GeometryType::Reference {
-                            name,
-                            offsets,
-                            reference: ref_ind,
-                        };
-                        geometries
-                            .add(geometry, Some(parent_tree))
-                            .expect("Geometry Names must be unique at this point");
-                        // TODO replace with error
+    for n in children {
+        match n.tag_name().name() {
+            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
+            | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
+            | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
+            | "Structure" | "Support" | "Magnet" => {
+                let name = geometry_name(&n, problems, doc, &geometries.names);
+                let geometry = GeometryType::Geometry { name };
+                let i = geometries
+                    .add(geometry, Some(parent_tree))
+                    .ok_or(Error::Unexpected("Geometry Names must be unique when adding geometries".to_owned()))?;
+                add_children(&n, i, geometries, problems, doc)?;
+            }
+            "GeometryReference" => {
+                let name = geometry_name(&n, problems, doc, &geometries.names);
+                let ref_ind = n
+                    .parse_required_attribute::<String>("Geometry", problems, doc)
+                    .and_then(|refname| {
+                        geometries.find(&refname).or_else(|| {
+                            problems.push_then_none(Problem::UnknownGeometry(
+                                refname,
+                                n.position(doc),
+                            ))
+                        })
+                    })
+                    .and_then(|i| {
+                        if !geometries.is_top_level(i) {
+                            problems.push_then_none(Problem::NonTopLevelGeometryReferenced(
+                                geometries.graph[i].name().to_owned(),
+                                n.position(doc),
+                            ))
+                        } else {
+                            Some(i)
+                        }
+                    });
+                let offsets = parse_reference_offsets(&n, problems, doc);
+
+                if let Some(ref_ind) = ref_ind {
+                    let geometry = GeometryType::Reference {
+                        name,
+                        offsets,
+                        reference: ref_ind,
                     };
-                }
-                tag => problems.push(Problem::UnexpectedXmlNode(
-                    tag.to_owned(),
-                    n.position(doc),
-                )),
-            };
-        });
+                    geometries
+                        .add(geometry, Some(parent_tree))
+                        .ok_or(Error::Unexpected("Geometry Names must be unique when adding geometry references".to_owned()))?;
+                };
+            }
+            tag => problems.push(Problem::UnexpectedXmlNode(
+                tag.to_owned(),
+                n.position(doc),
+            )),
+        };
+    }
+    Ok(())
 }
 
 fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Document) -> Offsets {
@@ -528,7 +536,7 @@ mod tests {
         let ft = doc.root_element();
         let mut problems: Vec<Problem> = vec![];
         let mut geometries = Geometries::default();
-        parse_geometries(&mut geometries, &ft, &mut problems, &doc);
+        parse_geometries(&mut geometries, &ft, &mut problems, &doc).unwrap();
         (problems, geometries)
     }
 
