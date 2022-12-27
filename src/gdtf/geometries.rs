@@ -46,10 +46,7 @@ impl Geometries {
     ///
     /// If geometry with index `i` doesn't exist, `true` is returned.
     pub fn is_top_level(&self, i: NodeIndex) -> bool {
-        match self.graph.edges_directed(i, Incoming).next() {
-            None => true,
-            Some(_) => false,
-        }
+        self.graph.edges_directed(i, Incoming).next().is_none()
     }
 }
 
