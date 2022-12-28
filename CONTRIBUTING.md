@@ -13,5 +13,5 @@ TODO: Handling Failures
 To update the expected problems, execute
 
 ```sh
-cargo run -p example_files
+cargo run --bin update_expected_problems
 ```

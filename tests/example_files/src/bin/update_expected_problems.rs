@@ -1,10 +1,10 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
-use std::{collections::HashMap, io::Read};
 
 use chrono::Utc;
 use example_files::{
-    examples_update_output_iter, hash_gdtf_file, parse_expected_problems, ErrorInfo,
+    examples_update_output_iter, hash::hash_gdtf, parse_expected_problems, ErrorInfo,
     ExpectedProblem, ProblemInfo, EXPECTED_PROBLEMS_PATH,
 };
 
@@ -15,7 +15,7 @@ fn main() {
     for (entry, file, output) in examples_update_output_iter() {
         println!("{entry:?}");
 
-        let key = hash_gdtf_file(file);
+        let key = hash_gdtf(file);
 
         let info = match output {
             Ok(parsed) => ExpectedProblem::Ok(ProblemInfo {
