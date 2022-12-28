@@ -10,4 +10,5 @@ toml = "0.5.10"
 serde = { version = "1.0", features = ["derive"] }
 xxhash-rust = { version = "0.8.6", features = ["xxh3"] }
 zip = "0.6.2"
+chrono = { version = "0.4.23", features = ["serde"] }
 opengdtf ={ path = "../.." }

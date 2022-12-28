@@ -1,20 +1,13 @@
-use std::{
-    fs::{create_dir_all, remove_dir_all, File},
-    io::Write,
-    path::Path,
-};
-
 use example_files::examples_update_output_iter;
-use opengdtf::parse;
 
 #[test]
 fn test_example_files() {
-    for (entry, file, output) in examples_update_output_iter() {
+    for (entry, _file, _output) in examples_update_output_iter() {
         println!("{entry:?}")
     }
 
     // TODO list:
-    // - [ ] implement expected output creation
+    // - [x] implement expected output creation
     // - [ ] read list of expected outputs for files
     // - [x] read list of example files
     // - [x] parse GDTF

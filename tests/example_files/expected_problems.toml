@@ -1,0 +1,26 @@
+[85e82dae40e058b3f64da3979c96b965]
+manufacturer = 'Robe Lighting'
+name = 'Robin Tetra2'
+fixture_type_id = '5a7b5195-af40-4bda-a658-cbaa98dff9c0'
+entry_created_on = '2022-12-28T01:20:04.050042242Z'
+original_filename = 'Robe_Lighting@Robin_Tetra2@04062021.gdtf'
+problems = [
+    '''duplicate Geometry name 'pixel1empty 4' at line 2000:15''',
+    '''duplicate Geometry name 'pixel2empty 4' at line 2001:15''',
+    '''duplicate Geometry name 'pixel3empty 4' at line 2002:15''',
+    '''duplicate Geometry name 'pixel4empty 4' at line 2003:15''',
+    '''duplicate Geometry name 'flower pixel5empty 4' at line 2004:15''',
+    '''duplicate Geometry name 'pixel6empty 4' at line 2005:15''',
+    '''duplicate Geometry name 'pixel7empty 4' at line 2006:15''',
+    '''duplicate Geometry name 'pixel8empty 4' at line 2007:15''',
+    '''duplicate Geometry name 'pixel9empty 4' at line 2008:15''',
+    '''duplicate Geometry name 'pixel10empty 4' at line 2014:15''',
+    '''duplicate Geometry name 'pixel11empty 4' at line 2015:15''',
+    '''duplicate Geometry name 'pixel12empty 4' at line 2016:15''',
+    '''duplicate Geometry name 'pixel13empty 4' at line 2017:15''',
+    '''duplicate Geometry name 'flower pixel14empty 4' at line 2018:15''',
+    '''duplicate Geometry name 'pixel15empty 4' at line 2019:15''',
+    '''duplicate Geometry name 'pixel16empty 4' at line 2020:15''',
+    '''duplicate Geometry name 'pixel17empty 4' at line 2021:15''',
+    '''duplicate Geometry name 'pixel18empty 4' at line 2022:15''',
+]
