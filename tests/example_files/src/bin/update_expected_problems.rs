@@ -1,64 +1,21 @@
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
-use std::{collections::HashMap, fs, io::Read};
+use std::{collections::HashMap, io::Read};
 
 use chrono::Utc;
-use example_files::examples_update_output_iter;
-use example_files::EXAMPLE_FILES_DIR;
-use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
-
-use xxhash_rust::xxh3::xxh3_128;
-use zip::ZipArchive;
-
-type ExpectedProblems = HashMap<String, ExpectedProblem>;
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum ExpectedProblem {
-    Ok(ProblemInfo),
-    Err(ErrorInfo),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ErrorInfo {
-    error: String,
-    entry_created_on: chrono::DateTime<Utc>,
-    original_filename: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ProblemInfo {
-    manufacturer: String,
-    name: String,
-    fixture_type_id: String,
-    entry_created_on: chrono::DateTime<Utc>,
-    original_filename: String,
-    problems: Vec<String>,
-}
-
-static EXPECTED_PROBLEMS_PATH: Lazy<PathBuf> =
-    Lazy::new(|| EXAMPLE_FILES_DIR.join("expected_problems.toml"));
+use example_files::{
+    examples_update_output_iter, hash_gdtf_file, parse_expected_problems, ErrorInfo,
+    ExpectedProblem, ProblemInfo, EXPECTED_PROBLEMS_PATH,
+};
 
 fn main() {
-    let expected_problems_str = fs::read_to_string(&*EXPECTED_PROBLEMS_PATH).unwrap();
-    let mut expected_problems: ExpectedProblems = toml::from_str(&expected_problems_str).unwrap();
+    let mut expected_problems = parse_expected_problems();
 
     println!("iterating over example files");
     for (entry, file, output) in examples_update_output_iter() {
         println!("{entry:?}");
 
-        let mut zip = ZipArchive::new(&file).unwrap();
-        let mut buf = vec![0u8; 0];
-        let mut file_names: Vec<String> = zip.file_names().map(|s| s.to_string()).collect();
-        file_names.sort();
-        for file_name in file_names {
-            let mut internal_file = zip.by_name(&file_name).unwrap();
-            internal_file.read_to_end(&mut buf).unwrap();
-        }
-        let hash = xxh3_128(&buf);
-        let key = format!("{hash:x}");
+        let key = hash_gdtf_file(file);
 
         let info = match output {
             Ok(parsed) => ExpectedProblem::Ok(ProblemInfo {

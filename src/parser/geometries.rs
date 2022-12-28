@@ -83,6 +83,13 @@ fn geometry_name(
             name.to_owned(),
             n.position(doc),
         ));
+        // TODO what if there are Geometries with the same name at the exact
+        // same level? They are indistinguishable and we should just drop the
+        // one(s) after the first!
+
+        // TODO when there are Geometries with the same name at different
+        // positions in the graph, there should be a deterministic renaming that
+        // must ensure not to conflict with any geometries parsed later as well
         name = make_geometry_name_unique(name);
     }
 
@@ -90,6 +97,7 @@ fn geometry_name(
 }
 
 fn make_geometry_name_unique(name: String) -> String {
+    // TODO can this be made fully deterministic?
     format!("{} {}", name, Uuid::new_v4())
 }
 
