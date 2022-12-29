@@ -9,7 +9,7 @@ use std::{
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse, Parsed};
+use opengdtf::{parse, Error, Parsed};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 use xxhash_rust::xxh3::Xxh3Builder;
@@ -29,12 +29,31 @@ pub struct ExpectedEntry {
     pub output_enum: OutputEnum,
 }
 
-// TODO directly create this from gdtf parse result (refactor that functionality from update bin)
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum OutputEnum {
     Ok(ProblemInfo),
     Err(ErrorInfo),
+}
+
+impl From<Result<Parsed, Error>> for OutputEnum {
+    fn from(value: Result<Parsed, Error>) -> Self {
+        match value {
+            Ok(parsed) => OutputEnum::Ok(ProblemInfo {
+                manufacturer: parsed.gdtf.manufacturer,
+                name: parsed.gdtf.name,
+                fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
+                problems: parsed
+                    .problems
+                    .into_iter()
+                    .map(|p| format!("{p:?}"))
+                    .collect(),
+            }),
+            Err(e) => OutputEnum::Err(ErrorInfo {
+                error: format!("{e:?}"),
+            }),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]

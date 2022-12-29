@@ -4,8 +4,8 @@ use std::io::Write;
 
 use chrono::Utc;
 use example_files::{
-    examples_update_output_iter, hash::hash_gdtf, parse_expected_problems, ErrorInfo,
-    ExpectedEntry, OutputEnum, ProblemInfo, EXPECTED_PROBLEMS_PATH,
+    examples_update_output_iter, hash::hash_gdtf, parse_expected_problems, ExpectedEntry,
+    EXPECTED_PROBLEMS_PATH,
 };
 
 fn main() {
@@ -17,17 +17,7 @@ fn main() {
 
         let key = hash_gdtf(file);
 
-        let output_enum = match output {
-            Ok(parsed) => OutputEnum::Ok(ProblemInfo {
-                manufacturer: parsed.gdtf.manufacturer,
-                name: parsed.gdtf.name,
-                fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
-                problems: parsed.problems.into_iter().map(|p| p.to_string()).collect(),
-            }),
-            Err(e) => OutputEnum::Err(ErrorInfo {
-                error: e.to_string(),
-            }),
-        };
+        let output_enum = output.into();
 
         let comment = if let Some(existing_entry) = expected_problems.get(&key) {
             if existing_entry.output_enum == output_enum {
