@@ -22,9 +22,10 @@ fn test_example_files() {
     // - [x] debug-stringify the output to a file
     // - [x] make tests for the properties of the GDTF hash (original little zip file, one with changed creation date, one with changed file name, one with changed content)
     //       hash for GDTF files should include filenames as well as file content (but not file metadata, like last changed date)
-    // - [ ] when re-running update, existing entries should only be updated when something changes. Currently, the timestamp is updated, creating unnecessary diffs.
+    // - [x] when re-running update, existing entries should only be updated when something changes. Currently, the timestamp is updated, creating unnecessary diffs.
     // - [ ] ordering of entries in expected.toml should be deterministic based on file hash
     // - [ ] comment field in expected problems (default empty string, to be filled by people)
+    // - [ ] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem???
     // - [ ] how to ensure that Geometries stay the same in the future? Just number of Geometries?
     //      If we check names and their relationship somehow, we need deterministic deduplication to make that work.
     //      Just using a hash is not a good idea, because it doesn't communicate to the dev what went wrong.

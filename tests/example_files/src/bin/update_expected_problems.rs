@@ -5,7 +5,7 @@ use std::io::Write;
 use chrono::Utc;
 use example_files::{
     examples_update_output_iter, hash::hash_gdtf, parse_expected_problems, ErrorInfo,
-    ExpectedProblem, ProblemInfo, EXPECTED_PROBLEMS_PATH,
+    ExpectedEntry, OutputEnum, ProblemInfo, EXPECTED_PROBLEMS_PATH,
 };
 
 fn main() {
@@ -17,23 +17,32 @@ fn main() {
 
         let key = hash_gdtf(file);
 
-        let info = match output {
-            Ok(parsed) => ExpectedProblem::Ok(ProblemInfo {
+        let output_enum = match output {
+            Ok(parsed) => OutputEnum::Ok(ProblemInfo {
                 manufacturer: parsed.gdtf.manufacturer,
                 name: parsed.gdtf.name,
                 fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
-                original_filename: format!("{}", entry.file_name().to_string_lossy()),
                 problems: parsed.problems.into_iter().map(|p| p.to_string()).collect(),
-                entry_created_on: Utc::now(),
             }),
-            Err(e) => ExpectedProblem::Err(ErrorInfo {
+            Err(e) => OutputEnum::Err(ErrorInfo {
                 error: e.to_string(),
-                entry_created_on: Utc::now(),
-                original_filename: format!("{:?}", entry.file_name()),
             }),
         };
 
-        expected_problems.insert(key, info);
+        if let Some(existing_entry) = expected_problems.get(&key) {
+            if existing_entry.output_enum == output_enum {
+                continue;
+            }
+        }
+
+        expected_problems.insert(
+            key,
+            ExpectedEntry {
+                filename: format!("{}", entry.file_name().to_string_lossy()),
+                saved_on: Utc::now(),
+                output_enum,
+            },
+        );
     }
     let serialized = toml::to_string_pretty(&expected_problems).unwrap();
     let mut output_file = File::create(&*EXPECTED_PROBLEMS_PATH).unwrap();
@@ -41,10 +50,7 @@ fn main() {
 
     // check for duplicate original filenames
     let mut filename_set = HashMap::<&String, u32>::new();
-    for original_filename in expected_problems.values().map(|v| match v {
-        ExpectedProblem::Ok(p) => &p.original_filename,
-        ExpectedProblem::Err(i) => &i.original_filename,
-    }) {
+    for original_filename in expected_problems.values().map(|v| &v.filename) {
         if !filename_set.contains_key(original_filename) {
             filename_set.insert(original_filename, 1);
         } else {

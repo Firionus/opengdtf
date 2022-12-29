@@ -1,9 +1,9 @@
 [6b908e9c84e93dd3b6e55b56790dbe82]
+filename = 'Robe_Lighting@Robin_Tetra2@04062021.gdtf'
+saved_on = '2022-12-29T00:55:03.032642604Z'
 manufacturer = 'Robe Lighting'
 name = 'Robin Tetra2'
 fixture_type_id = '5a7b5195-af40-4bda-a658-cbaa98dff9c0'
-entry_created_on = '2022-12-28T23:24:13.730550258Z'
-original_filename = 'Robe_Lighting@Robin_Tetra2@04062021.gdtf'
 problems = [
     '''duplicate Geometry name 'pixel1empty 4' at line 2000:15''',
     '''duplicate Geometry name 'pixel2empty 4' at line 2001:15''',

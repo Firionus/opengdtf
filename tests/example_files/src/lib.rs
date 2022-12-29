@@ -17,29 +17,39 @@ pub static EXAMPLE_FILES_DIR: Lazy<&Path> = Lazy::new(|| Path::new("tests/exampl
 pub static EXAMPLES_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("examples"));
 pub static OUTPUTS_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("outputs"));
 
-type ExpectedProblems = HashMap<String, ExpectedProblem>;
+type ExpectedProblems = HashMap<String, ExpectedEntry>;
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ExpectedEntry {
+    pub filename: String,
+    pub saved_on: chrono::DateTime<Utc>,
+    #[serde(flatten)]
+    pub output_enum: OutputEnum,
+}
+
+impl ExpectedEntry {
+    pub fn output_equals(&self, other: &Self) -> bool {
+        self.output_enum == other.output_enum
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(untagged)]
-pub enum ExpectedProblem {
+pub enum OutputEnum {
     Ok(ProblemInfo),
     Err(ErrorInfo),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct ErrorInfo {
     pub error: String,
-    pub entry_created_on: chrono::DateTime<Utc>,
-    pub original_filename: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct ProblemInfo {
     pub manufacturer: String,
     pub name: String,
     pub fixture_type_id: String,
-    pub entry_created_on: chrono::DateTime<Utc>,
-    pub original_filename: String,
     pub problems: Vec<String>,
 }
 
