@@ -29,17 +29,21 @@ fn main() {
             }),
         };
 
-        if let Some(existing_entry) = expected_problems.get(&key) {
+        let comment = if let Some(existing_entry) = expected_problems.get(&key) {
             if existing_entry.output_enum == output_enum {
                 continue;
             }
-        }
+            existing_entry.comment.clone()
+        } else {
+            "".to_string()
+        };
 
         expected_problems.insert(
             key,
             ExpectedEntry {
                 filename: format!("{}", entry.file_name().to_string_lossy()),
                 saved_on: Utc::now(),
+                comment,
                 output_enum,
             },
         );

@@ -24,16 +24,12 @@ type ExpectedProblems = HashMap<String, ExpectedEntry, Xxh3Builder>;
 pub struct ExpectedEntry {
     pub filename: String,
     pub saved_on: chrono::DateTime<Utc>,
+    pub comment: String,
     #[serde(flatten)]
     pub output_enum: OutputEnum,
 }
 
-impl ExpectedEntry {
-    pub fn output_equals(&self, other: &Self) -> bool {
-        self.output_enum == other.output_enum
-    }
-}
-
+// TODO directly create this from gdtf parse result (refactor that functionality from update bin)
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum OutputEnum {

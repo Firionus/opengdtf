@@ -4,7 +4,7 @@ use example_files::{examples_update_output_iter, hash::hash_gdtf, parse_expected
 fn test_example_files() {
     let expected_problems = parse_expected_problems();
 
-    for (entry, file, _output) in examples_update_output_iter() {
+    for (_entry, file, _output) in examples_update_output_iter() {
         let key = hash_gdtf(file);
         match expected_problems.get(&key) {
             Some(_) => todo!(),
@@ -24,7 +24,7 @@ fn test_example_files() {
     //       hash for GDTF files should include filenames as well as file content (but not file metadata, like last changed date)
     // - [x] when re-running update, existing entries should only be updated when something changes. Currently, the timestamp is updated, creating unnecessary diffs.
     // - [x] ordering of entries in expected.toml should be deterministic based on file hash
-    // - [ ] comment field in expected problems (default empty string, to be filled by people)
+    // - [x] comment field in expected problems (default empty string, to be filled by people, should be copied when replacing entry with new output)
     // - [ ] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem???
     // - [ ] how to ensure that Geometries stay the same in the future? Just number of Geometries?
     //      If we check names and their relationship somehow, we need deterministic deduplication to make that work.
