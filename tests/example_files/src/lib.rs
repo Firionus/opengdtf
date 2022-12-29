@@ -12,12 +12,13 @@ use once_cell::sync::Lazy;
 use opengdtf::{parse, Parsed};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
+use xxhash_rust::xxh3::Xxh3Builder;
 
 pub static EXAMPLE_FILES_DIR: Lazy<&Path> = Lazy::new(|| Path::new("tests/example_files"));
 pub static EXAMPLES_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("examples"));
 pub static OUTPUTS_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("outputs"));
 
-type ExpectedProblems = HashMap<String, ExpectedEntry>;
+type ExpectedProblems = HashMap<String, ExpectedEntry, Xxh3Builder>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpectedEntry {
