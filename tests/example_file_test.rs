@@ -26,9 +26,10 @@ fn test_example_files() {
     // - [x] ordering of entries in expected.toml should be deterministic based on file hash
     // - [x] comment field in expected problems (default empty string, to be filled by people, should be copied when replacing entry with new output)
     // - [x] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem??? -> let's assert on debug output
-    // - [ ] how to ensure that Geometries stay the same in the future? Just number of Geometries?
-    //      If we check names and their relationship somehow, we need deterministic deduplication to make that work.
-    //      Just using a hash is not a good idea, because it doesn't communicate to the dev what went wrong.
+    // - [ ] deterministic Geometry renaming
+    // - [ ] how to ensure that Geometries stay the same in the future?
+    //       Just number of Geometries? Or names of geometries? Or qualified names of Geometries to also capture relations (best idea so far)?
+    //       Just using a hash is not a good idea, because it doesn't communicate to the dev what went wrong.
     // - [ ] make separate test functions for: (so they can independently fail and report their issues)
     //       no file-name duplicates in expected.toml;
     //       all entries in expected.toml are present in examples (to avoid rot of fixture files no one has anymore);

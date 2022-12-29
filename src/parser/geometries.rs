@@ -72,7 +72,8 @@ fn geometry_name(
 ) -> String {
     let mut name = n
         .parse_required_attribute("Name", problems, doc)
-        .unwrap_or_else(|| format!("No Name {}", Uuid::new_v4()));
+        // TODO make determinstic
+        .unwrap_or_else(|| format!("No Name {}", Uuid::new_v4())); // TODO Default for "Name" type in GDTF is actually "{Object Type} {Index in Parent}"
 
     if geometry_names.contains_key(&name) {
         problems.push(Problem::DuplicateGeometryName(
@@ -83,13 +84,13 @@ fn geometry_name(
             name.to_owned(),
             n.position(doc),
         ));
-        // TODO what if there are Geometries with the same name at the exact
-        // same level? They are indistinguishable and we should just drop the
-        // one(s) after the first!
+        // TODO what if there are Geometries of same name but in a different top-level geometry?
+        // put into list for later renaming, then once all other are known appyl renaming:
+        // "{duplicate name} (duplicate {duplication index, increased dynamically until unique name} in {top-level geometry name})"
 
-        // TODO when there are Geometries with the same name at different
-        // positions in the graph, there should be a deterministic renaming that
-        // must ensure not to conflict with any geometries parsed later as well
+        // TODO what if there are Geometries with the same name but in the same top-level geometry?
+        // same as above
+
         name = make_geometry_name_unique(name);
     }
 

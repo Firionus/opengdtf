@@ -82,6 +82,8 @@ pub struct Offset {
     pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
+// TODO "name" field should be validated to be GDTF "Name" type, with some characters disallowed
+// see if we can base our implementation on gdtf_parser
 #[derive(Debug)]
 pub enum GeometryType {
     Geometry {
