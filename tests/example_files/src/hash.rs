@@ -2,11 +2,13 @@ use xxhash_rust::xxh3::xxh3_128;
 
 use zip::ZipArchive;
 
-use std::io::{Read, Seek};
+use std::{fs::File, io::Read};
 
-pub fn hash_gdtf<T: Read + Seek>(file: T) -> String {
+// TODO once Seek::stream_len is stabilized, we can go to <T: Read + Seek>
+// please track https://github.com/rust-lang/rust/issues/59359
+pub fn hash_gdtf(file: File) -> String {
+    let mut buf = Vec::with_capacity(file.metadata().unwrap().len().try_into().unwrap());
     let mut zip = ZipArchive::new(file).unwrap();
-    let mut buf = vec![0u8; 0];
     let mut file_names: Vec<String> = zip.file_names().map(|s| s.to_string()).collect();
     file_names.sort(); // needed because zip might reorder files arbitrarily
     for file_name in file_names {

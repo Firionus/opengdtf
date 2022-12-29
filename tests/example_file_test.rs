@@ -25,7 +25,7 @@ fn test_example_files() {
     // - [x] when re-running update, existing entries should only be updated when something changes. Currently, the timestamp is updated, creating unnecessary diffs.
     // - [x] ordering of entries in expected.toml should be deterministic based on file hash
     // - [x] comment field in expected problems (default empty string, to be filled by people, should be copied when replacing entry with new output)
-    // - [ ] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem???
+    // - [x] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem??? -> let's assert on debug output
     // - [ ] how to ensure that Geometries stay the same in the future? Just number of Geometries?
     //      If we check names and their relationship somehow, we need deterministic deduplication to make that work.
     //      Just using a hash is not a good idea, because it doesn't communicate to the dev what went wrong.
