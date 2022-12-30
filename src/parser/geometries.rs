@@ -215,6 +215,7 @@ fn parse_reference_offsets(&n: &Node, problems: &mut Vec<Problem>, doc: &Documen
 mod tests {
     use std::ops::Not;
 
+    use petgraph::{visit::IntoEdgesDirected, Direction::Outgoing};
     use regex::Regex;
 
     use super::*;
@@ -472,6 +473,83 @@ mod tests {
 
         let name_of_broken_node = geometries.graph.raw_nodes()[0].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
+    }
+
+    #[test]
+    /// Geometries should really have a Name attribute, but according to GDTF
+    /// 1.2 (DIN SPEC 15800:2022-02), the default value for "Name" type values
+    /// is: "object type with an index in parent".  
+    /// I think the reasonable choice is to still report these problems, but
+    /// report which default name was assigned. If there are name duplicates in
+    /// default names, they can be handled and report like any other.
+    fn geometry_names_missing() {
+        let (problems, geometries) = run_parse_geometries(
+            r#"
+            <FixtureType>
+                <Geometries>
+                    <Beam /> <!--default name "Beam 1"-->
+                    <Geometry /> <!--default name "Geometry 2"-->
+                    <Geometry> <!--default name "Geometry 3"-->
+                        <Geometry /> <!--default name "Geometry 1"-->
+                        <Geometry /> <!--default name "Geometry 2", deduplicated to "Geometry 2 (in Geometry 3)"-->
+                        <GeometryReference Geometry="Geometry 2"/> <!--default name "GeometryReference 3"-->
+                    </Geometry>
+                </Geometries>
+            </FixtureType>
+            "#,
+        );
+
+        todo!("set up problem type to support actions for all problems");
+
+        // assert!(
+        //     matches!(problems[0], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Beam 1"))
+        // );
+        // assert!(
+        //     matches!(problems[1], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 2"))
+        // );
+        // assert!(
+        //     matches!(problems[2], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 3"))
+        // );
+        // assert!(
+        //     matches!(problems[3], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 1"))
+        // );
+        // assert!(
+        //     matches!(problems[4], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 2"))
+        // );
+        // assert!(
+        //     matches!(problems[5], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("GeometryReference 3"))
+        // );
+        // assert!(
+        //     matches!(problems[6], Problem::DuplicateGeometryName(dup, _, dedup) if dup == "Geometry 2" && dedup == "Geometry 2 (in Geometry 3)")
+        // );
+
+        // let beam_ind = geometries.find("Beam 1").unwrap();
+        // assert!(geometries
+        //     .graph
+        //     .neighbors_undirected(beam_ind)
+        //     .next()
+        //     .is_none());
+
+        // let g2_ind = geometries.find("Geometry 2").unwrap();
+        // assert!(geometries
+        //     .graph
+        //     .neighbors_undirected(g2_ind)
+        //     .next()
+        //     .is_none());
+
+        // let g3_ind = geometries.find("Geometry 3").unwrap();
+        // assert!(geometries.is_top_level(g3_ind));
+        // let g3_children = geometries.graph.neighbors(g3_ind);
+        // let children = g3_children.map(|ind| geometries.graph[ind]).collect();
+        // assert_eq(3, children.len());
+
+        todo!("assert that the names and types of the children are as expected")
+        // children.any(|g| matches!(g, GeometryType));
+    }
+
+    #[test]
+    fn geometry_duplicate_name_deterministic_renaming() {
+        todo!()
     }
 
     #[test]
