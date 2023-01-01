@@ -48,6 +48,20 @@ impl Geometries {
     pub fn is_top_level(&self, i: NodeIndex) -> bool {
         self.graph.edges_directed(i, Incoming).next().is_none()
     }
+
+    pub fn qualified_name(&self, ind: NodeIndex) -> String {
+        // TODO indexing may panic - what to do?
+        let n = &self.graph[ind];
+        let mut qualified_name = n.name().to_string();
+        let mut i = ind;
+        while let Some(parent_ind) = self.graph.neighbors_directed(i, Incoming).next() {
+            // indexing won't panic because ind comes from graph iterator
+            qualified_name = format!("{}.{}", self.graph[parent_ind].name(), qualified_name);
+            // TODO prepending like this probably isn't very performant ;)
+            i = parent_ind
+        }
+        qualified_name
+    }
 }
 
 // TODO When Channel parsing is implemented, there needs to be a validation that

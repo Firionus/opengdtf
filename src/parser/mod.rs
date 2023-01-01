@@ -12,7 +12,7 @@ use crate::{parser::utils::AssignOrHandle, Gdtf};
 pub use self::errors::{Error, Problem};
 
 use self::{
-    errors::{HandleProblem, HandledProblem, ProblemType},
+    errors::{HandledProblem, ProblemType},
     geometries::parse_geometries,
     utils::GetFromNode,
 };

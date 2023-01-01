@@ -27,7 +27,7 @@ fn test_example_files() {
     // - [x] comment field in expected problems (default empty string, to be filled by people, should be copied when replacing entry with new output)
     // - [x] Problems should stay consistent even when problem stringification changes, no? Maybe only assert the type of problem??? -> let's assert on debug output
     // - [x] deterministic Geometry renaming
-    // - [ ] how to ensure that Geometries stay the same in the future?
+    // - [x] how to ensure that Geometries stay the same in the future?
     //       Just number of Geometries? Or names of geometries? Or qualified names of Geometries to also capture relations (best idea so far)?
     //       Just using a hash is not a good idea, because it doesn't communicate to the dev what went wrong.
     // - [ ] make separate test functions for: (so they can independently fail and report their issues)

@@ -48,6 +48,17 @@ impl From<Result<Parsed, Error>> for OutputEnum {
                     .into_iter()
                     .map(|p| format!("{p}"))
                     .collect(),
+                geometries: {
+                    let mut qualified_names = parsed
+                        .gdtf
+                        .geometries
+                        .graph
+                        .node_indices()
+                        .map(|i| parsed.gdtf.geometries.qualified_name(i))
+                        .collect::<Vec<String>>();
+                    qualified_names.sort();
+                    qualified_names
+                },
             }),
             Err(e) => OutputEnum::Err(ErrorInfo {
                 error: format!("{e}"),
@@ -67,6 +78,7 @@ pub struct ProblemInfo {
     pub name: String,
     pub fixture_type_id: String,
     pub problems: Vec<String>,
+    pub geometries: Vec<String>,
 }
 
 pub static EXPECTED_PROBLEMS_PATH: Lazy<PathBuf> =
