@@ -4,6 +4,8 @@ use roxmltree::TextPos;
 use thiserror::Error;
 use zip::result::ZipError;
 
+use super::utils::XmlPosition;
+
 /// An unrecoverable GDTF Error.
 #[derive(Error, Debug)]
 pub enum Error {
@@ -17,62 +19,100 @@ pub enum Error {
     DescriptionXmlMissing(ZipError),
     #[error("'description.xml' could not be read: {0}")]
     InvalidDescriptionXml(io::Error),
-    #[error("unexpected condition occured. This is a fault in opengdtf. Please open an issue at https://github.com/Firionus/opengdtf/issues/new. The cause is: '{0}'")]
+    #[error(
+        "unexpected condition occured. This is a fault in opengdtf. \
+    Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
+    )]
     Unexpected(String),
 }
 
-// TODO Do all of these Problems indicate what action was taken? Like "Renamed to
-// 'DuplicateGeometry <UUID>'"? Can we actually say that? In a lot of cases, we
-// might have different actions depending on the context, e.g. with
-// XmlAttributeMissing, sometimes we abort parsing an element, sometimes we
-// insert a default, sometimes we indicate missing, ...
+#[derive(Error, Debug)]
+#[error("{p} (line {at})")]
+pub struct Problem {
+    p: ProblemType,
+    at: TextPos,
+}
+
+impl Problem {
+    pub fn handled_by<T: Into<String>>(self, action: T, problems: &mut Vec<HandledProblem>) {
+        problems.push(HandledProblem {
+            p: self,
+            action: action.into(),
+        });
+    }
+}
+
+pub(crate) trait HandleProblem<T, S: Into<String>> {
+    fn handled_by(self, action: S, problems: &mut Vec<HandledProblem>) -> Option<T>;
+}
+
+impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, Problem> {
+    fn handled_by(self, action: S, problems: &mut Vec<HandledProblem>) -> Option<T> {
+        match self {
+            Ok(t) => Some(t),
+            Err(p) => {
+                p.handled_by(action, problems);
+                None
+            }
+        }
+    }
+}
+
+#[derive(Error, Debug)]
+#[error("{p}; {action}")]
+pub struct HandledProblem {
+    p: Problem,
+    action: String,
+}
 
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug)]
-pub enum Problem {
-    #[error("missing attribute 'DataVersion' on 'GDTF' node at line {0}")]
-    NoDataVersion(TextPos),
-    #[error("attribute 'DataVersion' of 'GDTF' node at line {1} is invalid. Got '{0}'.")]
-    InvalidDataVersion(String, TextPos),
-    #[error("node '{missing}' missing as child of '{parent}' at line {pos}")]
-    XmlNodeMissing {
-        missing: String,
-        parent: String,
-        pos: TextPos,
-    },
-    #[error("attribute '{attr}' missing on '{tag}' node at line {pos}")]
-    XmlAttributeMissing {
-        attr: String,
-        tag: String,
-        pos: TextPos,
-    },
-    #[error("attribute '{attr}' on '{tag}' at line {pos} could not be parsed as {expected_type}. Value '{content}' caused error: {err}")]
+pub enum ProblemType {
+    #[error("missing node '{missing}' as child of '{parent}'")]
+    XmlNodeMissing { missing: String, parent: String },
+    #[error("missing attribute '{attr}' on <{tag}>")]
+    XmlAttributeMissing { attr: String, tag: String },
+    #[error(
+        "could not parse attribute {attr}=\"{content}\" on <{tag}> as {expected_type}; {source}"
+    )]
     InvalidAttribute {
         attr: String,
         tag: String,
-        pos: TextPos,
         content: String,
-        err: Box<dyn std::error::Error>,
+        source: Box<dyn std::error::Error>,
         expected_type: String,
     },
-    #[error("unexpected XML node '{0}' at line {1}")]
-    UnexpectedXmlNode(String, TextPos),
-    #[error("UUID error in '{1}' at line {2}: {0}")]
-    UuidError(uuid::Error, String, TextPos),
-    #[error("invalid enum string in {1} at line {2}. Expected one of ['Yes', 'No']. Got {0}")]
-    InvalidYesNoEnum(String, String, TextPos),
-    #[error("duplicate Geometry name '{0}' at line {1}")]
-    DuplicateGeometryName(String, TextPos),
-    #[error("duplicate DMXBreak attribute '{0}' at line {1}")]
-    DuplicateDmxBreak(u16, TextPos),
-    #[error("unexpected 'GeometryReference' as top-level Geometry at line {0}")]
-    UnexpectedTopLevelGeometryReference(TextPos),
-    #[error("Geometry '{0}' is referenced at line {1} but not found")]
-    UnknownGeometry(String, TextPos),
+    #[error("unexpected node <{0}>")]
+    UnexpectedXmlNode(String),
+    #[error("duplicate Geometry name '{0}'")]
+    DuplicateGeometryName(String),
     #[error(
-        "Geometry '{0}' is referenced at line {1} and was expected to be top-level but wasn't"
+        "duplicate DMXBreak attribute {duplicate_break} in GeometryReference '{geometry_reference_name}'"
     )]
-    NonTopLevelGeometryReferenced(String, TextPos),
+    DuplicateDmxBreak {
+        duplicate_break: u16,
+        geometry_reference_name: String,
+    },
+    #[error("unexpected GeometryReference '{0}' as top-level Geometry")]
+    UnexpectedTopLevelGeometryReference(String),
+    #[error("unknown Geometry '{0}' referenced")]
+    UnknownGeometry(String),
+    #[error(
+        "non-top-level Geometry '{target}' referenced in GeometryReference '{geometry_reference}'"
+    )]
+    NonTopLevelGeometryReferenced {
+        target: String,
+        geometry_reference: String,
+    },
+}
+
+impl ProblemType {
+    pub(crate) fn at(self, node: &roxmltree::Node) -> Problem {
+        Problem {
+            p: self,
+            at: node.position(),
+        }
+    }
 }
 
 pub(crate) trait ProblemAdd {

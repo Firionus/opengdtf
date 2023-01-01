@@ -46,11 +46,11 @@ impl From<Result<Parsed, Error>> for OutputEnum {
                 problems: parsed
                     .problems
                     .into_iter()
-                    .map(|p| format!("{p:?}"))
+                    .map(|p| format!("{p}"))
                     .collect(),
             }),
             Err(e) => OutputEnum::Err(ErrorInfo {
-                error: format!("{e:?}"),
+                error: format!("{e}"),
             }),
         }
     }

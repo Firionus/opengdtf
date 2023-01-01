@@ -4,22 +4,23 @@ mod utils;
 
 use std::io::{Read, Seek};
 
+use strum::EnumString;
 use uuid::Uuid;
 
-use crate::Gdtf;
+use crate::{parser::utils::AssignOrHandle, Gdtf};
 
 pub use self::errors::{Error, Problem};
 
 use self::{
-    errors::ProblemAdd,
+    errors::{HandleProblem, HandledProblem, ProblemType},
     geometries::parse_geometries,
-    utils::{GetAttribute, XmlPosition},
+    utils::GetFromNode,
 };
 
 #[derive(Debug)]
 pub struct Parsed {
     pub gdtf: Gdtf,
-    pub problems: Vec<Problem>,
+    pub problems: Vec<HandledProblem>,
 }
 
 pub fn parse<T: Read + Seek>(reader: T) -> Result<Parsed, Error> {
@@ -49,94 +50,85 @@ fn parse_description(description_content: &str) -> Result<Parsed, Error> {
         .find(|n| n.has_tag_name("GDTF"))
         .ok_or(Error::NoRootNode)?;
 
-    if let Some(val) = root_node.parse_required_attribute("DataVersion", &mut problems, &doc) {
-        gdtf.data_version = val;
-    };
+    root_node
+        .parse_required_attribute("DataVersion")
+        .assign_or_handle(&mut gdtf.data_version, &mut problems);
+    // TODO communicate how we handle version that aren't v1.2 here, if applicable
 
-    let ft = root_node
-        .children()
-        .find(|n| n.has_tag_name("FixtureType"))
-        .or_else(|| {
-            problems.push_then_none(Problem::XmlNodeMissing {
+    let ft = match root_node.children().find(|n| n.has_tag_name("FixtureType")) {
+        Some(ft) => ft,
+        None => {
+            ProblemType::XmlNodeMissing {
                 missing: "FixtureType".to_owned(),
                 parent: "GDTF".to_owned(),
-                pos: root_node.position(&doc),
-            })
-        });
+            }
+            .at(&root_node)
+            .handled_by("returning empty fixture type", &mut problems);
+            return Ok(Parsed { gdtf, problems });
+        }
+    };
 
     let geometries = &mut gdtf.geometries;
 
-    if let Some(ft) = ft {
-        parse_geometries(geometries, &ft, &mut problems, &doc)?;
+    parse_geometries(geometries, &ft, &mut problems)?;
 
-        gdtf.fixture_type_id = ft
-            .attribute("FixtureTypeID")
-            .or_else(|| {
-                problems.push_then_none(Problem::XmlAttributeMissing {
-                    attr: "FixtureTypeId".to_owned(),
-                    tag: "FixtureType".to_owned(),
-                    pos: ft.position(&doc),
-                })
-            })
-            .and_then(|s| match Uuid::try_from(s) {
-                Ok(v) => Some(v),
-                Err(e) => problems.push_then_none(Problem::UuidError(
-                    e,
-                    "FixtureTypeId".to_owned(),
-                    ft.position(&doc),
-                )),
-            })
-            .unwrap_or(Uuid::nil());
+    ft.parse_required_attribute("FixtureTypeID")
+        .assign_or_handle(&mut gdtf.fixture_type_id, &mut problems);
 
-        gdtf.ref_ft = ft
-            .attribute("RefFT")
-            // no handling if missing, I don't think it's important to have the node present when the value is empty
-            .and_then(|s| match s {
-                "" => None,
-                _ => match Uuid::try_from(s) {
-                    Ok(v) => Some(v),
-                    Err(e) => problems.push_then_none(Problem::UuidError(
-                        e,
-                        "RefFT".to_owned(),
-                        ft.position(&doc),
-                    )),
-                },
-            });
-
-        if let Some(can_have_children) = ft.attribute("CanHaveChildren").and_then(|s| match s {
-            "Yes" => Some(true),
-            "No" => Some(false),
-            _ => problems.push_then_none(Problem::InvalidYesNoEnum(
-                s.to_owned(),
-                "CanHaveChildren".to_owned(),
-                ft.position(&doc),
-            )),
-        }) {
-            gdtf.can_have_children = can_have_children;
+    // TODO test this behavior
+    gdtf.ref_ft =
+        match ft.map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| s.is_empty())) {
+            Some(Ok(v)) => Some(v),
+            Some(Err(p)) => {
+                p.handled_by("setting ref_ft to None", &mut problems);
+                None
+            }
+            None => None,
         };
 
-        if let Some(val) = ft.parse_required_attribute("Name", &mut problems, &doc) {
-            gdtf.name = val;
-        };
-
-        if let Some(val) = ft.parse_required_attribute("ShortName", &mut problems, &doc) {
-            gdtf.short_name = val;
-        };
-
-        if let Some(val) = ft.parse_required_attribute("LongName", &mut problems, &doc) {
-            gdtf.long_name = val;
-        };
-
-        if let Some(val) = ft.parse_required_attribute("Description", &mut problems, &doc) {
-            gdtf.description = val;
-        };
-
-        if let Some(val) = ft.parse_required_attribute("Manufacturer", &mut problems, &doc) {
-            gdtf.manufacturer = val;
-        };
+    // TODO test this, I wanna see the error output :)
+    match ft.parse_attribute::<YesNoEnum>("CanHaveChildren") {
+        Some(Ok(v)) => gdtf.can_have_children = v.into(),
+        Some(Err(p)) => p.handled_by(
+            format!("using default value {}", gdtf.can_have_children),
+            &mut problems,
+        ),
+        None => (),
     }
 
+    ft.parse_required_attribute("Name")
+        .assign_or_handle(&mut gdtf.name, &mut problems);
+
+    ft.parse_required_attribute("ShortName")
+        .assign_or_handle(&mut gdtf.short_name, &mut problems);
+
+    ft.parse_required_attribute("LongName")
+        .assign_or_handle(&mut gdtf.long_name, &mut problems);
+
+    ft.parse_required_attribute("Description")
+        .assign_or_handle(&mut gdtf.description, &mut problems);
+
+    ft.parse_required_attribute("Manufacturer")
+        .assign_or_handle(&mut gdtf.manufacturer, &mut problems);
+
     Ok(Parsed { gdtf, problems })
+}
+
+#[derive(strum::Display, EnumString)]
+enum YesNoEnum {
+    #[strum(to_string = "Yes")]
+    Yes,
+    #[strum(to_string = "No")]
+    No,
+}
+
+impl From<YesNoEnum> for bool {
+    fn from(value: YesNoEnum) -> Self {
+        match value {
+            YesNoEnum::Yes => true,
+            YesNoEnum::No => false,
+        }
+    }
 }
 
 #[cfg(test)]
