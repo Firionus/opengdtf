@@ -160,6 +160,8 @@ impl XmlPosition for Node<'_, '_> {
 mod tests {
     use super::*;
 
+    use pretty_assertions::assert_eq;
+
     #[test]
     fn get_attribute_works() {
         let xml = r#"<tag attr="300" />"#;

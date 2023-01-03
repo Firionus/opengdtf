@@ -300,6 +300,7 @@ mod tests {
     use std::ops::Not;
 
     use petgraph::{visit::IntoEdgesDirected, Direction::Outgoing};
+    use pretty_assertions::assert_eq;
     use regex::Regex;
 
     use super::*;

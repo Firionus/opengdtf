@@ -136,6 +136,7 @@ mod tests {
     use std::{fs::File, path::Path};
 
     use crate::DataVersion;
+    use pretty_assertions::assert_eq;
 
     use super::*;
 

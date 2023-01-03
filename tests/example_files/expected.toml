@@ -1,0 +1,285 @@
+[455ca68ce1721503ae4c12dcbb3bd0be]
+filename = 'Ayrton@Ghibli@V2_-_Soft_V201.gdtf'
+saved_on = '2023-01-01T14:03:56.314026681Z'
+comment = ''
+manufacturer = 'Ayrton'
+name = 'Ghibli'
+fixture_type_id = '2e7392e6-03f5-423b-85c0-7a1b4bbb99cd'
+problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 4:3); setting ref_ft to None']
+geometries = [
+    'Base',
+    'Base.Pigtail',
+    'Base.Yoke',
+    'Base.Yoke.Head',
+    'Base.Yoke.Head.Beam',
+]
+
+[6b908e9c84e93dd3b6e55b56790dbe82]
+filename = 'Robe_Lighting@Robin_Tetra2@04062021.gdtf'
+saved_on = '2023-01-02T23:59:09.673708466Z'
+comment = ''
+manufacturer = 'Robe Lighting'
+name = 'Robin Tetra2'
+fixture_type_id = '5a7b5195-af40-4bda-a658-cbaa98dff9c0'
+problems = [
+    '''duplicate Geometry name 'pixel18empty 4' (line 2022:15); ignoring node''',
+    '''duplicate Geometry name 'pixel17empty 4' (line 2021:15); ignoring node''',
+    '''duplicate Geometry name 'pixel16empty 4' (line 2020:15); ignoring node''',
+    '''duplicate Geometry name 'pixel15empty 4' (line 2019:15); ignoring node''',
+    '''duplicate Geometry name 'flower pixel14empty 4' (line 2018:15); ignoring node''',
+    '''duplicate Geometry name 'pixel13empty 4' (line 2017:15); ignoring node''',
+    '''duplicate Geometry name 'pixel12empty 4' (line 2016:15); ignoring node''',
+    '''duplicate Geometry name 'pixel11empty 4' (line 2015:15); ignoring node''',
+    '''duplicate Geometry name 'pixel10empty 4' (line 2014:15); ignoring node''',
+    '''duplicate Geometry name 'pixel9empty 4' (line 2008:15); ignoring node''',
+    '''duplicate Geometry name 'pixel8empty 4' (line 2007:15); ignoring node''',
+    '''duplicate Geometry name 'pixel7empty 4' (line 2006:15); ignoring node''',
+    '''duplicate Geometry name 'pixel6empty 4' (line 2005:15); ignoring node''',
+    '''duplicate Geometry name 'flower pixel5empty 4' (line 2004:15); ignoring node''',
+    '''duplicate Geometry name 'pixel4empty 4' (line 2003:15); ignoring node''',
+    '''duplicate Geometry name 'pixel3empty 4' (line 2002:15); ignoring node''',
+    '''duplicate Geometry name 'pixel2empty 4' (line 2001:15); ignoring node''',
+    '''duplicate Geometry name 'pixel1empty 4' (line 2000:15); ignoring node''',
+    'could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None',
+]
+geometries = [
+    'Base 1',
+    'Base 1.Pigtail 4',
+    'Base 1.Pigtail 5',
+    'Base 1.Yoke 1',
+    'Base 1.Yoke 1.array 1',
+    'Base 1.Yoke 1.array 1.zoom1 1',
+    'Base 1.Yoke 1.array 1.zoom1 1.flower1 1',
+    'Base 1.Yoke 1.array 1.zoom1 2',
+    'Base 1.Yoke 1.array 1.zoom1 2.flower2 1',
+    'Base 2',
+    'Base 2.Pigtail 2',
+    'Base 2.Pigtail 3',
+    'Base 2.Yoke 2',
+    'Base 2.Yoke 2.array 2',
+    'Base 2.Yoke 2.array 2.pattern mode 2',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.flower pixel5empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.flower1 2',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel1empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel2empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel3empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel4empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel6empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel7empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel8empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 1.pixel9empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.flower pixel14empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.flower2 3',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel10empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel11empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel12empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel13empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel15empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel16empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel17empty 4',
+    'Base 2.Yoke 2.array 2.pattern mode 2.zoom2 2.pixel18empty 4',
+    'Base 3',
+    'Base 3.Pigtail 10',
+    'Base 3.Pigtail 11',
+    'Base 3.Yoke 3',
+    'Base 3.Yoke 3.array 3',
+    'Base 3.Yoke 3.array 3.zoom3 1',
+    'Base 3.Yoke 3.array 3.zoom3 1.flower 1 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.flower pixelRGB 5 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel1RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel2RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel3RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel4RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel6RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel7RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel8RGB 5 3',
+    'Base 3.Yoke 3.array 3.zoom3 1.pixel9RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2',
+    'Base 3.Yoke 3.array 3.zoom3 2.flower 2 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.flower pixel14RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel10RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel11RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel12RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel13RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel16RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel17RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel18RGB 3',
+    'Base 3.Yoke 3.array 3.zoom3 2.pixel1RGB 5 3',
+    'Base 4',
+    'Base 4.Pigtail 6',
+    'Base 4.Pigtail 7',
+    'Base 4.Yoke 4',
+    'Base 4.Yoke 4.array 4',
+    'Base 4.Yoke 4.array 4.zoom4 1',
+    'Base 4.Yoke 4.array 4.zoom4 1.flower pixel5RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.flower1 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel1RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel2RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel3RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel4RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel6RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel7RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel8RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 1.pixel9RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2',
+    'Base 4.Yoke 4.array 4.zoom4 2.flower pixel14RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.flower2 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel10RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel11RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel12RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel13RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel15RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel16RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel17RGBW 4',
+    'Base 4.Yoke 4.array 4.zoom4 2.pixel18RGBW 4',
+    'Base 5',
+    'Base 5.Pigtail 8',
+    'Base 5.Pigtail 9',
+    'Base 5.Yoke 5',
+    'Base 5.Yoke 5.array 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.flower 1 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.flower pixel5RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel1RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel2RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel3RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel4RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel6RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel7RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel8RGB5 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom 5 1.pixel9RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.flower 2 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.flower pixel14RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel10RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel11RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel12RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel13RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel15RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel16RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel17RGB 5',
+    'Base 5.Yoke 5.array 5.pattern mode 5.zoom5 2.pixel18RGB 5',
+    'Base 6',
+    'Base 6.Pigtail',
+    'Base 6.Pigtail 1',
+    'Base 6.Yoke 6',
+    'Base 6.Yoke 6.array 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.flower pixel5RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.flower1 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel1RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel2RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel3RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel4RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel6RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel7RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel8RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 1.pixel9RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.flower pixel14RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.flower2 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel10RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel11RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel12RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel13RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel15RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel16RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel17RGBW 6',
+    'Base 6.Yoke 6.array 6.pattern mode 6.zoom6 2.pixel18RGBW 6',
+    'flower effect',
+    'pixel RGB',
+    'pixel RGBW',
+    'pixel empty',
+]
+
+[bd9b870b201764bed79f0ef42981d67a]
+filename = 'Robe_Lighting@Robin_Esprite@25102021_new_rotating_gobo_7.gdtf'
+saved_on = '2023-01-01T14:03:56.030850062Z'
+comment = ''
+manufacturer = 'Robe Lighting'
+name = 'Robin Esprite'
+fixture_type_id = 'ed22065c-2c72-43fe-ba36-a81d53d0250d'
+problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None']
+geometries = [
+    'base',
+    'base.Pigtail',
+    'base.yoke',
+    'base.yoke.head',
+    'base.yoke.head.beam',
+]
+
+[24b3a956d5ab474d8fcc2dc8fe5ccbaf]
+filename = 'Robe_Lighting@Robin_BMFL_Blade@31072020.gdtf'
+saved_on = '2023-01-01T14:03:55.643686366Z'
+comment = ''
+manufacturer = 'Robe lighting'
+name = 'Robin BMFL Blade'
+fixture_type_id = '7f8c97fd-5a4a-403f-9486-a3a06fbff570'
+problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 4:3); setting ref_ft to None']
+geometries = [
+    'Base',
+    'Base.Pigtail',
+    'Base.Yoke',
+    'Base.Yoke.Head',
+    'Base.Yoke.Head.Beam',
+]
+
+[a7f0c2583dd4e27420c8ebfb959680cf]
+filename = 'Robe_Lighting@pixelPATT@15012021v3.gdtf'
+saved_on = '2023-01-01T14:03:55.486316331Z'
+comment = ''
+manufacturer = 'Robe lighting'
+name = 'pixelPATT'
+fixture_type_id = '41a5c4f0-9c42-4068-bee8-4478b2283f98'
+problems = []
+geometries = [
+    'base PRGB',
+    'base PRGB.background PRGB',
+    'base PRGB.background PRGB.pattern PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 1 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 2 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 3 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 4 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 5 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 6 PRGB',
+    'base PRGB.background PRGB.pattern PRGB.pixel 7 PRGB',
+    'base PRGB.pigtail PRGB',
+    'base PRGBW',
+    'base PRGBW.background PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 1 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 2 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 3 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 4 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 5 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 6 PRGBW',
+    'base PRGBW.background PRGBW.pattern PRGBW.pixel 7 PRGBW',
+    'base PRGBW.pigtail PRGBW',
+    'patt beam 1',
+    'patt beam 1.patt cross 1',
+    'patt beam 2',
+    'patt beam 2.patt cross 2',
+]
+
+[2c10f61c05151d78bfa5992bbdfffec5]
+filename = 'Robe_Lighting@Robin_Esprite@25102021_new_rotating_gobo_7.missing_version.gdtf'
+saved_on = '2023-01-01T14:03:56.265692742Z'
+comment = ''
+manufacturer = 'Robe Lighting'
+name = 'Robin Esprite'
+fixture_type_id = 'ed22065c-2c72-43fe-ba36-a81d53d0250d'
+problems = [
+    '''missing attribute 'DataVersion' on <GDTF> (line 2:1); using default 1.2''',
+    'could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None',
+]
+geometries = [
+    'base',
+    'base.Pigtail',
+    'base.yoke',
+    'base.yoke.head',
+    'base.yoke.head.beam',
+]
