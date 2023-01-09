@@ -1,11 +1,11 @@
 [455ca68ce1721503ae4c12dcbb3bd0be]
 filename = 'Ayrton@Ghibli@V2_-_Soft_V201.gdtf'
-saved_on = '2023-01-01T14:03:56.314026681Z'
+saved_on = '2023-01-09T15:06:31.393517606Z'
 comment = ''
 manufacturer = 'Ayrton'
 name = 'Ghibli'
 fixture_type_id = '2e7392e6-03f5-423b-85c0-7a1b4bbb99cd'
-problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 4:3); setting ref_ft to None']
+problems = []
 geometries = [
     'Base',
     'Base.Pigtail',
@@ -16,7 +16,7 @@ geometries = [
 
 [6b908e9c84e93dd3b6e55b56790dbe82]
 filename = 'Robe_Lighting@Robin_Tetra2@04062021.gdtf'
-saved_on = '2023-01-02T23:59:09.673708466Z'
+saved_on = '2023-01-09T15:06:30.897009700Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Tetra2'
@@ -40,7 +40,6 @@ problems = [
     '''duplicate Geometry name 'pixel3empty 4' (line 2002:15); ignoring node''',
     '''duplicate Geometry name 'pixel2empty 4' (line 2001:15); ignoring node''',
     '''duplicate Geometry name 'pixel1empty 4' (line 2000:15); ignoring node''',
-    'could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None',
 ]
 geometries = [
     'Base 1',
@@ -198,12 +197,12 @@ geometries = [
 
 [bd9b870b201764bed79f0ef42981d67a]
 filename = 'Robe_Lighting@Robin_Esprite@25102021_new_rotating_gobo_7.gdtf'
-saved_on = '2023-01-01T14:03:56.030850062Z'
+saved_on = '2023-01-09T15:06:31.110159999Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Esprite'
 fixture_type_id = 'ed22065c-2c72-43fe-ba36-a81d53d0250d'
-problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None']
+problems = []
 geometries = [
     'base',
     'base.Pigtail',
@@ -214,12 +213,12 @@ geometries = [
 
 [24b3a956d5ab474d8fcc2dc8fe5ccbaf]
 filename = 'Robe_Lighting@Robin_BMFL_Blade@31072020.gdtf'
-saved_on = '2023-01-01T14:03:55.643686366Z'
+saved_on = '2023-01-09T15:06:30.744843500Z'
 comment = ''
 manufacturer = 'Robe lighting'
 name = 'Robin BMFL Blade'
 fixture_type_id = '7f8c97fd-5a4a-403f-9486-a3a06fbff570'
-problems = ['could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 4:3); setting ref_ft to None']
+problems = []
 geometries = [
     'Base',
     'Base.Pigtail',
@@ -267,15 +266,12 @@ geometries = [
 
 [2c10f61c05151d78bfa5992bbdfffec5]
 filename = 'Robe_Lighting@Robin_Esprite@25102021_new_rotating_gobo_7.missing_version.gdtf'
-saved_on = '2023-01-01T14:03:56.265692742Z'
+saved_on = '2023-01-09T15:06:31.344770259Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Esprite'
 fixture_type_id = 'ed22065c-2c72-43fe-ba36-a81d53d0250d'
-problems = [
-    '''missing attribute 'DataVersion' on <GDTF> (line 2:1); using default 1.2''',
-    'could not parse attribute RefFT="" on <FixtureType> as uuid::Uuid; invalid length: expected length 32 for simple format, found 0 (line 3:3); setting ref_ft to None',
-]
+problems = ['''missing attribute 'DataVersion' on <GDTF> (line 2:1); using default 1.2''']
 geometries = [
     'base',
     'base.Pigtail',

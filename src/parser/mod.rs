@@ -75,9 +75,11 @@ fn parse_description(description_content: &str) -> Result<Parsed, Error> {
     ft.parse_required_attribute("FixtureTypeID")
         .assign_or_handle(&mut gdtf.fixture_type_id, &mut problems);
 
+    // empty string as ref_ft is not considered a problem, just parses to None
+    // while the DIN requires this attribute, semantically and in practice it is usually absent and the GDTF builder encodes absence as empty string
     // TODO test this behavior
     gdtf.ref_ft =
-        match ft.map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| s.is_empty())) {
+        match ft.map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| !s.is_empty())) {
             Some(Ok(v)) => Some(v),
             Some(Err(p)) => {
                 p.handled_by("setting ref_ft to None", &mut problems);
@@ -143,7 +145,7 @@ mod tests {
     #[test]
     fn channel_layout_test() {
         let path = Path::new(
-            "test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
+            "tests/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
         );
         let file = File::open(path).unwrap();
         let Parsed { gdtf, problems } = parse(file).unwrap();
