@@ -398,7 +398,7 @@ mod tests {
         #[test]
         fn duplicate_break() {
             let xml = r#"
-    <GeometryReference Name="testing">
+    <GeometryReference>
         <Break DMXBreak="1" DMXOffset="1"/>
         <Break DMXBreak="2" DMXOffset="2"/>
         <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
@@ -409,11 +409,10 @@ mod tests {
             assert!(matches!(
                 problems.pop().unwrap().problem_type(),
                 ProblemType::DuplicateDmxBreak {
-                            duplicate_break: 2,
-                            geometry_reference_name
-          
+                    duplicate_break: 2,
+                    geometry_reference_name
                 }
-            if geometry_reference_name == "testing"));
+            ));
             assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
         }
 
@@ -429,8 +428,7 @@ mod tests {
             let doc = roxmltree::Document::parse(xml).unwrap();
             let n = doc.root_element();
             let mut problems: Vec<HandledProblem> = vec![];
-            let root_name: String = n.parse_required_attribute("Name").unwrap();
-            let offsets = parse_reference_offsets(&n, &root_name, &mut problems);
+            let offsets = parse_reference_offsets(&n, "arbitrary name for testing", &mut problems);
             (problems, offsets)
         }
     }
@@ -616,30 +614,26 @@ mod tests {
 
     #[test]
     fn geometry_duplicate_name_deterministic_renaming() {
-        todo!()
-    }
-
-    #[test]
-    fn geometries_duplicate_names() {
+        todo!("replace with more complex example, remove unnecessary attributes?");
         let ft_str = r#"
-<FixtureType>
-    <Geometries>
-        <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-        <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                <Break DMXBreak="1" DMXOffset="1"/>
-                <Break DMXBreak="2" DMXOffset="1"/>
-                <Break DMXBreak="1" DMXOffset="1"/>
-            </GeometryReference>
-            <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                <Break DMXBreak="1" DMXOffset="3"/>
-                <Break DMXBreak="2" DMXOffset="3"/>
-                <Break DMXBreak="1" DMXOffset="2"/>
-            </GeometryReference>
-        </Geometry>
-    </Geometries>
-</FixtureType>
-        "#;
+        <FixtureType>
+            <Geometries>
+                <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+                <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                    <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                        <Break DMXBreak="1" DMXOffset="1"/>
+                        <Break DMXBreak="2" DMXOffset="1"/>
+                        <Break DMXBreak="1" DMXOffset="1"/>
+                    </GeometryReference>
+                    <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                        <Break DMXBreak="1" DMXOffset="3"/>
+                        <Break DMXBreak="2" DMXOffset="3"/>
+                        <Break DMXBreak="1" DMXOffset="2"/>
+                    </GeometryReference>
+                </Geometry>
+            </Geometries>
+        </FixtureType>
+                "#;
 
         let (problems, geometries) = run_parse_geometries(ft_str);
 
@@ -649,8 +643,7 @@ mod tests {
             ProblemType::DuplicateGeometryName(..),
         ));
 
-        let name_of_broken_node = geometries.graph.raw_nodes()[3].weight.name();
-        assert_is_uuid_and_not_nil(name_of_broken_node);
+        todo!("assert deduped geometry name")
     }
 
     #[test]

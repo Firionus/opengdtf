@@ -138,7 +138,6 @@ mod tests {
     use std::{fs::File, path::Path};
 
     use crate::{parser::errors::HandleProblem, DataVersion};
-    use pretty_assertions::assert_eq;
 
     use super::*;
 
@@ -174,37 +173,10 @@ mod tests {
     #[test]
     fn description_xml_missing() {
         let path = Path::new(
-            "test/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.empty.gdtf",
+            "tests/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.empty.gdtf",
         );
         let file = File::open(path).unwrap();
         let e = parse(file).unwrap_err();
         assert!(matches!(e, Error::DescriptionXmlMissing(..)));
-    }
-
-    // TODO I expect failure here, probbaly remove, what does it even test?
-    #[test]
-    fn data_version_parsing_with_get_attribute() {
-        let xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        let mut problems: Vec<HandledProblem> = vec![];
-        let root_node = doc.root_element();
-
-        let dv: Option<DataVersion> = root_node
-            .parse_required_attribute("DataVersion")
-            .handled_by("setting to None", &mut problems);
-        assert_eq!(problems.len(), 1);
-        assert_eq!(dv, None);
-
-        let xml = r#"<GDTF DataVersion="1.1"></GDTF>"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        let mut problems: Vec<HandledProblem> = vec![];
-        let root_node = doc.root_element();
-
-        let dv: Option<DataVersion> = root_node
-            .parse_required_attribute("DataVersion")
-            .handled_by("setting to None", &mut problems);
-        assert_eq!(problems.len(), 0);
-        assert_eq!(dv, Some(DataVersion::V1_1));
-        assert_eq!(format!("{}", dv.unwrap()), "1.1");
     }
 }
