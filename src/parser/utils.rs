@@ -5,6 +5,8 @@ use std::str::FromStr;
 use roxmltree::Node;
 use roxmltree::TextPos;
 
+use crate::Problems;
+
 use super::errors::*;
 
 // TODO fix warning later, it is only a memory usage problem, due to an enum
@@ -29,11 +31,7 @@ pub(crate) trait GetFromNode {
 
     fn find_child_by_tag_name(&self, tag: &str) -> Result<Node, Problem>;
 
-    fn get_name(
-        &self,
-        node_index_in_xml_parent: usize,
-        problems: &mut Vec<HandledProblem>,
-    ) -> String;
+    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> String;
 
     // TODO does not return Problem if attribute missing, just None
     // fn parse_attribute<T: FromStr>(&self, attr: &str) -> Result<Option<T>, ProblemType>
@@ -103,11 +101,7 @@ impl GetFromNode for Node<'_, '_> {
     }
 
     /// Get attribute 'Name', or if missing provide default and push a problem.
-    fn get_name(
-        &self,
-        node_index_in_xml_parent: usize,
-        problems: &mut Vec<HandledProblem>,
-    ) -> String {
+    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> String {
         self.parse_required_attribute("Name").unwrap_or_else(|p| {
             let default_name = format!(
                 "{} {}",
@@ -140,11 +134,11 @@ where
 }
 
 pub(crate) trait AssignOrHandle<T: Display> {
-    fn assign_or_handle(self, to: &mut T, problems: &mut Vec<HandledProblem>);
+    fn assign_or_handle(self, to: &mut T, problems: &mut Problems);
 }
 
 impl<T: Display> AssignOrHandle<T> for Result<T, Problem> {
-    fn assign_or_handle(self, to: &mut T, problems: &mut Vec<HandledProblem>) {
+    fn assign_or_handle(self, to: &mut T, problems: &mut Problems) {
         match self {
             Ok(v) => *to = v,
             Err(p) => p.handled_by(format!("using default {}", to), problems),
@@ -171,7 +165,7 @@ mod tests {
         let xml = r#"<tag attr="300" />"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
-        let mut problems: Vec<HandledProblem> = vec![];
+        let mut problems: Problems = vec![];
         assert_eq!(
             n.parse_required_attribute("attr")
                 .handled_by("setting None", &mut problems),
@@ -190,7 +184,7 @@ mod tests {
         let xml = r#"<Geometry pos="not_a_number" />"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
-        let mut problems: Vec<HandledProblem> = vec![];
+        let mut problems: Problems = vec![];
         assert_eq!(
             n.parse_required_attribute("pos")
                 .handled_by("setting None", &mut problems),

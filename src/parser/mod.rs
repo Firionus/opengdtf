@@ -17,10 +17,12 @@ use self::{
     utils::GetFromNode,
 };
 
+pub type Problems = Vec<HandledProblem>;
+
 #[derive(Debug)]
 pub struct Parsed {
     pub gdtf: Gdtf,
-    pub problems: Vec<HandledProblem>,
+    pub problems: Problems,
 }
 
 pub fn parse<T: Read + Seek>(reader: T) -> Result<Parsed, Error> {
@@ -43,7 +45,7 @@ fn parse_description(description_content: &str) -> Result<Parsed, Error> {
 
     let mut gdtf = Gdtf::default();
 
-    let mut problems = vec![];
+    let mut problems: Problems = vec![];
 
     let root_node = doc
         .descendants()

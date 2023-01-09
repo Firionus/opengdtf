@@ -5,7 +5,10 @@ use roxmltree::Node; // TODO import qualified, so it's easier to distinguish fro
 
 use super::errors::*;
 
-use crate::geometries::{Geometries, GeometryType, Offset, Offsets};
+use crate::{
+    geometries::{Geometries, GeometryType, Offset, Offsets},
+    Problems,
+};
 
 use super::utils::GetFromNode;
 
@@ -22,7 +25,7 @@ struct GeometryDuplicate<'a> {
 pub fn parse_geometries(
     geometries: &mut Geometries,
     ft: &Node,
-    problems: &mut Vec<HandledProblem>,
+    problems: &mut Problems,
 ) -> Result<(), Error> {
     let g = match ft.find_child_by_tag_name("Geometries") {
         Ok(g) => g,
@@ -114,7 +117,7 @@ fn get_unique_geometry_name<'a>(
     geometries: &Geometries,
     geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
     parent_graph_ind: Option<NodeIndex>,
-    problems: &mut Vec<HandledProblem>,
+    problems: &mut Problems,
 ) -> Option<String> {
     let name = n.get_name(node_index_in_xml_parent, problems);
     match geometries.names.get(&name) {
@@ -135,7 +138,7 @@ fn add_children<'a>(
     parent_xml: Node<'a, 'a>,
     parent_tree: NodeIndex,
     geometries: &mut Geometries,
-    problems: &mut Vec<HandledProblem>,
+    problems: &mut Problems,
     geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
 ) -> Result<(), Error> {
     let children = parent_xml.children().filter(|n| n.is_element());
@@ -187,7 +190,7 @@ fn parse_geometry_reference<'a>(
     geometries: &mut Geometries,
     geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
     parent_graph_ind: Option<NodeIndex>,
-    problems: &mut Vec<HandledProblem>,
+    problems: &mut Problems,
 ) -> Result<(), Error> {
     let name = match get_unique_geometry_name(
         n,
@@ -245,7 +248,7 @@ fn get_index_of_referenced_geometry(
     }
 }
 
-fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Vec<HandledProblem>) -> Offsets {
+fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Problems) -> Offsets {
     let mut nodes = n
         .children()
         .filter(|n| n.tag_name().name() == "Break")
@@ -424,10 +427,10 @@ mod tests {
             assert_eq!(offsets, Offsets::new());
         }
 
-        fn run_parse_reference_offsets(xml: &str) -> (Vec<HandledProblem>, Offsets) {
+        fn run_parse_reference_offsets(xml: &str) -> (Problems, Offsets) {
             let doc = roxmltree::Document::parse(xml).unwrap();
             let n = doc.root_element();
-            let mut problems: Vec<HandledProblem> = vec![];
+            let mut problems: Problems = vec![];
             let offsets = parse_reference_offsets(&n, "arbitrary name for testing", &mut problems);
             (problems, offsets)
         }
@@ -673,10 +676,10 @@ mod tests {
         assert!(geometries.names.contains_key("Element 1").not());
     }
 
-    fn run_parse_geometries(ft_str: &str) -> (Vec<HandledProblem>, Geometries) {
+    fn run_parse_geometries(ft_str: &str) -> (Problems, Geometries) {
         let doc = roxmltree::Document::parse(ft_str).unwrap();
         let ft = doc.root_element();
-        let mut problems: Vec<HandledProblem> = vec![];
+        let mut problems: Problems = vec![];
         let mut geometries = Geometries::default();
         parse_geometries(&mut geometries, &ft, &mut problems).unwrap();
         (problems, geometries)

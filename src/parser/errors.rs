@@ -4,6 +4,8 @@ use roxmltree::TextPos;
 use thiserror::Error;
 use zip::result::ZipError;
 
+use crate::Problems;
+
 use super::utils::XmlPosition;
 
 /// An unrecoverable GDTF Error.
@@ -34,7 +36,7 @@ pub struct Problem {
 }
 
 impl Problem {
-    pub fn handled_by<T: Into<String>>(self, action: T, problems: &mut Vec<HandledProblem>) {
+    pub fn handled_by<T: Into<String>>(self, action: T, problems: &mut Problems) {
         problems.push(HandledProblem {
             p: self,
             action: action.into(),
@@ -43,11 +45,11 @@ impl Problem {
 }
 
 pub(crate) trait HandleProblem<T, S: Into<String>> {
-    fn handled_by(self, action: S, problems: &mut Vec<HandledProblem>) -> Option<T>;
+    fn handled_by(self, action: S, problems: &mut Problems) -> Option<T>;
 }
 
 impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, Problem> {
-    fn handled_by(self, action: S, problems: &mut Vec<HandledProblem>) -> Option<T> {
+    fn handled_by(self, action: S, problems: &mut Problems) -> Option<T> {
         match self {
             Ok(t) => Some(t),
             Err(p) => {
