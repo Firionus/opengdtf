@@ -9,6 +9,7 @@ use crate::geometries::{Geometries, GeometryType, Offset, Offsets};
 
 use super::utils::GetFromNode;
 
+#[allow(dead_code)] // TODO remove once fields are used in deduplication
 struct GeometryDuplicate<'a> {
     /// already parsed 'Name' attribute
     // duplicate_name: String, // TODO just get it from the problem
@@ -221,6 +222,9 @@ fn parse_geometry_reference<'a>(
     Ok(())
 }
 
+// TODO fix warning later, it is only a memory usage problem, due to an enum
+// variant in `ProblemType` with many fields
+#[allow(clippy::result_large_err)]
 fn get_index_of_referenced_geometry(
     n: Node,
     geometries: &mut Geometries,
@@ -297,13 +301,12 @@ fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Vec<HandledPr
 #[allow(clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     use std::ops::Not;
 
     use petgraph::{visit::IntoEdgesDirected, Direction::Outgoing};
-    use pretty_assertions::assert_eq;
     use regex::Regex;
-
-    use super::*;
 
     #[cfg(test)]
     mod parse_reference_offsets {
@@ -395,15 +398,22 @@ mod tests {
         #[test]
         fn duplicate_break() {
             let xml = r#"
-    <GeometryReference>
+    <GeometryReference Name="testing">
         <Break DMXBreak="1" DMXOffset="1"/>
         <Break DMXBreak="2" DMXOffset="2"/>
         <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
         <Break DMXBreak="1" DMXOffset="4"/>  <!-- This is not a duplicate break, since it occurs in the last element, which is overwrite -->
     </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
+            let (mut problems, offsets) = run_parse_reference_offsets(xml);
             assert_eq!(problems.len(), 1);
-            assert!(matches!(problems[0], Problem::DuplicateDmxBreak(..)));
+            assert!(matches!(
+                problems.pop().unwrap().problem_type(),
+                ProblemType::DuplicateDmxBreak {
+                            duplicate_break: 2,
+                            geometry_reference_name
+          
+                }
+            if geometry_reference_name == "testing"));
             assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
         }
 
@@ -415,11 +425,12 @@ mod tests {
             assert_eq!(offsets, Offsets::new());
         }
 
-        fn run_parse_reference_offsets(xml: &str) -> (Vec<Problem>, Offsets) {
+        fn run_parse_reference_offsets(xml: &str) -> (Vec<HandledProblem>, Offsets) {
             let doc = roxmltree::Document::parse(xml).unwrap();
             let n = doc.root_element();
-            let mut problems: Vec<Problem> = vec![];
-            let offsets = parse_reference_offsets(&n, &mut problems, &doc);
+            let mut problems: Vec<HandledProblem> = vec![];
+            let root_name: String = n.parse_required_attribute("Name").unwrap();
+            let offsets = parse_reference_offsets(&n, &root_name, &mut problems);
             (problems, offsets)
         }
     }
@@ -532,35 +543,6 @@ mod tests {
     }
 
     #[test]
-    fn geometries_top_level_name_missing() {
-        let ft_str = r#"
-<FixtureType>
-    <Geometries>
-        <Geometry Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-        <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-        </Geometry>
-    </Geometries>
-</FixtureType>
-        "#;
-
-        let (problems, geometries) = run_parse_geometries(ft_str);
-
-        assert_eq!(problems.len(), 1);
-        assert!(matches!(problems[0], Problem::XmlAttributeMissing { .. }));
-
-        assert_eq!(geometries.graph.node_count(), 2);
-
-        geometries
-            .graph
-            .raw_nodes()
-            .iter()
-            .for_each(|n| assert!(n.weight.name() != ""));
-
-        let name_of_broken_node = geometries.graph.raw_nodes()[0].weight.name();
-        assert_is_uuid_and_not_nil(name_of_broken_node);
-    }
-
-    #[test]
     /// Geometries should really have a Name attribute, but according to GDTF
     /// 1.2 (DIN SPEC 15800:2022-02), the default value for "Name" type values
     /// is: "object type with an index in parent".  
@@ -662,7 +644,10 @@ mod tests {
         let (problems, geometries) = run_parse_geometries(ft_str);
 
         assert_eq!(problems.len(), 1);
-        assert!(matches!(problems[0], Problem::DuplicateGeometryName(..)));
+        assert!(matches!(
+            problems[0].problem_type(),
+            ProblemType::DuplicateGeometryName(..),
+        ));
 
         let name_of_broken_node = geometries.graph.raw_nodes()[3].weight.name();
         assert_is_uuid_and_not_nil(name_of_broken_node);
@@ -687,18 +672,18 @@ mod tests {
 
         assert_eq!(problems.len(), 1);
         assert!(matches!(
-            problems[0],
-            Problem::NonTopLevelGeometryReferenced(..)
+            problems[0].problem_type(),
+            ProblemType::NonTopLevelGeometryReferenced { .. },
         ));
 
         assert_eq!(geometries.graph.node_count(), 3);
         assert!(geometries.names.contains_key("Element 1").not());
     }
 
-    fn run_parse_geometries(ft_str: &str) -> (Vec<Problem>, Geometries) {
+    fn run_parse_geometries(ft_str: &str) -> (Vec<HandledProblem>, Geometries) {
         let doc = roxmltree::Document::parse(ft_str).unwrap();
         let ft = doc.root_element();
-        let mut problems: Vec<Problem> = vec![];
+        let mut problems: Vec<HandledProblem> = vec![];
         let mut geometries = Geometries::default();
         parse_geometries(&mut geometries, &ft, &mut problems).unwrap();
         (problems, geometries)

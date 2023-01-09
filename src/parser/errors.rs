@@ -65,6 +65,12 @@ pub struct HandledProblem {
     action: String,
 }
 
+impl HandledProblem {
+    pub fn problem_type(&self) -> &ProblemType {
+        &self.p.p
+    }
+}
+
 /// A Problem in a GDTF file that is recoverable with a sensible empty or default value.
 #[derive(Error, Debug)]
 pub enum ProblemType {

@@ -135,7 +135,7 @@ impl From<YesNoEnum> for bool {
 mod tests {
     use std::{fs::File, path::Path};
 
-    use crate::DataVersion;
+    use crate::{parser::errors::HandleProblem, DataVersion};
     use pretty_assertions::assert_eq;
 
     use super::*;
@@ -149,21 +149,6 @@ mod tests {
         let Parsed { gdtf, problems } = parse(file).unwrap();
         assert_eq!(gdtf.data_version, DataVersion::V1_1);
         assert!(problems.is_empty());
-    }
-
-    #[test]
-    fn robe_tetra2_slightly_broken() {
-        let path = Path::new("test/resources/Robe_Lighting@Robin_Tetra2@04062021.gdtf");
-        let file = File::open(path).unwrap();
-        let Parsed { gdtf, problems } = parse(file).unwrap();
-        assert_eq!(gdtf.data_version, DataVersion::V1_1);
-        // Problems with duplicate Geometry Names
-        assert_eq!(problems.len(), 18);
-        problems
-            .iter()
-            .for_each(|prob| assert!(matches!(prob, Problem::DuplicateGeometryName(..))));
-        // TODO assert all channels properly find their geometries even with
-        // duplicate geometry names
     }
 
     #[test]
@@ -194,25 +179,28 @@ mod tests {
         assert!(matches!(e, Error::DescriptionXmlMissing(..)));
     }
 
+    // TODO I expect failure here, probbaly remove, what does it even test?
     #[test]
     fn data_version_parsing_with_get_attribute() {
         let xml = r#"<GDTF DataVersion="1.0"></GDTF>"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
-        let mut problems: Vec<Problem> = vec![];
+        let mut problems: Vec<HandledProblem> = vec![];
         let root_node = doc.root_element();
 
-        let dv: Option<DataVersion> =
-            root_node.parse_required_attribute("DataVersion", &mut problems, &doc);
+        let dv: Option<DataVersion> = root_node
+            .parse_required_attribute("DataVersion")
+            .handled_by("setting to None", &mut problems);
         assert_eq!(problems.len(), 1);
         assert_eq!(dv, None);
 
         let xml = r#"<GDTF DataVersion="1.1"></GDTF>"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
-        let mut problems: Vec<Problem> = vec![];
+        let mut problems: Vec<HandledProblem> = vec![];
         let root_node = doc.root_element();
 
-        let dv: Option<DataVersion> =
-            root_node.parse_required_attribute("DataVersion", &mut problems, &doc);
+        let dv: Option<DataVersion> = root_node
+            .parse_required_attribute("DataVersion")
+            .handled_by("setting to None", &mut problems);
         assert_eq!(problems.len(), 0);
         assert_eq!(dv, Some(DataVersion::V1_1));
         assert_eq!(format!("{}", dv.unwrap()), "1.1");

@@ -7,7 +7,10 @@ use roxmltree::TextPos;
 
 use super::errors::*;
 
-// TODO is name accurate?
+// TODO fix warning later, it is only a memory usage problem, due to an enum
+// variant in `ProblemType` with many fields
+#[allow(clippy::result_large_err)]
+/// A catch-all trait to implement custom methods for getting things from roxmltree Nodes
 pub(crate) trait GetFromNode {
     fn parse_required_attribute<T: FromStr>(&self, attr: &str) -> Result<T, Problem>
     where
@@ -117,6 +120,9 @@ impl GetFromNode for Node<'_, '_> {
     }
 }
 
+// TODO fix warning later, it is only a memory usage problem, due to an enum
+// variant in `ProblemType` with many fields
+#[allow(clippy::result_large_err)]
 fn parse_attribute_content<T: FromStr>(node: &Node, content: &str, attr: &str) -> Result<T, Problem>
 where
     <T as FromStr>::Err: std::error::Error + 'static,
@@ -160,20 +166,20 @@ impl XmlPosition for Node<'_, '_> {
 mod tests {
     use super::*;
 
-    use pretty_assertions::assert_eq;
-
     #[test]
     fn get_attribute_works() {
         let xml = r#"<tag attr="300" />"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
-        let mut problems: Vec<Problem> = vec![];
+        let mut problems: Vec<HandledProblem> = vec![];
         assert_eq!(
-            n.parse_required_attribute("attr", &mut problems, &doc),
+            n.parse_required_attribute("attr")
+                .handled_by("setting None", &mut problems),
             Some(300u32)
         );
         assert_eq!(
-            n.parse_required_attribute::<u8>("attr", &mut problems, &doc),
+            n.parse_required_attribute::<u8>("attr")
+                .handled_by("setting None", &mut problems),
             None
         );
         assert_eq!(problems.len(), 1);
@@ -184,13 +190,15 @@ mod tests {
         let xml = r#"<Geometry pos="not_a_number" />"#;
         let doc = roxmltree::Document::parse(xml).unwrap();
         let n = doc.root_element();
-        let mut problems: Vec<Problem> = vec![];
+        let mut problems: Vec<HandledProblem> = vec![];
         assert_eq!(
-            n.parse_required_attribute("pos", &mut problems, &doc),
+            n.parse_required_attribute("pos")
+                .handled_by("setting None", &mut problems),
             Some("not_a_number".to_string())
         );
         assert_eq!(
-            n.parse_required_attribute::<i16>("pos", &mut problems, &doc),
+            n.parse_required_attribute::<i16>("pos")
+                .handled_by("setting None", &mut problems),
             None
         );
         assert_eq!(problems.len(), 1);

@@ -1,6 +1,5 @@
 pub mod hash;
 
-use std::fmt::Write as _;
 use std::io::Write;
 use std::{
     collections::HashMap,
@@ -21,7 +20,7 @@ pub static OUTPUTS_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("out
 pub static EXPECTED_TOML_PATH: Lazy<PathBuf> =
     Lazy::new(|| EXAMPLE_FILES_DIR.join("expected.toml"));
 
-type expected = HashMap<String, ExpectedEntry, Xxh3Builder>;
+type Expected = HashMap<String, ExpectedEntry, Xxh3Builder>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpectedEntry {
@@ -84,7 +83,7 @@ pub struct ParsedInfo {
     pub geometries: Vec<String>,
 }
 
-pub fn parse_expected_toml() -> expected {
+pub fn parse_expected_toml() -> Expected {
     let expected_str = fs::read_to_string(&*EXPECTED_TOML_PATH).unwrap();
     toml::from_str(&expected_str).unwrap()
 }
@@ -128,6 +127,7 @@ pub fn examples_update_output_iter(
     })
 }
 
+#[allow(dead_code)] // fields accessed with Debug, which is ignored during dead code analysis
 #[derive(Debug)]
 struct DuplicateFilename {
     filename: String,
