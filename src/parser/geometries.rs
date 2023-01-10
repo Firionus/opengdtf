@@ -36,7 +36,7 @@ pub fn parse_geometries(
     };
 
     let top_level_geometries = g.children().filter(|n| n.is_element());
-    let mut top_level_geometry_graph_indices: Vec<NodeIndex> = vec![];
+    let mut parsed_top_level_geometries: Vec<(NodeIndex, Node)> = vec![];
 
     let mut geometry_duplicates = Vec::<GeometryDuplicate>::new();
 
@@ -54,10 +54,10 @@ pub fn parse_geometries(
                         None => continue,
                      };
                 let geometry = GeometryType::Geometry { name };
-                let i = geometries.add(geometry, None).ok_or(Error::Unexpected(
+                let graph_ind = geometries.add(geometry, None).ok_or(Error::Unexpected(
                     "Geometry Names must be unique once adding top level geometries".to_owned(),
                 ))?;
-                top_level_geometry_graph_indices.push(i);
+                parsed_top_level_geometries.push((graph_ind, n));
             }
             "GeometryReference" => ProblemType::UnexpectedTopLevelGeometryReference(
                 n.attribute("Name")
@@ -75,11 +75,10 @@ pub fn parse_geometries(
     }
 
     // Next, add non-top-level geometries.
-    for (i, n) in top_level_geometries.enumerate() {
-        let graph_index = top_level_geometry_graph_indices[i];
+    for (graph_ind, n) in parsed_top_level_geometries.iter() {
         add_children(
-            n,
-            graph_index,
+            *n,
+            *graph_ind,
             geometries,
             problems,
             &mut geometry_duplicates,
@@ -567,71 +566,71 @@ mod tests {
             "#,
         );
 
-        todo!("set up problem type to support actions for all problems");
+        for p in problems[0..6].iter() {
+            assert!(
+                matches!(p.problem_type(), ProblemType::XmlAttributeMissing { attr, .. } if attr == "Name")
+            );
+        }
 
-        // assert!(
-        //     matches!(problems[0], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Beam 1"))
-        // );
-        // assert!(
-        //     matches!(problems[1], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 2"))
-        // );
-        // assert!(
-        //     matches!(problems[2], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 3"))
-        // );
-        // assert!(
-        //     matches!(problems[3], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 1"))
-        // );
-        // assert!(
-        //     matches!(problems[4], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("Geometry 2"))
-        // );
-        // assert!(
-        //     matches!(problems[5], Problem::XmlAttributeMissing { attr, action .. } if attr == "Name" && action.contains("GeometryReference 3"))
-        // );
-        // assert!(
-        //     matches!(problems[6], Problem::DuplicateGeometryName(dup, _, dedup) if dup == "Geometry 2" && dedup == "Geometry 2 (in Geometry 3)")
-        // );
+        assert!(matches!(
+            problems[6].problem_type(),
+            ProblemType::DuplicateGeometryName(dup) if dup == "Geometry 2"
+        ));
 
-        // let beam_ind = geometries.find("Beam 1").unwrap();
-        // assert!(geometries
-        //     .graph
-        //     .neighbors_undirected(beam_ind)
-        //     .next()
-        //     .is_none());
+        let b = geometries.find("Beam 1").unwrap();
+        assert!(geometries.is_top_level(b) && geometries.count_children(b) == 0);
 
-        // let g2_ind = geometries.find("Geometry 2").unwrap();
-        // assert!(geometries
-        //     .graph
-        //     .neighbors_undirected(g2_ind)
-        //     .next()
-        //     .is_none());
+        let g2 = geometries.find("Geometry 2").unwrap();
+        assert!(geometries.is_top_level(g2) && geometries.count_children(g2) == 0);
 
-        // let g3_ind = geometries.find("Geometry 3").unwrap();
-        // assert!(geometries.is_top_level(g3_ind));
-        // let g3_children = geometries.graph.neighbors(g3_ind);
-        // let children = g3_children.map(|ind| geometries.graph[ind]).collect();
-        // assert_eq(3, children.len());
+        let g3 = geometries.find("Geometry 3").unwrap();
+        assert!(geometries.is_top_level(g3));
 
-        todo!("assert that the names and types of the children are as expected")
-        // children.any(|g| matches!(g, GeometryType));
+        let mut g3_children = geometries
+            .graph
+            .neighbors(g3)
+            .map(|ind| &geometries.graph[ind]);
+
+        assert!(matches!(
+            g3_children.find(|g| g.name() == "Geometry 1").unwrap(),
+            GeometryType::Geometry { .. }
+        ));
+        assert!(matches!(
+            g3_children
+                .find(|g| g.name() == "Geometry 2 (in Geometry 3)")
+                .unwrap(), // TODO broken until deterministic renaming is implemented
+            GeometryType::Geometry { .. }
+        ));
+        assert!(matches!(
+            g3_children
+                .find(|g| g.name() == "GeometryReference 3")
+                .unwrap(),
+            GeometryType::Reference { .. }
+        ));
+
+        assert_eq!(3, g3_children.count());
     }
 
     #[test]
-    fn geometry_duplicate_name_deterministic_renaming() {
-        todo!("replace with more complex example, remove unnecessary attributes?");
+    fn geometry_duplicate_names() {
         let ft_str = r#"
         <FixtureType>
             <Geometries>
-                <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-                <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                    <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Geometry Name="Top 1">                    
+                    <Geometry Name="Element 1"/>
+                    <Geometry Name="Element 1"/> <!-- 2) rename to "Element 1 (duplicate 1)" -->
+                    <Geometry Name="Top 2"/> <!-- 3) rename to "Top 2 (in Top 1)" -->
+                </Geometry>
+                <Geometry Name="Top 2"/>
+                <Geometry Name="Top 2"> <!-- 1) rename to "Top 2 (duplicate 1)" -->
+                    <Geometry Name="Element 1"/> <!-- 5) rename to "Element 1 (in Top 2) (duplicate 1)" -->
+                    <Geometry Name="Element 1 (in Top 2)"/>
+                    <Geometry Name="Top 2"/> <!-- 6) rename to "Top 2 (in Top 2)" -->
+                </Geometry>
+                <Geometry Name="Top 3">
+                    <GeometryReference Geometry="Top 2" Name="Element 1"> 
+                    <!-- 4) rename to "Element 1 (in Top 3)", should reference the one w/o children -->
                         <Break DMXBreak="1" DMXOffset="1"/>
-                        <Break DMXBreak="2" DMXOffset="1"/>
-                        <Break DMXBreak="1" DMXOffset="1"/>
-                    </GeometryReference>
-                    <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-                        <Break DMXBreak="1" DMXOffset="3"/>
-                        <Break DMXBreak="2" DMXOffset="3"/>
-                        <Break DMXBreak="1" DMXOffset="2"/>
                     </GeometryReference>
                 </Geometry>
             </Geometries>
@@ -640,13 +639,52 @@ mod tests {
 
         let (problems, geometries) = run_parse_geometries(ft_str);
 
-        assert_eq!(problems.len(), 1);
-        assert!(matches!(
-            problems[0].problem_type(),
-            ProblemType::DuplicateGeometryName(..),
-        ));
+        assert_eq!(problems.len(), 6);
+        for p in problems.iter() {
+            assert!(matches!(
+                p.problem_type(),
+                ProblemType::DuplicateGeometryName(..)
+            ))
+        }
 
-        todo!("assert deduped geometry name")
+        let t1 = geometries.find("Top 1").unwrap();
+        assert!(geometries.is_top_level(t1));
+        let mut t1_children = geometries.children(t1);
+        t1_children.find(|g| g.name() == "Element 1").unwrap();
+        t1_children
+            .find(|g| g.name() == "Element 1 (duplicate 1)")
+            .unwrap();
+        t1_children
+            .find(|g| g.name() == "Top 2 (in Top 1)")
+            .unwrap();
+        assert_eq!(t1_children.count(), 3);
+
+        let t2 = geometries.find("Top 2").unwrap();
+        assert!(geometries.is_top_level(t2));
+        assert_eq!(geometries.count_children(t2), 0);
+
+        let t2d = geometries.find("Top 2 (duplicate 1)").unwrap();
+        assert!(geometries.is_top_level(t2d));
+        let mut t2d_children = geometries.children(t2d);
+        t2d_children
+            .find(|g| g.name() == "Element 1 (in Top 2) (duplicate 1)")
+            .unwrap();
+        t2d_children
+            .find(|g| g.name() == "Element 1 (in Top 2)")
+            .unwrap();
+        t2d_children
+            .find(|g| g.name() == "Top 2 (in Top 2)")
+            .unwrap();
+        assert_eq!(t2d_children.count(), 3);
+
+        let t3 = geometries.find("Top 3").unwrap();
+        assert!(geometries.is_top_level(t3));
+        let mut t3_children = geometries.children(t3);
+        let reference = t3_children
+            .find(|g| g.name() == "Element 1 (in Top 3)")
+            .unwrap();
+        assert_eq!(t3_children.count(), 1);
+        assert!(matches!(reference, GeometryType::Reference { reference, .. } if *reference == t2));
     }
 
     #[test]

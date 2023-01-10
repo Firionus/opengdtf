@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use petgraph::Direction::Incoming;
+use petgraph::visit::{IntoEdgesDirected, IntoNeighbors};
+use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
 #[derive(Debug, Default)]
@@ -47,6 +48,17 @@ impl Geometries {
     /// If geometry with index `i` doesn't exist, `true` is returned.
     pub fn is_top_level(&self, i: NodeIndex) -> bool {
         self.graph.edges_directed(i, Incoming).next().is_none()
+    }
+
+    /// Returns the number of children of the Geometry with index `i`.
+    ///
+    /// If geometry `i` does not exist, zero is returned.
+    pub fn count_children(&self, i: NodeIndex) -> usize {
+        self.graph.edges_directed(i, Outgoing).count()
+    }
+
+    pub fn children(&self, i: NodeIndex) -> impl Iterator<Item = &GeometryType> {
+        self.graph.neighbors(i).map(|ind| &self.graph[ind])
     }
 
     pub fn qualified_name(&self, ind: NodeIndex) -> String {

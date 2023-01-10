@@ -64,7 +64,7 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, Problem> {
 #[error("{p}; {action}")]
 pub struct HandledProblem {
     p: Problem,
-    action: String,
+    pub action: String,
 }
 
 impl HandledProblem {
