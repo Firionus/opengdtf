@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use petgraph::visit::{IntoEdgesDirected, IntoNeighbors};
+use petgraph::visit::{IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected};
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
@@ -73,6 +73,18 @@ impl Geometries {
             i = parent_ind
         }
         qualified_name
+    }
+
+    pub fn parent_ind(&self, ind: NodeIndex) -> Option<NodeIndex> {
+        self.graph.neighbors_directed(ind, Incoming).next()
+    }
+
+    pub fn top_level_geometry(&self, ind: NodeIndex) -> NodeIndex {
+        let mut i = ind;
+        while let Some(parent_ind) = self.parent_ind(i) {
+            i = parent_ind
+        }
+        i
     }
 }
 

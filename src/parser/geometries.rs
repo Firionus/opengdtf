@@ -1,7 +1,7 @@
 use std::collections::hash_map::Entry::Vacant;
 
 use petgraph::graph::NodeIndex;
-use roxmltree::Node; // TODO import qualified, so it's easier to distinguish from petgraph::Node
+use roxmltree::Node; // TODO import qualified, so it's easier to distinguish from petgraph::Node?
 
 use super::errors::*;
 
@@ -14,12 +14,11 @@ use super::utils::GetFromNode;
 
 #[allow(dead_code)] // TODO remove once fields are used in deduplication
 struct GeometryDuplicate<'a> {
-    /// already parsed 'Name' attribute
-    // duplicate_name: String, // TODO just get it from the problem
+    /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
+    name: String,
     xml_node: Node<'a, 'a>,
     /// None if duplicate is top-level
     parent_graph_ind: Option<NodeIndex>,
-    problem: Problem,
 }
 
 pub fn parse_geometries(
@@ -85,30 +84,56 @@ pub fn parse_geometries(
         )?;
     }
 
-    // TODO handle geometries deduplication
-    // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with other names
-    while !geometry_duplicates.is_empty() {
-        let dup = geometry_duplicates
-            .pop()
-            .ok_or_else(|| Error::Unexpected("geometry duplicates empty".into()))?;
+    // TODO refactor to function for more semantic naming?
+    // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with defined names
+    while let Some(dup) = geometry_duplicates.pop() {
+        let mut suggested_name = dup.name.clone();
+        let mut goes_into_lookup = false;
 
-        // TODO handle properly according to this algorithm:
-        // - if the original to the duplicate is in a different top-level geometry, append `(in top-level geometry)`,
-        //   and continue with further duplications checks (it could still conflict with an existing). Once the name is final,
-        //   put them into a look-up table with top-level geometry and their old name, so that when they are linked the new name can be found that way
-        // - otherwise (or if still duplicated), append `(duplicate i)` and increase i until there are no duplicates
-        //   a look up table is not necessary in that case, as these geometries can never be referenced on their own
+        // check if duplicate and original are in different top level geometry, if yes, suggest semantic renaming
+        if let Some(duplicate_parent) = dup.parent_graph_ind {
+            let original_ind = geometries.find(&dup.name).ok_or_else(|| {
+                Error::Unexpected("Geometry Duplicate Name not found anymore".into())
+            })?;
 
-        // TODO check what happens if the name of a non-top-level geometry is
-        // the same as a later occuring top-level geometry that is referenced by
-        // a <GeometryReference>. It should work fine.
+            let original_top_level = geometries.top_level_geometry(original_ind);
+            let duplicate_top_level = geometries.top_level_geometry(duplicate_parent);
 
-        // quick and dirty
-        dup.problem.handled_by("ignoring node", problems);
+            if original_top_level != duplicate_top_level {
+                let duplicate_top_level_name = geometries.graph[duplicate_top_level].name();
+                suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name);
+                goes_into_lookup = true;
+                if !geometries.names.contains_key(&suggested_name) {
+                    todo!("add to geometries with suggested name, pass in `goes_into_lookup` and act accordingly, push problem about duplicate geometry, then add_children");
+                    continue;
+                }
+            }
+        }
+
+        let mut dedup_ind: u16 = 1;
+
+        loop {
+            suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind);
+            if !geometries.names.contains_key(&suggested_name) {
+                todo!("add to geometries with suggested name, pass in `goes_into_lookup` and act accordingly, push problem about duplicate geometry, then add_children");
+                break;
+            }
+            dedup_ind = match dedup_ind.checked_add(1) {
+                Some(v) => v,
+                None => {
+                    ProblemType::DuplicateGeometryName(dup.name)
+                        .at(&dup.xml_node)
+                        .handled_by("deduplication failed, ignoring node", problems);
+                    break;
+                }
+            };
+        }
     }
 
     Ok(())
 }
+
+// TODO add functions for "adding a geometry node" with a custom name, behavior also depends on whether the node is top-level
 
 fn get_unique_geometry_name<'a>(
     n: Node<'a, 'a>,
@@ -125,7 +150,7 @@ fn get_unique_geometry_name<'a>(
             geometry_duplicates.push(GeometryDuplicate {
                 xml_node: n,
                 parent_graph_ind,
-                problem: ProblemType::DuplicateGeometryName(name).at(&n),
+                name,
             });
             None
         }
@@ -306,9 +331,6 @@ mod tests {
     use super::*;
 
     use std::ops::Not;
-
-    use petgraph::{visit::IntoEdgesDirected, Direction::Outgoing};
-    use regex::Regex;
 
     #[cfg(test)]
     mod parse_reference_offsets {
@@ -613,6 +635,7 @@ mod tests {
 
     #[test]
     fn geometry_duplicate_names() {
+        // TODO add a third level in top-level geometry that is deduplicated. Those geometries should not be added multiple times
         let ft_str = r#"
         <FixtureType>
             <Geometries>
@@ -721,13 +744,5 @@ mod tests {
         let mut geometries = Geometries::default();
         parse_geometries(&mut geometries, &ft, &mut problems).unwrap();
         (problems, geometries)
-    }
-
-    fn assert_is_uuid_and_not_nil(s: &str) {
-        let uuid_pattern =
-            Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap();
-        assert!(uuid_pattern.is_match(s));
-        let uuid_nil_pattern = Regex::new(r"00000000-0000-0000-0000-000000000000").unwrap();
-        assert!(!uuid_nil_pattern.is_match(s));
     }
 }
