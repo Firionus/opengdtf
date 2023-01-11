@@ -112,6 +112,11 @@ pub enum ProblemType {
         target: String,
         geometry_reference: String,
     },
+    #[error(
+        "unexpected condition occured. This is a fault in opengdtf. \
+    Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
+    )]
+    Unexpected(String),
 }
 
 impl ProblemType {

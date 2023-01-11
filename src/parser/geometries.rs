@@ -19,6 +19,7 @@ struct GeometryDuplicate<'a> {
     xml_node: Node<'a, 'a>,
     /// None if duplicate is top-level
     parent_graph_ind: Option<NodeIndex>,
+    duplicate_graph_ind: NodeIndex,
 }
 
 pub fn parse_geometries(
@@ -39,71 +40,47 @@ pub fn parse_geometries(
 
     let mut geometry_duplicates = Vec::<GeometryDuplicate>::new();
 
+    let mut gcx = GeometryParsingContext {
+        geometries,
+        geometry_duplicates: &mut geometry_duplicates,
+        problems,
+    };
+
     // First, add top-level geometries. These must exist so a GeometryReference
     // later on can be linked to a NodeIndex.
     for (i, n) in top_level_geometries.clone().enumerate() {
-        match n.tag_name().name() {
-            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
-            | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
-            | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
-            | "Magnet" => {
-                let name = match get_unique_geometry_name(n, i, geometries,
-                     &mut geometry_duplicates, None, problems){
-                        Some(name) => name,
-                        None => continue,
-                     };
-                let geometry = GeometryType::Geometry { name };
-                let graph_ind = geometries.add(geometry, None).ok_or(Error::Unexpected(
-                    "Geometry Names must be unique once adding top level geometries".to_owned(),
-                ))?;
-                parsed_top_level_geometries.push((graph_ind, n));
+        if let Ok(graph_ind) = parse_element(i, n, None, &mut gcx) {
+            parsed_top_level_geometries.push((graph_ind, n));
+            if let GeometryType::Reference { name, .. } = &gcx.geometries.graph[graph_ind] {
+                ProblemType::UnexpectedTopLevelGeometryReference(name.clone()).at(&n).handled_by("keeping GeometryReference, \
+                but it is useless because a top-level GeometryReference can only be used for a DMX mode \
+                that is offset from another one, which is useless because one can just change the start address in \
+                the console", gcx.problems);
             }
-            "GeometryReference" => ProblemType::UnexpectedTopLevelGeometryReference(
-                n.attribute("Name")
-                    .unwrap_or("no `Name` attribute")
-                    .to_owned(),
-            )
-            .at(&n)
-            // TODO keep the problem message but handle by just parsing it, it's not actively harmful
-            // so we should stick with the third principle: Suck out as much information as possible
-            .handled_by("ignoring node because top-level GeometryReference could only be used for a DMX mode \
-            that is offset from another one, which is useless because one can just change the start address in \
-            the console", problems), 
-            tag => ProblemType::UnexpectedXmlNode(tag.into()).at(&n).handled_by("ignoring node", problems),
         };
     }
 
     // Next, add non-top-level geometries.
     for (graph_ind, n) in parsed_top_level_geometries.iter() {
-        add_children(
-            *n,
-            *graph_ind,
-            geometries,
-            problems,
-            &mut geometry_duplicates,
-        )?;
+        add_children(*n, *graph_ind, &mut gcx)?;
     }
 
     // TODO refactor to function for more semantic naming?
     // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with defined names
-    while let Some(dup) = geometry_duplicates.pop() {
+    while let Some(dup) = gcx.geometry_duplicates.pop() {
         let mut suggested_name = dup.name.clone();
         let mut goes_into_lookup = false;
 
         // check if duplicate and original are in different top level geometry, if yes, suggest semantic renaming
         if let Some(duplicate_parent) = dup.parent_graph_ind {
-            let original_ind = geometries.find(&dup.name).ok_or_else(|| {
-                Error::Unexpected("Geometry Duplicate Name not found anymore".into())
-            })?;
-
-            let original_top_level = geometries.top_level_geometry(original_ind);
-            let duplicate_top_level = geometries.top_level_geometry(duplicate_parent);
+            let original_top_level = gcx.geometries.top_level_geometry(dup.duplicate_graph_ind);
+            let duplicate_top_level = gcx.geometries.top_level_geometry(duplicate_parent);
 
             if original_top_level != duplicate_top_level {
-                let duplicate_top_level_name = geometries.graph[duplicate_top_level].name();
+                let duplicate_top_level_name = gcx.geometries.graph[duplicate_top_level].name();
                 suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name);
                 goes_into_lookup = true;
-                if !geometries.names.contains_key(&suggested_name) {
+                if !gcx.geometries.names.contains_key(&suggested_name) {
                     todo!("add to geometries with suggested name, pass in `goes_into_lookup` and act accordingly, push problem about duplicate geometry, then add_children");
                     continue;
                 }
@@ -114,7 +91,7 @@ pub fn parse_geometries(
 
         loop {
             suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind);
-            if !geometries.names.contains_key(&suggested_name) {
+            if !gcx.geometries.names.contains_key(&suggested_name) {
                 todo!("add to geometries with suggested name, pass in `goes_into_lookup` and act accordingly, push problem about duplicate geometry, then add_children");
                 break;
             }
@@ -123,7 +100,7 @@ pub fn parse_geometries(
                 None => {
                     ProblemType::DuplicateGeometryName(dup.name)
                         .at(&dup.xml_node)
-                        .handled_by("deduplication failed, ignoring node", problems);
+                        .handled_by("deduplication failed, ignoring node", gcx.problems);
                     break;
                 }
             };
@@ -133,24 +110,103 @@ pub fn parse_geometries(
     Ok(())
 }
 
-// TODO add functions for "adding a geometry node" with a custom name, behavior also depends on whether the node is top-level
+struct GeometryParsingContext<'a> {
+    geometries: &'a mut Geometries,
+    geometry_duplicates: &'a mut Vec<GeometryDuplicate<'a>>,
+    problems: &'a mut Problems,
+}
+
+/// Parse the geometry element. If the result is Ok(graph_ind), the geometry was
+/// added into the geometry graph at graph_ind and the caller should continue to
+/// parse its children (if they exist). If the result is Err(()), an error was
+/// handled otherwise and the caller should not continue to parse the children
+/// on the node.
+fn parse_element<'a>(
+    node_index_in_xml_parent: usize,
+    n: Node<'a, 'a>,
+    parent_graph_ind: Option<NodeIndex>,
+    gcx: &mut GeometryParsingContext<'a>,
+) -> Result<NodeIndex, ()> {
+    match n.tag_name().name() {
+        "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
+        | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster" | "Display"
+        | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support" | "Magnet" => {
+            let GenericGeometryAttributes { name } = get_generic_geometry_attributes(
+                node_index_in_xml_parent,
+                n,
+                parent_graph_ind,
+                gcx,
+            )?;
+            let geometry = GeometryType::Geometry { name };
+            add_to_geometries(geometry, parent_graph_ind, n, gcx)
+        }
+        "GeometryReference" => {
+            let geometry =
+                parse_geometry_reference(n, node_index_in_xml_parent, parent_graph_ind, gcx)?;
+            add_to_geometries(geometry, parent_graph_ind, n, gcx).and(Err(()))
+            // don't parse children as geometries
+        }
+        tag => {
+            ProblemType::UnexpectedXmlNode(tag.into())
+                .at(&n)
+                .handled_by("ignoring node", gcx.problems);
+            Err(())
+        }
+    }
+}
+
+fn add_to_geometries(
+    geometry: GeometryType,
+    parent_graph_ind: Option<NodeIndex>,
+    n: Node,
+    gcx: &mut GeometryParsingContext,
+) -> Result<NodeIndex, ()> {
+    let graph_ind = gcx
+        .geometries
+        .add(geometry, parent_graph_ind)
+        .ok_or_else(|| {
+            ProblemType::Unexpected(
+                "Geometry name not unique when trying to add to geometry graph".into(),
+            )
+            .at(&n)
+            .handled_by("ignoring node", gcx.problems)
+        })?;
+    Ok(graph_ind)
+}
+
+struct GenericGeometryAttributes {
+    name: String,
+    // model: ?,
+    // position: ?,
+}
+
+fn get_generic_geometry_attributes<'a>(
+    node_index_in_xml_parent: usize,
+    n: Node<'a, 'a>,
+    parent_graph_ind: Option<NodeIndex>,
+    gcx: &mut GeometryParsingContext<'a>,
+) -> Result<GenericGeometryAttributes, ()> {
+    let name =
+        get_unique_geometry_name(n, node_index_in_xml_parent, parent_graph_ind, gcx).ok_or(())?;
+
+    Ok(GenericGeometryAttributes { name })
+}
 
 fn get_unique_geometry_name<'a>(
     n: Node<'a, 'a>,
     node_index_in_xml_parent: usize,
-    geometries: &Geometries,
-    geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
     parent_graph_ind: Option<NodeIndex>,
-    problems: &mut Problems,
+    gcx: &mut GeometryParsingContext<'a>,
 ) -> Option<String> {
-    let name = n.get_name(node_index_in_xml_parent, problems);
-    match geometries.names.get(&name) {
+    let name = n.get_name(node_index_in_xml_parent, gcx.problems);
+    match gcx.geometries.names.get(&name) {
         None => Some(name),
-        Some(_duplicate_graph_ind) => {
-            geometry_duplicates.push(GeometryDuplicate {
+        Some(duplicate_graph_ind) => {
+            gcx.geometry_duplicates.push(GeometryDuplicate {
                 xml_node: n,
                 parent_graph_ind,
                 name,
+                duplicate_graph_ind: *duplicate_graph_ind,
             });
             None
         }
@@ -161,49 +217,14 @@ fn get_unique_geometry_name<'a>(
 fn add_children<'a>(
     parent_xml: Node<'a, 'a>,
     parent_tree: NodeIndex,
-    geometries: &mut Geometries,
-    problems: &mut Problems,
-    geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
+    gcx: &mut GeometryParsingContext<'a>,
 ) -> Result<(), Error> {
     let children = parent_xml.children().filter(|n| n.is_element());
 
     for (i, n) in children.enumerate() {
-        match n.tag_name().name() {
-            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
-            | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
-            | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
-            | "Magnet" => {
-                let name = match get_unique_geometry_name(
-                    n,
-                    i,
-                    geometries,
-                    geometry_duplicates,
-                    Some(parent_tree),
-                    problems,
-                ) {
-                    Some(name) => name,
-                    None => continue,
-                };
-                let geometry = GeometryType::Geometry { name };
-                let i = geometries
-                    .add(geometry, Some(parent_tree))
-                    .ok_or(Error::Unexpected(
-                        "Geometry Names must be unique when adding geometries".to_owned(),
-                    ))?;
-                add_children(n, i, geometries, problems, geometry_duplicates)?;
-            }
-            "GeometryReference" => parse_geometry_reference(
-                n,
-                i,
-                geometries,
-                geometry_duplicates,
-                Some(parent_tree),
-                problems,
-            )?,
-            tag => ProblemType::UnexpectedXmlNode(tag.into())
-                .at(&n)
-                .handled_by("ignoring node", problems),
-        };
+        if let Ok(graph_ind) = parse_element(i, n, Some(parent_tree), gcx) {
+            add_children(n, graph_ind, gcx)?
+        }
     }
     Ok(())
 }
@@ -211,42 +232,28 @@ fn add_children<'a>(
 fn parse_geometry_reference<'a>(
     n: Node<'a, 'a>,
     node_index_in_xml_parent: usize,
-    geometries: &mut Geometries,
-    geometry_duplicates: &mut Vec<GeometryDuplicate<'a>>,
     parent_graph_ind: Option<NodeIndex>,
-    problems: &mut Problems,
-) -> Result<(), Error> {
-    let name = match get_unique_geometry_name(
-        n,
-        node_index_in_xml_parent,
-        geometries,
-        geometry_duplicates,
-        parent_graph_ind,
-        problems,
-    ) {
-        Some(name) => name,
-        None => return Ok(()),
-    };
-    let ref_ind = match get_index_of_referenced_geometry(n, geometries, &name) {
+    gcx: &mut GeometryParsingContext<'a>,
+) -> Result<GeometryType, ()> {
+    let GenericGeometryAttributes { name } =
+        get_generic_geometry_attributes(node_index_in_xml_parent, n, parent_graph_ind, gcx)?;
+
+    let ref_ind = match get_index_of_referenced_geometry(n, &mut gcx.geometries, &name) {
         Ok(i) => i,
         Err(p) => {
-            p.handled_by("ignoring node", problems);
-            return Ok(());
+            p.handled_by("ignoring node", gcx.problems);
+            return Err(());
         }
     };
-    let offsets = parse_reference_offsets(&n, &name, problems);
+    let offsets = parse_reference_offsets(&n, &name, gcx.problems);
 
     let geometry = GeometryType::Reference {
         name,
         offsets,
         reference: ref_ind,
     };
-    geometries
-        .add(geometry, parent_graph_ind)
-        .ok_or(Error::Unexpected(
-            "Geometry Names must be unique when adding geometry references".to_owned(),
-        ))?;
-    Ok(())
+
+    Ok(geometry)
 }
 
 // TODO fix warning later, it is only a memory usage problem, due to an enum
