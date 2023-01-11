@@ -135,22 +135,7 @@ impl From<YesNoEnum> for bool {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, path::Path};
-
-    use crate::DataVersion;
-
     use super::*;
-
-    #[test]
-    fn channel_layout_test() {
-        let path = Path::new(
-            "tests/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.gdtf",
-        );
-        let file = File::open(path).unwrap();
-        let Parsed { gdtf, problems } = parse(file).unwrap();
-        assert_eq!(gdtf.data_version, DataVersion::V1_1);
-        assert!(problems.is_empty());
-    }
 
     #[test]
     fn xml_error() {
@@ -168,15 +153,5 @@ mod tests {
         let res = parse_description(invalid_xml);
         let e = res.unwrap_err();
         assert!(matches!(&e, Error::NoRootNode));
-    }
-
-    #[test]
-    fn description_xml_missing() {
-        let path = Path::new(
-            "tests/resources/channel_layout_test/Test@Channel_Layout_Test@v1_first_try.empty.gdtf",
-        );
-        let file = File::open(path).unwrap();
-        let e = parse(file).unwrap_err();
-        assert!(matches!(e, Error::DescriptionXmlMissing(..)));
     }
 }

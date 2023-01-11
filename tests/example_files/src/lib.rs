@@ -93,7 +93,11 @@ pub fn examples_iter() -> impl Iterator<Item = DirEntry> {
         .into_iter()
         .map(|e| e.unwrap())
         .filter(|e| !e.file_type().is_dir())
-        .filter(|e| e.file_name() != ".gitignore")
+        .filter(|e| {
+            Path::new(e.file_name())
+                .extension()
+                .map_or_else(|| false, |ext| ext == "gdtf")
+        })
 }
 
 pub fn opened_examples_iter() -> impl Iterator<Item = (DirEntry, File)> {
