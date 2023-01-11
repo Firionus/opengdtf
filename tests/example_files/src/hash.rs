@@ -7,14 +7,14 @@ use std::{fs::File, io::Read};
 // TODO once Seek::stream_len is stabilized, we can go to <T: Read + Seek>
 // please track https://github.com/rust-lang/rust/issues/59359
 pub fn hash_gdtf(file: File) -> String {
-    let mut buf = Vec::with_capacity(file.metadata().unwrap().len().try_into().unwrap());
     let mut zip = ZipArchive::new(file).unwrap();
     let mut file_names: Vec<String> = zip.file_names().map(|s| s.to_string()).collect();
     file_names.sort(); // needed because zip might reorder files arbitrarily
+    let mut buf = Vec::with_capacity(file_names.len() * 30);
     for file_name in file_names {
-        let mut internal_file = zip.by_name(&file_name).unwrap();
+        let internal_file = zip.by_name(&file_name).unwrap();
         buf.extend_from_slice(file_name.as_bytes());
-        internal_file.read_to_end(&mut buf).unwrap();
+        buf.extend_from_slice(&internal_file.crc32().to_be_bytes());
     }
     let hash = xxh3_128(&buf);
     format!("{hash:x}")
