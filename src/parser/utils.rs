@@ -32,11 +32,6 @@ pub(crate) trait GetFromNode {
     fn find_child_by_tag_name(&self, tag: &str) -> Result<Node, Problem>;
 
     fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> String;
-
-    // TODO does not return Problem if attribute missing, just None
-    // fn parse_attribute<T: FromStr>(&self, attr: &str) -> Result<Option<T>, ProblemType>
-    // where
-    //     <T as FromStr>::Err: std::error::Error + 'static;
 }
 
 impl GetFromNode for Node<'_, '_> {
@@ -48,7 +43,6 @@ impl GetFromNode for Node<'_, '_> {
     where
         <T as FromStr>::Err: std::error::Error + 'static,
     {
-        // TODO return Problem instead of ProblemType - we know where the error is anyway
         let content = self.required_attribute(attr)?;
         parse_attribute_content(self, content, attr)
     }

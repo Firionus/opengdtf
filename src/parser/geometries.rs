@@ -1,7 +1,7 @@
 use std::collections::{hash_map::Entry::Vacant, HashMap};
 
 use petgraph::graph::NodeIndex;
-use roxmltree::Node; // TODO import qualified, so it's easier to distinguish from petgraph::Node?
+use roxmltree::Node;
 
 use super::errors::*;
 
@@ -12,7 +12,6 @@ use crate::{
 
 use super::utils::GetFromNode;
 
-#[allow(dead_code)] // TODO remove once fields are used in deduplication
 struct GeometryDuplicate<'a> {
     /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
     name: String,
@@ -65,12 +64,10 @@ pub fn parse_geometries(
         add_children(*n, *graph_ind, &mut gcx);
     }
 
-    // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with defined names
-    // TODO refactor to function for more semantic naming?
-
     // TODO factor out to its own struct with methods for lookup and adding elements
     let mut rename_lookup = HashMap::<(String, String), String>::new(); // (top level name, duplicate geometry name) => renamed name
 
+    // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with defined names
     while let Some(dup) = gcx.geometry_duplicates.pop() {
         let mut suggested_name = dup.name.clone();
 
@@ -98,8 +95,8 @@ pub fn parse_geometries(
             None
         };
 
+        // increment index until unique name is found
         let mut dedup_ind: u16 = 1;
-
         loop {
             suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind);
             if !gcx.geometries.names.contains_key(&suggested_name) {
@@ -200,7 +197,7 @@ fn parse_named_element<'a>(
             add_to_geometries(geometry, parent_graph_ind, n, gcx)
         }
         "GeometryReference" => {
-            let geometry = parse_geometry_reference(n, name, parent_graph_ind, gcx)?;
+            let geometry = parse_geometry_reference(n, name, gcx)?;
             add_to_geometries(geometry, parent_graph_ind, n, gcx).and(Err(()))
             // don't parse children as geometries
         }
@@ -230,24 +227,6 @@ fn add_to_geometries(
             .handled_by("ignoring node", gcx.problems)
         })?;
     Ok(graph_ind)
-}
-
-struct GenericGeometryAttributes {
-    name: String,
-    // model: ?,
-    // position: ?,
-}
-
-fn get_generic_geometry_attributes<'a>(
-    node_index_in_xml_parent: usize,
-    n: Node<'a, 'a>,
-    parent_graph_ind: Option<NodeIndex>,
-    gcx: &mut GeometryParsingContext<'a>,
-) -> Result<GenericGeometryAttributes, ()> {
-    let name =
-        get_unique_geometry_name(n, node_index_in_xml_parent, parent_graph_ind, gcx).ok_or(())?;
-
-    Ok(GenericGeometryAttributes { name })
 }
 
 fn get_unique_geometry_name<'a>(
@@ -289,10 +268,9 @@ fn add_children<'a>(
 fn parse_geometry_reference<'a>(
     n: Node<'a, 'a>,
     name: String,
-    parent_graph_ind: Option<NodeIndex>,
     gcx: &mut GeometryParsingContext<'a>,
 ) -> Result<GeometryType, ()> {
-    let ref_ind = match get_index_of_referenced_geometry(n, &mut gcx.geometries, &name) {
+    let ref_ind = match get_index_of_referenced_geometry(n, gcx.geometries, &name) {
         Ok(i) => i,
         Err(p) => {
             p.handled_by("ignoring node", gcx.problems);
@@ -391,7 +369,7 @@ fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Problems) -> 
 mod tests {
     use super::*;
 
-    use std::{collections::HashSet, ops::Not};
+    use std::ops::Not;
 
     #[cfg(test)]
     mod parse_reference_offsets {
@@ -495,7 +473,7 @@ mod tests {
                 problems.pop().unwrap().problem_type(),
                 ProblemType::DuplicateDmxBreak {
                     duplicate_break: 2,
-                    geometry_reference_name
+                    ..
                 }
             ));
             assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
@@ -675,7 +653,7 @@ mod tests {
             g3_children
                 .iter()
                 .find(|g| g.name() == "Geometry 2 (in Geometry 3)")
-                .unwrap(), // TODO broken until deterministic renaming is implemented
+                .unwrap(),
             GeometryType::Geometry { .. }
         ));
         assert!(matches!(

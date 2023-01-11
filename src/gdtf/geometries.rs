@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use petgraph::visit::{IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected};
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 

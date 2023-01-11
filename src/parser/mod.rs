@@ -26,8 +26,6 @@ pub struct Parsed {
 }
 
 pub fn parse<T: Read + Seek>(reader: T) -> Result<Parsed, Error> {
-    // TODO remove line
-    // let zipfile = File::open(path).map_err(|e| Error::OpenError(path.into(), e))?;
     let mut zip = zip::ZipArchive::new(reader)?;
     let mut description_file = zip
         .by_name("description.xml")
@@ -139,7 +137,7 @@ impl From<YesNoEnum> for bool {
 mod tests {
     use std::{fs::File, path::Path};
 
-    use crate::{parser::errors::HandleProblem, DataVersion};
+    use crate::DataVersion;
 
     use super::*;
 
