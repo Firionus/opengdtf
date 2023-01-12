@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use example_files::{
-    check_for_duplicate_filenames, hash::hash_gdtf, opened_examples_iter, parse_expected_toml,
-    parsed_examples_iter, OutputEnum,
+    check_for_duplicate_filenames, opened_examples_iter, parse_expected_toml, parsed_examples_iter,
+    OutputEnum,
 };
+use opengdtf::hash::gdtf_hash_string;
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -17,7 +18,7 @@ fn fixtures_from_expected_toml_are_in_examples() {
     let expected = parse_expected_toml();
     let mut hashes_in_examples = HashMap::<String, String>::new();
     for (entry, file) in opened_examples_iter() {
-        let key = hash_gdtf(file);
+        let key = gdtf_hash_string(file).unwrap();
         let filename = entry.file_name().to_str().unwrap().to_string();
         assert!(
             matches!(hashes_in_examples.insert(key, filename.clone()), None),
@@ -46,7 +47,7 @@ fn fixtures_from_examples_are_in_expected_toml() {
     let expected = parse_expected_toml();
     let mut missing = Vec::<String>::new();
     for (entry, file) in opened_examples_iter() {
-        let key = hash_gdtf(file);
+        let key = gdtf_hash_string(file).unwrap();
         if expected.get(&key).is_none() {
             missing.push(entry.file_name().to_str().unwrap().to_string())
         }
@@ -63,7 +64,7 @@ please add these fixtures to 'expected.toml' by running `cargo run --bin update_
 fn expected_toml_matches_examples_output() {
     let expected = parse_expected_toml();
     for (_entry, file, parsed) in parsed_examples_iter() {
-        let key = hash_gdtf(file);
+        let key = gdtf_hash_string(file).unwrap();
         let expected_output = match expected.get(&key) {
             Some(v) => &v.output_enum,
             None => continue,

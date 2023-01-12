@@ -474,6 +474,7 @@ dependencies = [
  "strum",
  "thiserror",
  "uuid",
+ "xxhash-rust",
  "zip",
 ]
 

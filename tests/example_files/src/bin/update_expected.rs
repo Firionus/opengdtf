@@ -3,9 +3,10 @@ use std::io::Write;
 
 use chrono::Utc;
 use example_files::{
-    check_for_duplicate_filenames, hash::hash_gdtf, parse_expected_toml, parsed_examples_iter,
-    ExpectedEntry, EXPECTED_TOML_PATH,
+    check_for_duplicate_filenames, parse_expected_toml, parsed_examples_iter, ExpectedEntry,
+    EXPECTED_TOML_PATH,
 };
+use opengdtf::hash::gdtf_hash_string;
 
 fn main() {
     let mut expected = parse_expected_toml();
@@ -14,7 +15,7 @@ fn main() {
     for (entry, file, output) in parsed_examples_iter() {
         println!("{entry:?}");
 
-        let key = hash_gdtf(file);
+        let key = gdtf_hash_string(file).unwrap();
 
         let output_enum = output.into();
 

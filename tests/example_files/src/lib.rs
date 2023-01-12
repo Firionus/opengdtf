@@ -1,5 +1,3 @@
-pub mod hash;
-
 use std::io::Write;
 use std::{
     collections::HashMap,
