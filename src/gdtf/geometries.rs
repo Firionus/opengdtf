@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
+use crate::types::name::Name;
+
 #[derive(Debug, Default)]
 pub struct Geometries {
     /// Graph representing the Geometry tree.
     ///
     /// Edges point from parent to child.
     pub graph: Graph<GeometryType, (), Directed>,
-    pub names: HashMap<String, NodeIndex>,
+    pub names: HashMap<Name, NodeIndex>,
 }
 
 impl Geometries {
@@ -38,7 +40,7 @@ impl Geometries {
     }
 
     /// Find the NodeIndex of a Geometry by its unique `Name`.
-    pub fn find(&self, name: &str) -> Option<NodeIndex> {
+    pub fn find(&self, name: &Name) -> Option<NodeIndex> {
         self.names.get(name).map(|i| i.to_owned())
     }
 
@@ -119,22 +121,21 @@ pub struct Offset {
     pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
-// TODO "name" field should be validated to be GDTF "Name" type, with some characters disallowed
-// see if we can base our implementation on gdtf_parser
+// TODO use composition for reuse of name, position, model
 #[derive(Debug)]
 pub enum GeometryType {
     Geometry {
-        name: String,
+        name: Name,
     },
     Reference {
-        name: String,
+        name: Name,
         reference: NodeIndex,
         offsets: Offsets,
     },
 }
 
 impl GeometryType {
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> &Name {
         match self {
             GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => name,
         }

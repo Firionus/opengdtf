@@ -4,7 +4,7 @@ use roxmltree::TextPos;
 use thiserror::Error;
 use zip::result::ZipError;
 
-use crate::Problems;
+use crate::{types::name::Name, Problems};
 
 use super::utils::XmlPosition;
 
@@ -93,24 +93,24 @@ pub enum ProblemType {
     #[error("unexpected node <{0}>")]
     UnexpectedXmlNode(String),
     #[error("duplicate Geometry name '{0}'")]
-    DuplicateGeometryName(String),
+    DuplicateGeometryName(Name),
     #[error(
-        "duplicate DMXBreak attribute {duplicate_break} in GeometryReference '{geometry_reference_name}'"
+        "duplicate DMXBreak attribute {duplicate_break} in GeometryReference '{geometry_reference}'"
     )]
     DuplicateDmxBreak {
         duplicate_break: u16,
-        geometry_reference_name: String,
+        geometry_reference: Name,
     },
     #[error("unexpected GeometryReference '{0}' as top-level Geometry")]
-    UnexpectedTopLevelGeometryReference(String),
+    UnexpectedTopLevelGeometryReference(Name),
     #[error("unknown Geometry '{0}' referenced")]
-    UnknownGeometry(String),
+    UnknownGeometry(Name),
     #[error(
         "non-top-level Geometry '{target}' referenced in GeometryReference '{geometry_reference}'"
     )]
     NonTopLevelGeometryReferenced {
-        target: String,
-        geometry_reference: String,
+        target: Name,
+        geometry_reference: Name,
     },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \

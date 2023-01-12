@@ -7,6 +7,7 @@ use super::errors::*;
 
 use crate::{
     geometries::{Geometries, GeometryType, Offset, Offsets},
+    types::name::{Name, NameError},
     Problems,
 };
 
@@ -14,7 +15,7 @@ use super::utils::GetFromNode;
 
 struct GeometryDuplicate<'a> {
     /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
-    name: String,
+    name: Name,
     xml_node: Node<'a, 'a>,
     /// None if duplicate is top-level
     parent_graph_ind: Option<NodeIndex>,
@@ -51,7 +52,7 @@ pub fn parse_geometries(
         if let Ok(graph_ind) = parse_element(i, n, None, &mut gcx) {
             parsed_top_level_geometries.push((graph_ind, n));
             if let GeometryType::Reference { name, .. } = &gcx.geometries.graph[graph_ind] {
-                ProblemType::UnexpectedTopLevelGeometryReference(name.clone()).at(&n).handled_by("keeping GeometryReference, \
+                ProblemType::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
                 but it is useless because a top-level GeometryReference can only be used for a DMX mode \
                 that is offset from another one, which is useless because one can just change the start address in \
                 the console", gcx.problems);
@@ -65,11 +66,11 @@ pub fn parse_geometries(
     }
 
     // TODO factor out to its own struct with methods for lookup and adding elements
-    let mut rename_lookup = HashMap::<(String, String), String>::new(); // (top level name, duplicate geometry name) => renamed name
+    let mut rename_lookup = GeometryRenameLookup::new();
 
     // handle geometry duplicates after all others, to ensure deduplicated names don't conflict with defined names
     while let Some(dup) = gcx.geometry_duplicates.pop() {
-        let mut suggested_name = dup.name.clone();
+        let mut suggested_name: Name = dup.name.clone();
 
         // check if duplicate and original are in different top level geometry, if yes, suggest semantic renaming
         let duplicate_top_level = if let Some(duplicate_parent) = dup.parent_graph_ind {
@@ -78,7 +79,9 @@ pub fn parse_geometries(
 
             if original_top_level != duplicate_top_level {
                 let duplicate_top_level_name = gcx.geometries.graph[duplicate_top_level].name();
-                suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name);
+                suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name)
+                    .try_into()
+                    .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid
                 if !gcx.geometries.names.contains_key(&suggested_name) {
                     handle_renamed_geometry(
                         &dup,
@@ -98,7 +101,10 @@ pub fn parse_geometries(
         // increment index until unique name is found
         let mut dedup_ind: u16 = 1;
         loop {
-            suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind);
+            // TODO, does this actually count up, or just appends `(duplicate i)` EVERY SINGLE TIME?
+            suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
+                .try_into()
+                .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid;
             if !gcx.geometries.names.contains_key(&suggested_name) {
                 handle_renamed_geometry(
                     &dup,
@@ -126,11 +132,14 @@ pub fn parse_geometries(
     Ok(())
 }
 
+/// (top level name, duplicate geometry name) => renamed name
+type GeometryRenameLookup = HashMap<(Name, Name), Name>;
+
 fn handle_renamed_geometry<'a>(
     dup: &GeometryDuplicate<'a>,
-    suggested_name: &String,
+    suggested_name: &Name,
     gcx: &mut GeometryParsingContext<'a>,
-    rename_lookup: &mut HashMap<(String, String), String>,
+    rename_lookup: &mut GeometryRenameLookup,
     duplicate_top_level: Option<NodeIndex>,
 ) {
     ProblemType::DuplicateGeometryName(dup.name.clone())
@@ -145,10 +154,10 @@ fn handle_renamed_geometry<'a>(
         if let Some(duplicate_top_level) = duplicate_top_level {
             rename_lookup.insert(
                 (
-                    gcx.geometries.graph[duplicate_top_level].name().into(),
+                    gcx.geometries.graph[duplicate_top_level].name().to_owned(),
                     dup.name.clone(),
                 ),
-                suggested_name.into(),
+                suggested_name.clone(),
             );
         };
         add_children(dup.xml_node, graph_ind, gcx);
@@ -185,7 +194,7 @@ fn parse_element<'a>(
 /// caller should not continue to parse the children on the node.
 fn parse_named_element<'a>(
     n: Node<'a, 'a>,
-    name: String,
+    name: Name,
     parent_graph_ind: Option<NodeIndex>,
     gcx: &mut GeometryParsingContext<'a>,
 ) -> Result<NodeIndex, ()> {
@@ -234,7 +243,7 @@ fn get_unique_geometry_name<'a>(
     node_index_in_xml_parent: usize,
     parent_graph_ind: Option<NodeIndex>,
     gcx: &mut GeometryParsingContext<'a>,
-) -> Option<String> {
+) -> Option<Name> {
     let name = n.get_name(node_index_in_xml_parent, gcx.problems);
     match gcx.geometries.names.get(&name) {
         None => Some(name),
@@ -267,7 +276,7 @@ fn add_children<'a>(
 
 fn parse_geometry_reference<'a>(
     n: Node<'a, 'a>,
-    name: String,
+    name: Name,
     gcx: &mut GeometryParsingContext<'a>,
 ) -> Result<GeometryType, ()> {
     let ref_ind = match get_index_of_referenced_geometry(n, gcx.geometries, &name) {
@@ -294,24 +303,24 @@ fn parse_geometry_reference<'a>(
 fn get_index_of_referenced_geometry(
     n: Node,
     geometries: &mut Geometries,
-    name: &str,
+    name: &Name,
 ) -> Result<NodeIndex, Problem> {
-    let ref_string = n.parse_required_attribute::<String>("Geometry")?;
+    let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
     let ref_ind = geometries
         .find(&ref_string)
-        .ok_or_else(|| ProblemType::UnknownGeometry("ref_string".into()).at(&n))?;
+        .ok_or_else(|| ProblemType::UnknownGeometry(ref_string.clone()).at(&n))?;
     if geometries.is_top_level(ref_ind) {
         Ok(ref_ind)
     } else {
         Err(ProblemType::NonTopLevelGeometryReferenced {
             target: ref_string,
-            geometry_reference: name.into(),
+            geometry_reference: name.to_owned(),
         }
         .at(&n))
     }
 }
 
-fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Problems) -> Offsets {
+fn parse_reference_offsets(&n: &Node, n_name: &Name, problems: &mut Problems) -> Offsets {
     let mut nodes = n
         .children()
         .filter(|n| n.tag_name().name() == "Break")
@@ -342,7 +351,7 @@ fn parse_reference_offsets(&n: &Node, n_name: &str, problems: &mut Problems) -> 
             if offsets.normal.contains_key(&dmx_break) {
                 ProblemType::DuplicateDmxBreak {
                     duplicate_break: dmx_break,
-                    geometry_reference_name: n_name.into(),
+                    geometry_reference: n_name.to_owned(),
                 }
                 .at(&n)
                 .handled_by("overwriting previous value", problems)
@@ -491,7 +500,11 @@ mod tests {
             let doc = roxmltree::Document::parse(xml).unwrap();
             let n = doc.root_element();
             let mut problems: Problems = vec![];
-            let offsets = parse_reference_offsets(&n, "arbitrary name for testing", &mut problems);
+            let offsets = parse_reference_offsets(
+                &n,
+                &"arbitrary name for testing".try_into().unwrap(),
+                &mut problems,
+            );
             (problems, offsets)
         }
     }
@@ -510,7 +523,7 @@ mod tests {
         let a = geometries
             .add(
                 GeometryType::Geometry {
-                    name: "a".to_owned(),
+                    name: "a".try_into().unwrap(),
                 },
                 None,
             )
@@ -518,7 +531,7 @@ mod tests {
         let b = geometries
             .add(
                 GeometryType::Geometry {
-                    name: "b".to_owned(),
+                    name: "b".try_into().unwrap(),
                 },
                 None,
             )
@@ -526,7 +539,7 @@ mod tests {
         let b1 = geometries
             .add(
                 GeometryType::Geometry {
-                    name: "b1".to_owned(),
+                    name: "b1".try_into().unwrap(),
                 },
                 Some(b),
             )
@@ -534,20 +547,20 @@ mod tests {
         let b1a = geometries
             .add(
                 GeometryType::Geometry {
-                    name: "b1a".to_owned(),
+                    name: "b1a".try_into().unwrap(),
                 },
                 Some(b1),
             )
             .unwrap();
 
-        assert_eq!(geometries.find("a"), Some(a));
-        assert_eq!(geometries.find("b"), Some(b));
-        assert_eq!(geometries.find("b1"), Some(b1));
-        assert_eq!(geometries.find("b1a"), Some(b1a));
+        assert_eq!(geometries.find(&"a".try_into().unwrap()), Some(a));
+        assert_eq!(geometries.find(&"b".try_into().unwrap()), Some(b));
+        assert_eq!(geometries.find(&"b1".try_into().unwrap()), Some(b1));
+        assert_eq!(geometries.find(&"b1a".try_into().unwrap()), Some(b1a));
 
         // nonexistent elements
-        assert_eq!(geometries.find("c"), None);
-        assert_eq!(geometries.find("a.a"), None);
+        assert_eq!(geometries.find(&"c".try_into().unwrap()), None);
+        assert_eq!(geometries.find(&"aa".try_into().unwrap()), None);
     }
 
     #[test]
@@ -577,7 +590,7 @@ mod tests {
         assert!(problems.is_empty());
         assert_eq!(geometries.graph.node_count(), 4);
 
-        let element_2 = &geometries.graph[geometries.names["Element 2"]];
+        let element_2 = &geometries.graph[geometries.names[&"Element 2".try_into().unwrap()]];
         if let GeometryType::Reference {
             name,
             reference,
@@ -638,13 +651,13 @@ mod tests {
             ProblemType::DuplicateGeometryName(dup) if dup == "Geometry 2"
         ));
 
-        let b = geometries.find("Beam 1").unwrap();
+        let b = geometries.find(&"Beam 1".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(b) && geometries.count_children(b) == 0);
 
-        let g2 = geometries.find("Geometry 2").unwrap();
+        let g2 = geometries.find(&"Geometry 2".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(g2) && geometries.count_children(g2) == 0);
 
-        let g3 = geometries.find("Geometry 3").unwrap();
+        let g3 = geometries.find(&"Geometry 3".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(g3));
 
         let g3_children = geometries.children(g3).collect::<Vec<_>>();
@@ -710,7 +723,7 @@ mod tests {
             ))
         }
 
-        let t1 = geometries.find("Top 1").unwrap();
+        let t1 = geometries.find(&"Top 1".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t1));
         let t1_children = geometries.children(t1).collect::<Vec<_>>();
         t1_children
@@ -727,11 +740,13 @@ mod tests {
             .unwrap();
         assert_eq!(t1_children.len(), 3);
 
-        let t2 = geometries.find("Top 2").unwrap();
+        let t2 = geometries.find(&"Top 2".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t2));
         assert_eq!(geometries.count_children(t2), 0);
 
-        let t2d = geometries.find("Top 2 (duplicate 1)").unwrap();
+        let t2d = geometries
+            .find(&"Top 2 (duplicate 1)".try_into().unwrap())
+            .unwrap();
         assert!(geometries.is_top_level(t2d));
         let t2d_children = geometries.children(t2d).collect::<Vec<_>>();
         t2d_children
@@ -748,7 +763,7 @@ mod tests {
             .unwrap();
         assert_eq!(t2d_children.len(), 3);
 
-        let t3 = geometries.find("Top 3").unwrap();
+        let t3 = geometries.find(&"Top 3".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t3));
         let t3_children = geometries.children(t3).collect::<Vec<_>>();
         let reference = t3_children
@@ -783,7 +798,10 @@ mod tests {
         ));
 
         assert_eq!(geometries.graph.node_count(), 3);
-        assert!(geometries.names.contains_key("Element 1").not());
+        assert!(geometries
+            .names
+            .contains_key(&"Element 1".try_into().unwrap())
+            .not());
     }
 
     fn run_parse_geometries(ft_str: &str) -> (Problems, Geometries) {

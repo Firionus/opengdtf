@@ -5,6 +5,7 @@ use std::str::FromStr;
 use roxmltree::Node;
 use roxmltree::TextPos;
 
+use crate::types::name::Name;
 use crate::Problems;
 
 use super::errors::*;
@@ -31,7 +32,7 @@ pub(crate) trait GetFromNode {
 
     fn find_child_by_tag_name(&self, tag: &str) -> Result<Node, Problem>;
 
-    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> String;
+    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> Name;
 }
 
 impl GetFromNode for Node<'_, '_> {
@@ -60,9 +61,8 @@ impl GetFromNode for Node<'_, '_> {
         Some(parse_attribute_content(self, content, attr))
     }
 
-    /// Get the value of an XML attribute and apply the closure. If it returns
-    /// None, function returns None. Otherwise, returns the result of parsing
-    /// the attribute as type T.
+    /// Get the value of an XML attribute. If it is missing, returns None.
+    /// Otherwise returns the result of parsing the attribute.
     fn parse_attribute<T: FromStr>(&self, attr: &str) -> Option<Result<T, Problem>>
     where
         <T as FromStr>::Err: std::error::Error + 'static,
@@ -95,16 +95,33 @@ impl GetFromNode for Node<'_, '_> {
     }
 
     /// Get attribute 'Name', or if missing provide default and push a problem.
-    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> String {
-        self.parse_required_attribute("Name").unwrap_or_else(|p| {
-            let default_name = format!(
-                "{} {}",
-                self.tag_name().name(),
-                node_index_in_xml_parent + 1
-            );
-            p.handled_by(format!("using default name '{default_name}'"), problems);
-            default_name
-        })
+    /// If the Name is invalid, a problem is pushed and a Name is returned where
+    /// the disallowed chars are replaced
+    fn get_name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> Name {
+        match self.required_attribute("Name") {
+            Ok(name) => Name::try_from(name).unwrap_or_else(|e| {
+                let fixed_name = e.name.clone();
+                ProblemType::InvalidAttribute {
+                    attr: "Name".into(),
+                    tag: self.tag_name().name().to_owned(),
+                    content: name.to_owned(),
+                    source: Box::new(e),
+                    expected_type: "Name".to_owned(),
+                }
+                .at(self)
+                .handled_by(
+                    "using string where invalid chars are replaced with □",
+                    problems,
+                );
+                fixed_name
+            }),
+            Err(p) => {
+                let default_name = Name::default(self.tag_name().name(), node_index_in_xml_parent)
+                    .unwrap_or_else(|e| e.name); // safe because GDTF tag names don't contain chars disallowed in Name
+                p.handled_by(format!("using default name '{default_name}'"), problems);
+                default_name
+            }
+        }
     }
 }
 

@@ -6,6 +6,7 @@ use self::{dmx_modes::DmxMode, geometries::Geometries};
 pub mod dmx_modes;
 mod errors;
 pub mod geometries;
+pub mod types;
 
 #[derive(Debug)]
 pub struct Gdtf {
