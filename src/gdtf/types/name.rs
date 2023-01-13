@@ -1,4 +1,6 @@
-use std::{fmt::Debug, fmt::Display, str::FromStr};
+use std::str::FromStr;
+
+use derive_more::{DebugCustom, Display};
 
 use thiserror::Error;
 
@@ -15,7 +17,7 @@ use thiserror::Error;
 /// - U+003F (?)
 /// - U+005B..=U+005E ([\]^)
 /// - U+007B..=U+007F ({|}~<control>)
-#[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash)]
+#[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash, Display, DebugCustom)]
 pub struct Name(String);
 
 #[derive(Error, Debug)]
@@ -80,16 +82,15 @@ impl FromStr for Name {
     }
 }
 
-// TODO replace with a macro like derive_more, ...
-impl Display for Name {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+impl PartialEq<str> for Name {
+    fn eq(&self, other: &str) -> bool {
+        self.0 == other
     }
 }
 
-impl Debug for Name {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+impl PartialEq<&str> for Name {
+    fn eq(&self, other: &&str) -> bool {
+        self.0 == *other
     }
 }
 
@@ -108,18 +109,6 @@ impl Name {
 
     pub fn as_str(&self) -> &str {
         &self.0
-    }
-}
-
-impl PartialEq<str> for Name {
-    fn eq(&self, other: &str) -> bool {
-        self.0 == other
-    }
-}
-
-impl PartialEq<&str> for Name {
-    fn eq(&self, other: &&str) -> bool {
-        self.0 == *other
     }
 }
 
@@ -150,7 +139,7 @@ mod tests {
         ));
 
         assert_eq!("yay", format!("{}", Name::try_from("yay").unwrap()));
-        assert_eq!("yay", format!("{:?}", Name::try_from("yay").unwrap()));
-        assert_eq!("yay", format!("{:#?}", Name::try_from("yay").unwrap()));
+        assert_eq!("\"yay\"", format!("{:?}", Name::try_from("yay").unwrap()));
+        assert_eq!("\"yay\"", format!("{:#?}", Name::try_from("yay").unwrap()));
     }
 }
