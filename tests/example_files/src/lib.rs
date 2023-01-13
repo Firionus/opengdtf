@@ -68,7 +68,7 @@ impl From<Result<Parsed, Error>> for OutputEnum {
                     let mut qualified_names = parsed
                         .gdtf
                         .geometries
-                        .graph
+                        .graph()
                         .node_indices()
                         .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
                         .collect::<Vec<String>>();

@@ -1,20 +1,31 @@
 use std::collections::HashMap;
 
+use getset::Getters;
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
 use crate::types::name::Name;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Getters)]
+#[getset(get = "pub")]
 pub struct Geometries {
-    /// Graph representing the Geometry tree.
+    /// Maps geometry name to its graph index. Use for quick name lookup.
+    names: HashMap<Name, NodeIndex>,
+
+    /// Graph representing the geometry tree. Edges point from parent to child.
     ///
-    /// Edges point from parent to child.
-    pub graph: Graph<GeometryType, (), Directed>,
-    pub names: HashMap<Name, NodeIndex>,
+    /// Petgraph is used to avoid having to learn multiple graph/tree-libraries
+    /// for this crate. The tree structure is ensured by the modifying methods
+    /// and the fact that the field is not mutably accesible from the outside.
+    graph: GeometryGraph,
 }
 
+type GeometryGraph = Graph<GeometryType, (), Directed>;
+
 impl Geometries {
+    // TODO replace with `add` and `add_top_level`, then there is no Option in
+    // the Arguments, which is somewhat confusing :)
+
     /// Adds a Geometry and returns the NodeIndex of the new geometry
     ///
     /// If you want to add a top-level geometry, set parent_index to `None`. If
@@ -94,7 +105,7 @@ impl Geometries {
 // channels operating on the referenced geometry. No more breaks are allowed to
 // be serialized (see GDTF 1.2 page 39), but I think having them in the struct
 // isn't bad.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Offsets {
     pub normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
     pub overwrite: Option<Offset>,
@@ -115,14 +126,14 @@ impl Default for Offsets {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Offset {
     pub dmx_break: u16, // TODO 0 disallowed?, is there an upper limit on breaks?
     pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
 // TODO use composition for reuse of name, position, model
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum GeometryType {
     Geometry {
         name: Name,
@@ -139,5 +150,41 @@ impl GeometryType {
         match self {
             GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => name,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        let mut g = Geometries::default();
+        let top_1 = g
+            .add(
+                GeometryType::Geometry {
+                    name: "top 0".try_into().unwrap(),
+                },
+                None,
+            )
+            .unwrap();
+        let _child_0 = g
+            .add(
+                GeometryType::Geometry {
+                    name: "child 0".try_into().unwrap(),
+                },
+                Some(top_1),
+            )
+            .unwrap();
+        // adding same name again does not work
+        assert_eq!(
+            g.add(
+                GeometryType::Geometry {
+                    name: "top 0".try_into().unwrap(),
+                },
+                Some(top_1),
+            ),
+            None
+        )
     }
 }

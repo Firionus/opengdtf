@@ -55,7 +55,7 @@ pub fn parse_geometries(
     for (i, n) in top_level_geometries.clone().enumerate() {
         if let Ok(graph_ind) = parse_element(i, n, None, &mut gcx) {
             parsed_top_level_geometries.push((graph_ind, n));
-            if let GeometryType::Reference { name, .. } = &gcx.geometries.graph[graph_ind] {
+            if let GeometryType::Reference { name, .. } = &gcx.geometries.graph()[graph_ind] {
                 ProblemType::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
                 but it is useless because a top-level GeometryReference can only be used for a DMX mode \
                 that is offset from another one, which is useless because one can just change the start address in \
@@ -82,11 +82,11 @@ pub fn parse_geometries(
             let duplicate_top_level = gcx.geometries.top_level_geometry(duplicate_parent);
 
             if original_top_level != duplicate_top_level {
-                let duplicate_top_level_name = gcx.geometries.graph[duplicate_top_level].name();
+                let duplicate_top_level_name = gcx.geometries.graph()[duplicate_top_level].name();
                 suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name)
                     .try_into()
                     .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid
-                if !gcx.geometries.names.contains_key(&suggested_name) {
+                if !gcx.geometries.names().contains_key(&suggested_name) {
                     handle_renamed_geometry(
                         &dup,
                         &suggested_name,
@@ -109,7 +109,7 @@ pub fn parse_geometries(
             suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
                 .try_into()
                 .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid;
-            if !gcx.geometries.names.contains_key(&suggested_name) {
+            if !gcx.geometries.names().contains_key(&suggested_name) {
                 handle_renamed_geometry(
                     &dup,
                     &suggested_name,
@@ -158,7 +158,9 @@ fn handle_renamed_geometry<'a>(
         if let Some(duplicate_top_level) = duplicate_top_level {
             rename_lookup.insert(
                 (
-                    gcx.geometries.graph[duplicate_top_level].name().to_owned(),
+                    gcx.geometries.graph()[duplicate_top_level]
+                        .name()
+                        .to_owned(),
                     dup.name.clone(),
                 ),
                 suggested_name.clone(),
@@ -249,7 +251,7 @@ fn get_unique_geometry_name<'a>(
     gcx: &mut GeometryParsingContext<'a>,
 ) -> Option<Name> {
     let name = n.get_name(node_index_in_xml_parent, gcx.problems);
-    match gcx.geometries.names.get(&name) {
+    match gcx.geometries.names().get(&name) {
         None => Some(name),
         Some(duplicate_graph_ind) => {
             gcx.geometry_duplicates.push(GeometryDuplicate {
@@ -516,8 +518,8 @@ mod tests {
     #[test]
     fn geometries_default_is_empty() {
         let geometries = Geometries::default();
-        assert_eq!(geometries.graph.node_count(), 0);
-        assert_eq!(geometries.names.len(), 0);
+        assert_eq!(geometries.graph().node_count(), 0);
+        assert_eq!(geometries.names().len(), 0);
     }
 
     #[test]
@@ -592,9 +594,9 @@ mod tests {
         let (problems, geometries) = run_parse_geometries(ft_str);
 
         assert!(problems.is_empty());
-        assert_eq!(geometries.graph.node_count(), 4);
+        assert_eq!(geometries.graph().node_count(), 4);
 
-        let element_2 = &geometries.graph[geometries.names[&"Element 2".try_into().unwrap()]];
+        let element_2 = &geometries.graph()[geometries.names()[&"Element 2".try_into().unwrap()]];
         if let GeometryType::Reference {
             name,
             reference,
@@ -612,7 +614,7 @@ mod tests {
             assert_eq!(offsets.normal[&1], 3);
             assert_eq!(offsets.normal[&2], 4);
             assert_eq!(
-                geometries.graph[reference.to_owned()].name(),
+                geometries.graph()[reference.to_owned()].name(),
                 "AbstractElement"
             );
         } else {
@@ -801,9 +803,9 @@ mod tests {
             ProblemType::NonTopLevelGeometryReferenced { .. },
         ));
 
-        assert_eq!(geometries.graph.node_count(), 3);
+        assert_eq!(geometries.graph().node_count(), 3);
         assert!(geometries
-            .names
+            .names()
             .contains_key(&"Element 1".try_into().unwrap())
             .not());
     }
