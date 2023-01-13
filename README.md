@@ -4,7 +4,7 @@
 
 
 A starting point to build a useful open-source [GDTF](https://gdtf-share.com/)
-libary in Rust.
+libary in Rust. GDTF is a standard fixture format for entertainment lighting.
 
 :construction: Early initial development, not usable yet :construction:  
 If you are interested in helping out, open a thread in the Discussions and say
@@ -13,8 +13,11 @@ hi :wave:
 ## Short-term goals
 
 - Parse some fundamental data from GDTF files
-- Show it can be bound to other languages (e.g. try a JS binding with [Neon](https://github.com/neon-bindings/neon) for [OFL](https://github.com/OpenLightingProject/open-fixture-library))
-- Documentation around GDTF and how this library handles it to help other developers chime in
+- Show it can be bound to other languages (e.g. try a JS binding with
+  [Neon](https://github.com/neon-bindings/neon) for
+  [OFL](https://github.com/OpenLightingProject/open-fixture-library))
+- Documentation around GDTF and how this library handles it to help other
+  developers chime in
 - Build community support
 
 ToDo's are kept in [Issues](https://github.com/Firionus/opengdtf/issues).
@@ -26,27 +29,17 @@ ToDo's are kept in [Issues](https://github.com/Firionus/opengdtf/issues).
 Provide a useful higher-level API that resembles the fixture model in a useful
 way. 
 
-**Never panic** 
-
-Indicate Problems in an Error Vector instead.
-
 **Suck out as much information as possible**
 
-Always return a result, even if some parts are broken.  
+Always return a valid result, even if some parts are fixed up or missing. Use
+mitigations (defaults, renames, ...) for unexpected conditions when possible or
+omit a part if mitigation is impossible or too hard.  
+In any case, indicate problems and actions taken in a Problem Vector.  
+All panics are considered a bug, because then no valid result is returned.
 
-**Indicate when things are broken**
+**Move faster**
 
-If parts of the result are broken, it must be indicated in the error vector.
-
-It is okay to replace broken things with sensible defaults, but this must be
-indicated in the error vector and leaving out broken things should be preferred
-if this does not clash with the preceding principle. 
-
-**Move fast and break things**
-
-Value developer time. If a value does not have to be read programmatically by
-the user, it is okay to just return the string from the file instead of an enum.
-However, it should be validated and errors indicated in the error vector. 
+Value developer time. 
 
 ### Rationale for Principles
 
@@ -60,3 +53,32 @@ However, it should be validated and errors indicated in the error vector.
 ## Long-term goals
 
 - Serialize GDTF XML, e.g. with quick-xml
+
+## Why Rust?
+
+Rust is my language of choice for this project, due to its interoperability with
+other languages and safety.  
+
+Interoperability is needed because creative lighting people want to work in many
+different languages but the community is not big enough to create GDTF
+implementations in every language. Safety is important because the environments
+in which we create stage lighting are already stressful, and software should not
+be a burden by being unreliable.
+
+Other languages without a runtime, like C/C++, are interoperable but not very
+safe. Safe languages on the other hand often have a runtime that makes language
+interoperability unfeasible. This is why I think Rust is a good choice for a
+GDTF library.
+
+## How to Develop
+
+see <CONTRIBUTING.md>
+
+## Other Links and Projects
+
+- [gdtf_parser](https://github.com/michaelhugi/gdtf_parser): More complete
+  parser than opengdtf, but aims for a lower level of abstraction and less
+  forgiving parser
+- [mvrdevelopment/spec](https://github.com/mvrdevelopment/spec): The official
+  GDTF and MVR specification. Also the place to file issues against the
+  specification. 
