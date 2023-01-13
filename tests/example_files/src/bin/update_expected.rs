@@ -6,7 +6,7 @@ use example_files::{
     check_for_duplicate_filenames, parse_expected_toml, parsed_examples_iter, ExpectedEntry,
     EXPECTED_TOML_PATH,
 };
-use opengdtf::hash::gdtf_hash_string;
+use opengdtf::hash::hash_gdtf_to_string;
 
 fn main() {
     let mut expected = parse_expected_toml();
@@ -16,7 +16,7 @@ fn main() {
     for (entry, file, parsed_result) in parsed_examples_iter() {
         println!("{entry:?}");
 
-        let key = gdtf_hash_string(file).unwrap();
+        let key = hash_gdtf_to_string(file).unwrap();
 
         let output_enum = parsed_result.into();
 

@@ -2,20 +2,15 @@ use xxhash_rust::xxh3::xxh3_128;
 
 use zip::{result::ZipError, ZipArchive};
 
-use std::fs::File;
+use std::{
+    fs::File,
+    io::{Read, Seek},
+};
 
-// TODO once Seek::stream_len is stabilized, we can go to <T: Read + Seek>
-// please track https://github.com/rust-lang/rust/issues/59359
-/// Hash a GDTF file based on the filenames and checksums inside the archive and
-/// format the output as a hex string.
-pub fn gdtf_hash_string(file: File) -> Result<String, ZipError> {
-    let hash = hash_gdtf(file)?;
-    Ok(format!("{hash:x}"))
-}
-
-/// Hash a GDTF file based on the filenames and checksums inside the archive.
-pub fn hash_gdtf(file: File) -> Result<u128, ZipError> {
-    let mut zip = ZipArchive::new(file)?;
+/// Hash a GDTF file based on the filenames inside the archive and the files'
+/// CRC32 checksums.
+pub fn hash_gdtf<T: Read + Seek>(gdtf_file: T) -> Result<u128, ZipError> {
+    let mut zip = ZipArchive::new(gdtf_file)?;
     let mut file_names: Vec<String> = zip.file_names().map(|s| s.to_string()).collect();
     file_names.sort(); // needed because zip might reorder files arbitrarily
     let mut buf = Vec::with_capacity(file_names.len() * 30);
@@ -27,6 +22,13 @@ pub fn hash_gdtf(file: File) -> Result<u128, ZipError> {
     Ok(xxh3_128(&buf))
 }
 
+/// Hash a GDTF file based on the filenames inside the archive and the files'
+/// CRC32 checksums. Returns a hex string representation of the hash.
+pub fn hash_gdtf_to_string(file: File) -> Result<String, ZipError> {
+    let hash = hash_gdtf(file)?;
+    Ok(format!("{hash:x}"))
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs::File;
@@ -34,12 +36,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn hash_example() {
+        let archive = File::open("tests/hash_resources/archive.zip").unwrap();
+        assert_eq!(
+            hash_gdtf(archive).unwrap(),
+            239358846132393802609962048883877577663
+        );
+    }
+
+    #[test]
+    fn hash_string_example() {
+        let archive = File::open("tests/hash_resources/archive.zip").unwrap();
+        assert_eq!(
+            hash_gdtf_to_string(archive).unwrap(),
+            "b412d64085c367a14322ade0cb3983bf"
+        );
+    }
+
+    #[test]
     fn hash_does_not_depend_on_archive_name() {
         let archive = File::open("tests/hash_resources/archive.zip").unwrap();
         let renamed_archive = File::open("tests/hash_resources/renamed archive.zip").unwrap();
         assert_eq!(
-            gdtf_hash_string(archive).unwrap(),
-            gdtf_hash_string(renamed_archive).unwrap()
+            hash_gdtf(archive).unwrap(),
+            hash_gdtf(renamed_archive).unwrap()
         )
     }
 
@@ -49,8 +69,8 @@ mod tests {
         let changed_archive =
             File::open("tests/hash_resources/archive changed file content.zip").unwrap();
         assert_ne!(
-            gdtf_hash_string(archive).unwrap(),
-            gdtf_hash_string(changed_archive).unwrap()
+            hash_gdtf(archive).unwrap(),
+            hash_gdtf(changed_archive).unwrap()
         )
     }
 
@@ -60,8 +80,8 @@ mod tests {
         let archive_renamed_inner_file =
             File::open("tests/hash_resources/archive renamed inner file.zip").unwrap();
         assert_ne!(
-            gdtf_hash_string(archive).unwrap(),
-            gdtf_hash_string(archive_renamed_inner_file).unwrap()
+            hash_gdtf(archive).unwrap(),
+            hash_gdtf(archive_renamed_inner_file).unwrap()
         )
     }
 
@@ -71,8 +91,8 @@ mod tests {
         let archive_change_inner_creation_date =
             File::open("tests/hash_resources/archive different inner creation date.zip").unwrap();
         assert_eq!(
-            gdtf_hash_string(archive).unwrap(),
-            gdtf_hash_string(archive_change_inner_creation_date).unwrap()
+            hash_gdtf(archive).unwrap(),
+            hash_gdtf(archive_change_inner_creation_date).unwrap()
         )
     }
 }
