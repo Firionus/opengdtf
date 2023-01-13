@@ -72,7 +72,7 @@ GDTF library.
 
 ## How to Develop
 
-see <CONTRIBUTING.md>
+see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Other Links and Projects
 
