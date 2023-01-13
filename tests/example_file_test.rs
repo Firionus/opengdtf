@@ -20,10 +20,13 @@ fn fixtures_from_expected_toml_are_in_examples() {
     for (entry, file) in opened_examples_iter() {
         let key = gdtf_hash_string(file).unwrap();
         let filename = entry.file_name().to_str().unwrap().to_string();
-        assert!(
-            matches!(hashes_in_examples.insert(key, filename.clone()), None),
-            "Duplicate file '{filename}' in examples"
-        );
+        match hashes_in_examples.get(&key) {
+            Some(collision_filename) => panic!(
+                "hash collision between '{}' and '{}'; GDTF files likely have the same content and one of them should be removed",
+                collision_filename, filename
+            ),
+            None => hashes_in_examples.insert(key, filename.clone()),
+        };
     }
     let mut missing = Vec::<String>::new();
     for (expected_key, expected_entry) in expected {
@@ -63,13 +66,13 @@ please add these fixtures to 'expected.toml' by running `cargo run --bin update_
 #[test]
 fn expected_toml_matches_examples_output() {
     let expected = parse_expected_toml();
-    for (_entry, file, parsed) in parsed_examples_iter() {
+    for (_entry, file, parsed_result) in parsed_examples_iter() {
         let key = gdtf_hash_string(file).unwrap();
         let expected_output = match expected.get(&key) {
             Some(v) => &v.output_enum,
             None => continue,
         };
-        let parsed_entry = OutputEnum::from(parsed);
+        let parsed_entry = OutputEnum::from(parsed_result);
 
         assert_eq!(expected_output, &parsed_entry);
     }

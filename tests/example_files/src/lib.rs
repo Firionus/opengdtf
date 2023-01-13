@@ -5,12 +5,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod duplicate_filenames;
+pub use duplicate_filenames::check_for_duplicate_filenames;
+
 use chrono::Utc;
 use once_cell::sync::Lazy;
 use opengdtf::{parse, Error, Parsed};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
-use xxhash_rust::xxh3::Xxh3Builder;
 
 pub static EXAMPLE_FILES_DIR: Lazy<&Path> = Lazy::new(|| Path::new("tests/example_files"));
 pub static EXAMPLES_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("examples"));
@@ -18,7 +20,7 @@ pub static OUTPUTS_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("out
 pub static EXPECTED_TOML_PATH: Lazy<PathBuf> =
     Lazy::new(|| EXAMPLE_FILES_DIR.join("expected.toml"));
 
-type Expected = HashMap<String, ExpectedEntry, Xxh3Builder>;
+type Expected = HashMap<String, ExpectedEntry, xxhash_rust::xxh3::Xxh3Builder>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpectedEntry {
@@ -34,6 +36,20 @@ pub struct ExpectedEntry {
 pub enum OutputEnum {
     Ok(ParsedInfo),
     Err(ErrorInfo),
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct ErrorInfo {
+    pub error: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct ParsedInfo {
+    pub manufacturer: String,
+    pub name: String,
+    pub fixture_type_id: String,
+    pub problems: Vec<String>,
+    pub geometries: Vec<String>,
 }
 
 impl From<Result<Parsed, Error>> for OutputEnum {
@@ -54,31 +70,17 @@ impl From<Result<Parsed, Error>> for OutputEnum {
                         .geometries
                         .graph
                         .node_indices()
-                        .map(|i| parsed.gdtf.geometries.qualified_name(i))
+                        .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
                         .collect::<Vec<String>>();
                     qualified_names.sort();
                     qualified_names
                 },
             }),
-            Err(e) => OutputEnum::Err(ErrorInfo {
-                error: format!("{e}"),
+            Err(err) => OutputEnum::Err(ErrorInfo {
+                error: format!("{err}"),
             }),
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct ErrorInfo {
-    pub error: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct ParsedInfo {
-    pub manufacturer: String,
-    pub name: String,
-    pub fixture_type_id: String,
-    pub problems: Vec<String>,
-    pub geometries: Vec<String>,
 }
 
 pub fn parse_expected_toml() -> Expected {
@@ -89,12 +91,12 @@ pub fn parse_expected_toml() -> Expected {
 pub fn examples_iter() -> impl Iterator<Item = DirEntry> {
     WalkDir::new(&*EXAMPLES_DIR)
         .into_iter()
-        .map(|e| e.unwrap())
-        .filter(|e| !e.file_type().is_dir())
-        .filter(|e| {
-            Path::new(e.file_name())
+        .map(|result| result.unwrap())
+        .filter(|entry| !entry.file_type().is_dir())
+        .filter(|entry| {
+            Path::new(entry.file_name())
                 .extension()
-                .map_or_else(|| false, |ext| ext == "gdtf")
+                .map_or_else(|| false, |extension| extension == "gdtf")
         })
 }
 
@@ -108,8 +110,8 @@ pub fn opened_examples_iter() -> impl Iterator<Item = (DirEntry, File)> {
 pub fn parsed_examples_iter(
 ) -> impl Iterator<Item = (DirEntry, File, Result<Parsed, opengdtf::Error>)> {
     opened_examples_iter().map(|(entry, file)| {
-        let parse_output = parse(&file);
-        (entry, file, parse_output)
+        let parse_result = parse(&file);
+        (entry, file, parse_result)
     })
 }
 
@@ -119,50 +121,12 @@ pub fn examples_update_output_iter(
     remove_dir_all(&*OUTPUTS_DIR).unwrap();
     create_dir_all(&*OUTPUTS_DIR).unwrap();
 
-    parsed_examples_iter().map(|(entry, file, parse_output)| {
+    parsed_examples_iter().map(|(entry, file, parse_result)| {
         let file_name = entry.file_name().to_str().unwrap();
 
-        let mut output = File::create(OUTPUTS_DIR.join(file_name)).unwrap();
-        write!(output, "{parse_output:#?}").unwrap();
+        let mut output_file = File::create(OUTPUTS_DIR.join(file_name)).unwrap();
+        write!(output_file, "{parse_result:#?}").unwrap();
 
-        (entry, file, parse_output)
+        (entry, file, parse_result)
     })
-}
-
-#[allow(dead_code)] // fields accessed with Debug, which is ignored during dead code analysis
-#[derive(Debug)]
-struct DuplicateFilename {
-    filename: String,
-    number_of_occurences: u32,
-}
-
-/// Panics with diagnostic message if there are duplicate filenames in `expected`
-pub fn check_for_duplicate_filenames(
-    expected: HashMap<String, ExpectedEntry, xxhash_rust::xxh3::Xxh3Builder>,
-) {
-    let mut filename_set = HashMap::<&String, u32>::new();
-    for original_filename in expected.values().map(|v| &v.filename) {
-        if !filename_set.contains_key(original_filename) {
-            filename_set.insert(original_filename, 1);
-        } else {
-            let prev_count = filename_set[original_filename];
-            filename_set.insert(original_filename, prev_count + 1);
-        }
-    }
-    let duplicates: Vec<DuplicateFilename> = filename_set
-        .into_iter()
-        .filter(|(_, c)| c != &1u32)
-        .map(|(k, v)| DuplicateFilename {
-            filename: k.to_string(),
-            number_of_occurences: v,
-        })
-        .collect();
-    assert!(
-        duplicates.is_empty(),
-        r"
-entries with duplicate filenames:
-{duplicates:#?}
-This probably means a GDTF file was modified without changing its filename.
-The stale entries in `expected.toml` should be removed."
-    );
 }

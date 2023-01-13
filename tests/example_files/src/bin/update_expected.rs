@@ -12,12 +12,13 @@ fn main() {
     let mut expected = parse_expected_toml();
 
     println!("iterating over example files");
-    for (entry, file, output) in parsed_examples_iter() {
+
+    for (entry, file, parsed_result) in parsed_examples_iter() {
         println!("{entry:?}");
 
         let key = gdtf_hash_string(file).unwrap();
 
-        let output_enum = output.into();
+        let output_enum = parsed_result.into();
 
         let comment = if let Some(existing_entry) = expected.get(&key) {
             if existing_entry.output_enum == output_enum {
@@ -38,6 +39,7 @@ fn main() {
             },
         );
     }
+
     let serialized = toml::to_string_pretty(&expected).unwrap();
     let mut output_file = File::create(&*EXPECTED_TOML_PATH).unwrap();
     write!(output_file, "{}", &serialized).unwrap();

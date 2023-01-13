@@ -22,6 +22,10 @@ struct GeometryDuplicate<'a> {
     duplicate_graph_ind: NodeIndex,
 }
 
+// TODO create a struct `GeometriesParser` or similar, then implement all these
+// functions on that. That reduces the amount of argument we have to pass around
+// and allows the functions to share some common state :). It is somewhat more
+// Java-like though ("everything's a class").
 pub fn parse_geometries(
     geometries: &mut Geometries,
     ft: &Node,
