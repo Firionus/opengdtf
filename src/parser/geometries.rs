@@ -6,7 +6,8 @@ use roxmltree::Node;
 use super::errors::*;
 
 use crate::{
-    geometries::{Geometries, GeometryType, Offset, Offsets},
+    geometries::Geometries,
+    geometry_type::{GeometryType, Offset, Offsets},
     types::name::{Name, NameError},
     Problems,
 };
@@ -214,7 +215,7 @@ fn parse_named_element<'a>(
         "GeometryReference" => {
             let geometry = parse_geometry_reference(n, name, gcx)?;
             add_to_geometries(geometry, parent_graph_ind, n, gcx).and(Err(()))
-            // don't parse children as geometries
+            // don't parse children of GeometryReference as geometries
         }
         tag => {
             ProblemType::UnexpectedXmlNode(tag.into())
@@ -231,16 +232,15 @@ fn add_to_geometries(
     n: Node,
     gcx: &mut GeometryParsingContext,
 ) -> Result<NodeIndex, ()> {
-    let graph_ind = gcx
-        .geometries
-        .add(geometry, parent_graph_ind)
-        .ok_or_else(|| {
-            ProblemType::Unexpected(
-                "Geometry name not unique when trying to add to geometry graph".into(),
-            )
+    let graph_ind = match parent_graph_ind {
+        Some(parent_graph_ind) => gcx.geometries.add(geometry, parent_graph_ind),
+        None => gcx.geometries.add_top_level(geometry),
+    }
+    .map_err(|err| {
+        ProblemType::Unexpected(err.to_string())
             .at(&n)
             .handled_by("ignoring node", gcx.problems)
-        })?;
+    })?;
     Ok(graph_ind)
 }
 
@@ -513,60 +513,6 @@ mod tests {
             );
             (problems, offsets)
         }
-    }
-
-    #[test]
-    fn geometries_default_is_empty() {
-        let geometries = Geometries::default();
-        assert_eq!(geometries.graph().node_count(), 0);
-        assert_eq!(geometries.names().len(), 0);
-    }
-
-    #[test]
-    fn find_geometry_works() {
-        let mut geometries = Geometries::default();
-
-        let a = geometries
-            .add(
-                GeometryType::Geometry {
-                    name: "a".try_into().unwrap(),
-                },
-                None,
-            )
-            .unwrap();
-        let b = geometries
-            .add(
-                GeometryType::Geometry {
-                    name: "b".try_into().unwrap(),
-                },
-                None,
-            )
-            .unwrap();
-        let b1 = geometries
-            .add(
-                GeometryType::Geometry {
-                    name: "b1".try_into().unwrap(),
-                },
-                Some(b),
-            )
-            .unwrap();
-        let b1a = geometries
-            .add(
-                GeometryType::Geometry {
-                    name: "b1a".try_into().unwrap(),
-                },
-                Some(b1),
-            )
-            .unwrap();
-
-        assert_eq!(geometries.find(&"a".try_into().unwrap()), Some(a));
-        assert_eq!(geometries.find(&"b".try_into().unwrap()), Some(b));
-        assert_eq!(geometries.find(&"b1".try_into().unwrap()), Some(b1));
-        assert_eq!(geometries.find(&"b1a".try_into().unwrap()), Some(b1a));
-
-        // nonexistent elements
-        assert_eq!(geometries.find(&"c".try_into().unwrap()), None);
-        assert_eq!(geometries.find(&"aa".try_into().unwrap()), None);
     }
 
     #[test]

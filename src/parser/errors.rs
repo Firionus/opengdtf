@@ -24,7 +24,7 @@ pub enum Error {
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
     Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
-    )]
+    )] // TODO remove and replace in all places with ProblemType::Unexpected
     Unexpected(String),
 }
 

@@ -35,7 +35,7 @@ Always return a valid result, even if some parts are fixed up or missing. Use
 mitigations (defaults, renames, ...) for unexpected conditions when possible or
 omit a part if mitigation is impossible or too hard.  
 In any case, indicate problems and actions taken in a Problem Vector.  
-All panics are considered a bug, because then no valid result is returned.
+Panics are usually considered a bug, because then no valid result is returned.
 
 **Move faster**
 

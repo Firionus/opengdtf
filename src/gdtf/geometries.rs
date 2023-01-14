@@ -1,10 +1,14 @@
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use getset::Getters;
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
+use crate::geometry_type::GeometryType;
 use crate::types::name::Name;
+
+use super::errors::GeometryError;
 
 #[derive(Debug, Default, Getters)]
 #[getset(get = "pub")]
@@ -23,35 +27,46 @@ pub struct Geometries {
 type GeometryGraph = Graph<GeometryType, (), Directed>;
 
 impl Geometries {
-    // TODO replace with `add` and `add_top_level`, then there is no Option in
-    // the Arguments, which is somewhat confusing :)
-
-    /// Adds a Geometry and returns the NodeIndex of the new geometry
+    /// Adds a top level geometry and returns its graph index.
     ///
-    /// If you want to add a top-level geometry, set parent_index to `None`. If
-    /// a geometry of the same name is already present, does not do anything and
-    /// returns `None`.
+    /// When the geometry name is already taken, does nothing and returns an Error.
+    pub fn add_top_level(&mut self, geometry: GeometryType) -> Result<NodeIndex, GeometryError> {
+        let new_name = geometry.name().to_owned();
+        match self.names.entry(new_name) {
+            Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
+            Vacant(entry) => Ok(*entry.insert(self.graph.add_node(geometry))),
+        }
+    }
+
+    /// Adds a geometry as the child of a parent and returns its graph index.
+    ///
+    /// When the `parent_graph_index` doesn't exist or the geometry name is
+    /// already taken, does nothing and returns an Err.
     pub fn add(
         &mut self,
         geometry: GeometryType,
-        parent_index: Option<NodeIndex>,
-    ) -> Option<NodeIndex> {
+        parent_graph_index: NodeIndex,
+    ) -> Result<NodeIndex, GeometryError> {
         let new_name = geometry.name().to_owned();
-
-        if self.names.contains_key(&new_name) {
-            return None;
+        if self.graph.node_weight(parent_graph_index).is_none() {
+            return Err(GeometryError::MissingIndex(parent_graph_index));
         }
-
-        let new_ind = self.graph.add_node(geometry);
-        if let Some(parent_index) = parent_index {
-            self.graph.add_edge(parent_index, new_ind, ());
-        };
-        self.names.insert(new_name, new_ind);
-        Some(new_ind)
+        match self.names.entry(new_name) {
+            Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
+            Vacant(entry) => {
+                let new_ind = *entry.insert(self.graph.add_node(geometry));
+                self.graph.add_edge(parent_graph_index, new_ind, ());
+                Ok(new_ind)
+            }
+        }
     }
+
+    // TODO ↓↓↓↓↓↓↓↓↓ continue code review below this point ↓↓↓↓↓↓↓↓↓↓
 
     /// Find the NodeIndex of a Geometry by its unique `Name`.
     pub fn find(&self, name: &Name) -> Option<NodeIndex> {
+        // TODO better name, maybe get_index? (like get for Vec in std)
+        // TODO return Option<&NodeIndex>?
         self.names.get(name).map(|i| i.to_owned())
     }
 
@@ -100,91 +115,83 @@ impl Geometries {
     }
 }
 
-// TODO When Channel parsing is implemented, there needs to be a validation that
-// each `Offsets` in a `GeometryReference` contains the breaks required by
-// channels operating on the referenced geometry. No more breaks are allowed to
-// be serialized (see GDTF 1.2 page 39), but I think having them in the struct
-// isn't bad.
-#[derive(Debug, PartialEq, Clone)]
-pub struct Offsets {
-    pub normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
-    pub overwrite: Option<Offset>,
-}
-
-impl Offsets {
-    pub fn new() -> Self {
-        Offsets {
-            normal: HashMap::new(),
-            overwrite: None,
-        }
-    }
-}
-
-impl Default for Offsets {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Offset {
-    pub dmx_break: u16, // TODO 0 disallowed?, is there an upper limit on breaks?
-    pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
-}
-
-// TODO use composition for reuse of name, position, model
-#[derive(Debug, Clone)]
-pub enum GeometryType {
-    Geometry {
-        name: Name,
-    },
-    Reference {
-        name: Name,
-        reference: NodeIndex,
-        offsets: Offsets,
-    },
-}
-
-impl GeometryType {
-    pub fn name(&self) -> &Name {
-        match self {
-            GeometryType::Geometry { name } | GeometryType::Reference { name, .. } => name,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_add() {
+    fn test_graph_generation_and_access() {
         let mut g = Geometries::default();
-        let top_1 = g
+        let a = g
+            .add_top_level(GeometryType::Geometry {
+                name: "a".try_into().unwrap(),
+            })
+            .unwrap();
+        let b = g
+            .add_top_level(GeometryType::Geometry {
+                name: "b".try_into().unwrap(),
+            })
+            .unwrap();
+        let a0 = g
             .add(
                 GeometryType::Geometry {
-                    name: "top 0".try_into().unwrap(),
+                    name: "a0".try_into().unwrap(),
                 },
-                None,
+                a,
             )
             .unwrap();
-        let _child_0 = g
+        let a0a = g
             .add(
                 GeometryType::Geometry {
-                    name: "child 0".try_into().unwrap(),
+                    name: "a0a".try_into().unwrap(),
                 },
-                Some(top_1),
+                a0,
             )
             .unwrap();
+
         // adding same name again does not work
-        assert_eq!(
+        assert!(matches!(
+            g.add_top_level(GeometryType::Geometry {
+                name: "a".try_into().unwrap(),
+            }),
+            Err(GeometryError::NameAlreadyTaken(i))
+        if i == a));
+        assert!(matches!(
             g.add(
                 GeometryType::Geometry {
-                    name: "top 0".try_into().unwrap(),
+                    name: "a0a".try_into().unwrap(),
                 },
-                Some(top_1),
+                b
             ),
-            None
-        )
+            Err(GeometryError::NameAlreadyTaken(i))
+        if i == a0a));
+
+        // adding with invalid parent index does not work
+        assert!(matches!(
+            g.add(
+                GeometryType::Geometry {
+                    name: "c".try_into().unwrap(),
+                },
+                NodeIndex::from(42)
+            ),
+            Err(GeometryError::MissingIndex(i))
+        if i == 42.into()));
+
+        // nodes can be found
+        assert_eq!(g.find(&"a".try_into().unwrap()), Some(a));
+        assert_eq!(g.find(&"b".try_into().unwrap()), Some(b));
+        assert_eq!(g.find(&"a0".try_into().unwrap()), Some(a0));
+        assert_eq!(g.find(&"a0a".try_into().unwrap()), Some(a0a));
+
+        // nonexistent elements
+        assert_eq!(g.find(&"c".try_into().unwrap()), None);
+        assert_eq!(g.find(&"aa".try_into().unwrap()), None);
+    }
+
+    #[test]
+    fn geometries_default_is_empty() {
+        let geometries = Geometries::default();
+        assert_eq!(geometries.graph().node_count(), 0);
+        assert_eq!(geometries.names().len(), 0);
     }
 }
