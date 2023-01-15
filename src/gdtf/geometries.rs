@@ -2,8 +2,8 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use getset::Getters;
-use petgraph::visit::IntoNeighbors;
-use petgraph::Direction::{Incoming, Outgoing};
+use petgraph::visit::Walker;
+use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
 use crate::geometry_type::GeometryType;
@@ -106,6 +106,13 @@ impl Geometries {
         self.graph.neighbors(graph_index).map(|i| &self.graph[i])
     }
 
+    /// Returns an iterator over the indices of all the ancestors of the
+    /// geometry with given graph index, all the way up to its
+    /// top level geometry.
+    pub fn ancestors(&self, graph_index: NodeIndex) -> impl Iterator<Item = NodeIndex> + '_ {
+        GeometryAncestors { i: graph_index }.iter(self)
+    }
+
     /// Returns the fully qualified name of the geometry with given graph index.
     ///
     /// If no geometry with given graph index exists, an empty String is returned.
@@ -115,13 +122,10 @@ impl Geometries {
             None => return "".to_string(),
         };
         let mut qualified_name = n.name().to_string();
-        // TODO refactor to our own Ancestors iterator? Can we use something like the Walker trait from petgraph?
-        let mut i = graph_index;
-        while let Some(parent_ind) = self.parent_index(i) {
-            qualified_name = format!("{}.{}", self.graph[parent_ind].name(), qualified_name);
-            // TODO prepending like this probably isn't very performant ;)
-            i = parent_ind
-        }
+        self.ancestors(graph_index).for_each(|parent_index| {
+            qualified_name = format!("{}.{}", self.graph[parent_index].name(), qualified_name)
+            // TODO prepending like this probably isn't particularly performant
+        });
         qualified_name
     }
 
@@ -130,12 +134,20 @@ impl Geometries {
     /// If graph_index doesn't exist or the geometry is top level itself, the
     /// input index is returned.
     pub fn top_level_geometry_index(&self, graph_index: NodeIndex) -> NodeIndex {
-        // TODO refactor to our own Ancestors iterator? Can we use something like the Walker trait from petgraph?
-        let mut i = graph_index;
-        while let Some(parent_ind) = self.parent_index(i) {
-            i = parent_ind
-        }
-        i
+        self.ancestors(graph_index).last().unwrap_or(graph_index)
+    }
+}
+
+pub struct GeometryAncestors {
+    i: NodeIndex,
+}
+
+impl Walker<&Geometries> for GeometryAncestors {
+    type Item = NodeIndex;
+
+    fn walk_next(&mut self, context: &Geometries) -> Option<Self::Item> {
+        self.i = context.parent_index(self.i)?;
+        Some(self.i)
     }
 }
 
@@ -233,6 +245,15 @@ mod tests {
             g.top_level_geometry_index(nonexistent_graph_index),
             nonexistent_graph_index
         );
+
+        let mut a0a_ancestors = g.ancestors(a0a);
+        assert_eq!(a0a_ancestors.next(), Some(a0));
+        assert_eq!(a0a_ancestors.next(), Some(a));
+        assert_eq!(a0a_ancestors.next(), None);
+
+        assert_eq!(g.qualified_name(a0a), "a.a0.a0a");
+        assert_eq!(g.qualified_name(a0), "a.a0");
+        assert_eq!(g.qualified_name(a), "a");
     }
 
     #[test]
