@@ -2,6 +2,7 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use getset::Getters;
+use petgraph::visit::IntoNeighbors;
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
@@ -48,9 +49,7 @@ impl Geometries {
         parent_graph_index: NodeIndex,
     ) -> Result<NodeIndex, GeometryError> {
         let new_name = geometry.name().to_owned();
-        if self.graph.node_weight(parent_graph_index).is_none() {
-            return Err(GeometryError::MissingIndex(parent_graph_index));
-        }
+        let parent_graph_index = self.validate_index(parent_graph_index)?;
         match self.names.entry(new_name) {
             Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
             Vacant(entry) => {
@@ -61,40 +60,64 @@ impl Geometries {
         }
     }
 
-    // TODO ↓↓↓↓↓↓↓↓↓ continue code review below this point ↓↓↓↓↓↓↓↓↓↓
-
-    /// Find the NodeIndex of a Geometry by its unique `Name`.
-    pub fn find(&self, name: &Name) -> Option<NodeIndex> {
-        // TODO better name, maybe get_index? (like get for Vec in std)
-        // TODO return Option<&NodeIndex>?
-        self.names.get(name).map(|i| i.to_owned())
+    /// Get the graph index of a Geometry by its unique `Name`
+    pub fn get_index(&self, name: &Name) -> Option<NodeIndex> {
+        self.names
+            .get(name)
+            .map(|graph_index| graph_index.to_owned())
     }
 
-    /// Checks if the Geometry with given `NodeIndex` `i` is a top-level geometry.
+    /// Wraps the graph index in Ok if a geometry with this graph index exists
+    pub fn validate_index(&self, graph_index: NodeIndex) -> Result<NodeIndex, GeometryError> {
+        if self.graph.node_weight(graph_index).is_none() {
+            Err(GeometryError::MissingIndex(graph_index))
+        } else {
+            Ok(graph_index)
+        }
+    }
+
+    /// Returns the graph index of the parent of the geometry with the given
+    /// graph_index, or None if the geometry is top level or missing.
+    pub fn parent_index(&self, graph_index: NodeIndex) -> Option<NodeIndex> {
+        self.graph.neighbors_directed(graph_index, Incoming).next()
+    }
+
+    /// Checks if the Geometry with given graph index is a top-level geometry.
     ///
-    /// If geometry with index `i` doesn't exist, `true` is returned.
-    pub fn is_top_level(&self, i: NodeIndex) -> bool {
-        self.graph.edges_directed(i, Incoming).next().is_none()
+    /// If no geometry with the graph index exists, true is returned.
+    pub fn is_top_level(&self, graph_index: NodeIndex) -> bool {
+        self.parent_index(graph_index).is_none()
     }
 
-    /// Returns the number of children of the Geometry with index `i`.
+    /// Returns the number of children of the geometry with given graph index.
     ///
-    /// If geometry `i` does not exist, zero is returned.
-    pub fn count_children(&self, i: NodeIndex) -> usize {
-        self.graph.edges_directed(i, Outgoing).count()
+    /// If no geometry with the graph index exists, zero is returned.
+    pub fn count_children(&self, graph_index: NodeIndex) -> usize {
+        self.graph.neighbors(graph_index).count()
     }
 
-    pub fn children(&self, i: NodeIndex) -> impl Iterator<Item = &GeometryType> {
-        self.graph.neighbors(i).map(|ind| &self.graph[ind])
+    /// Returns an iterator over the children of geometry with given graph index
+    ///
+    /// If no geometry with given graph index exists, an empty iterator is returned.
+    pub fn children_geometries(
+        &self,
+        graph_index: NodeIndex,
+    ) -> impl Iterator<Item = &GeometryType> {
+        self.graph.neighbors(graph_index).map(|i| &self.graph[i])
     }
 
-    pub fn qualified_name(&self, ind: NodeIndex) -> String {
-        // TODO indexing may panic - what to do?
-        let n = &self.graph[ind];
+    /// Returns the fully qualified name of the geometry with given graph index.
+    ///
+    /// If no geometry with given graph index exists, an empty String is returned.
+    pub fn qualified_name(&self, graph_index: NodeIndex) -> String {
+        let n = match self.graph.node_weight(graph_index) {
+            Some(n) => n,
+            None => return "".to_string(),
+        };
         let mut qualified_name = n.name().to_string();
-        let mut i = ind;
-        while let Some(parent_ind) = self.graph.neighbors_directed(i, Incoming).next() {
-            // indexing won't panic because ind comes from graph iterator
+        // TODO refactor to our own Ancestors iterator? Can we use something like the Walker trait from petgraph?
+        let mut i = graph_index;
+        while let Some(parent_ind) = self.parent_index(i) {
             qualified_name = format!("{}.{}", self.graph[parent_ind].name(), qualified_name);
             // TODO prepending like this probably isn't very performant ;)
             i = parent_ind
@@ -102,13 +125,14 @@ impl Geometries {
         qualified_name
     }
 
-    pub fn parent_ind(&self, ind: NodeIndex) -> Option<NodeIndex> {
-        self.graph.neighbors_directed(ind, Incoming).next()
-    }
-
-    pub fn top_level_geometry(&self, ind: NodeIndex) -> NodeIndex {
-        let mut i = ind;
-        while let Some(parent_ind) = self.parent_ind(i) {
+    /// Returns the graph index of the geometry with given graph index.
+    ///
+    /// If graph_index doesn't exist or the geometry is top level itself, the
+    /// input index is returned.
+    pub fn top_level_geometry_index(&self, graph_index: NodeIndex) -> NodeIndex {
+        // TODO refactor to our own Ancestors iterator? Can we use something like the Walker trait from petgraph?
+        let mut i = graph_index;
+        while let Some(parent_ind) = self.parent_index(i) {
             i = parent_ind
         }
         i
@@ -122,6 +146,8 @@ mod tests {
     #[test]
     fn test_graph_generation_and_access() {
         let mut g = Geometries::default();
+        let nonexistent_graph_index = NodeIndex::new(42);
+
         let a = g
             .add_top_level(GeometryType::Geometry {
                 name: "a".try_into().unwrap(),
@@ -166,26 +192,47 @@ mod tests {
             Err(GeometryError::NameAlreadyTaken(i))
         if i == a0a));
 
-        // adding with invalid parent index does not work
         assert!(matches!(
             g.add(
                 GeometryType::Geometry {
                     name: "c".try_into().unwrap(),
                 },
-                NodeIndex::from(42)
+                nonexistent_graph_index
             ),
             Err(GeometryError::MissingIndex(i))
-        if i == 42.into()));
+        if i == nonexistent_graph_index));
 
-        // nodes can be found
-        assert_eq!(g.find(&"a".try_into().unwrap()), Some(a));
-        assert_eq!(g.find(&"b".try_into().unwrap()), Some(b));
-        assert_eq!(g.find(&"a0".try_into().unwrap()), Some(a0));
-        assert_eq!(g.find(&"a0a".try_into().unwrap()), Some(a0a));
+        assert_eq!(g.get_index(&"a".try_into().unwrap()), Some(a));
+        assert_eq!(g.get_index(&"b".try_into().unwrap()), Some(b));
+        assert_eq!(g.get_index(&"a0".try_into().unwrap()), Some(a0));
+        assert_eq!(g.get_index(&"a0a".try_into().unwrap()), Some(a0a));
+        assert_eq!(g.get_index(&"c".try_into().unwrap()), None);
+        assert_eq!(g.get_index(&"aa".try_into().unwrap()), None);
 
-        // nonexistent elements
-        assert_eq!(g.find(&"c".try_into().unwrap()), None);
-        assert_eq!(g.find(&"aa".try_into().unwrap()), None);
+        assert!(g.is_top_level(a));
+        assert!(g.is_top_level(b));
+        assert!(!g.is_top_level(a0));
+        assert!(!g.is_top_level(a0a));
+        assert!(g.is_top_level(nonexistent_graph_index));
+
+        assert_eq!(g.count_children(a), 1);
+        assert_eq!(g.count_children(b), 0);
+        assert_eq!(g.count_children(a0), 1);
+        assert_eq!(g.count_children(a0a), 0);
+        assert_eq!(g.count_children(nonexistent_graph_index), 0);
+
+        assert_eq!(g.parent_index(a), None);
+        assert_eq!(g.parent_index(a0), Some(a));
+        assert_eq!(g.parent_index(a0a), Some(a0));
+        assert_eq!(g.parent_index(nonexistent_graph_index), None);
+
+        assert_eq!(g.top_level_geometry_index(a), a);
+        assert_eq!(g.top_level_geometry_index(a0), a);
+        assert_eq!(g.top_level_geometry_index(a0a), a);
+        assert_eq!(
+            g.top_level_geometry_index(nonexistent_graph_index),
+            nonexistent_graph_index
+        );
     }
 
     #[test]

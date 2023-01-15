@@ -79,8 +79,10 @@ pub fn parse_geometries(
 
         // check if duplicate and original are in different top level geometry, if yes, suggest semantic renaming
         let duplicate_top_level = if let Some(duplicate_parent) = dup.parent_graph_ind {
-            let original_top_level = gcx.geometries.top_level_geometry(dup.duplicate_graph_ind);
-            let duplicate_top_level = gcx.geometries.top_level_geometry(duplicate_parent);
+            let original_top_level = gcx
+                .geometries
+                .top_level_geometry_index(dup.duplicate_graph_ind);
+            let duplicate_top_level = gcx.geometries.top_level_geometry_index(duplicate_parent);
 
             if original_top_level != duplicate_top_level {
                 let duplicate_top_level_name = gcx.geometries.graph()[duplicate_top_level].name();
@@ -313,7 +315,7 @@ fn get_index_of_referenced_geometry(
 ) -> Result<NodeIndex, Problem> {
     let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
     let ref_ind = geometries
-        .find(&ref_string)
+        .get_index(&ref_string)
         .ok_or_else(|| ProblemType::UnknownGeometry(ref_string.clone()).at(&n))?;
     if geometries.is_top_level(ref_ind) {
         Ok(ref_ind)
@@ -603,16 +605,20 @@ mod tests {
             ProblemType::DuplicateGeometryName(dup) if dup == "Geometry 2"
         ));
 
-        let b = geometries.find(&"Beam 1".try_into().unwrap()).unwrap();
+        let b = geometries.get_index(&"Beam 1".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(b) && geometries.count_children(b) == 0);
 
-        let g2 = geometries.find(&"Geometry 2".try_into().unwrap()).unwrap();
+        let g2 = geometries
+            .get_index(&"Geometry 2".try_into().unwrap())
+            .unwrap();
         assert!(geometries.is_top_level(g2) && geometries.count_children(g2) == 0);
 
-        let g3 = geometries.find(&"Geometry 3".try_into().unwrap()).unwrap();
+        let g3 = geometries
+            .get_index(&"Geometry 3".try_into().unwrap())
+            .unwrap();
         assert!(geometries.is_top_level(g3));
 
-        let g3_children = geometries.children(g3).collect::<Vec<_>>();
+        let g3_children = geometries.children_geometries(g3).collect::<Vec<_>>();
 
         assert!(matches!(
             g3_children
@@ -675,9 +681,9 @@ mod tests {
             ))
         }
 
-        let t1 = geometries.find(&"Top 1".try_into().unwrap()).unwrap();
+        let t1 = geometries.get_index(&"Top 1".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t1));
-        let t1_children = geometries.children(t1).collect::<Vec<_>>();
+        let t1_children = geometries.children_geometries(t1).collect::<Vec<_>>();
         t1_children
             .iter()
             .find(|g| g.name() == "Element 1")
@@ -692,15 +698,15 @@ mod tests {
             .unwrap();
         assert_eq!(t1_children.len(), 3);
 
-        let t2 = geometries.find(&"Top 2".try_into().unwrap()).unwrap();
+        let t2 = geometries.get_index(&"Top 2".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t2));
         assert_eq!(geometries.count_children(t2), 0);
 
         let t2d = geometries
-            .find(&"Top 2 (duplicate 1)".try_into().unwrap())
+            .get_index(&"Top 2 (duplicate 1)".try_into().unwrap())
             .unwrap();
         assert!(geometries.is_top_level(t2d));
-        let t2d_children = geometries.children(t2d).collect::<Vec<_>>();
+        let t2d_children = geometries.children_geometries(t2d).collect::<Vec<_>>();
         t2d_children
             .iter()
             .find(|g| g.name() == "Element 1 (in Top 2 (duplicate 1)) (duplicate 1)")
@@ -715,9 +721,9 @@ mod tests {
             .unwrap();
         assert_eq!(t2d_children.len(), 3);
 
-        let t3 = geometries.find(&"Top 3".try_into().unwrap()).unwrap();
+        let t3 = geometries.get_index(&"Top 3".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t3));
-        let t3_children = geometries.children(t3).collect::<Vec<_>>();
+        let t3_children = geometries.children_geometries(t3).collect::<Vec<_>>();
         let reference = t3_children
             .iter()
             .find(|g| g.name() == "Element 1 (in Top 3)")
