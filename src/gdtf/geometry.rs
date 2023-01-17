@@ -26,14 +26,15 @@ pub enum Type {
 // breaks are allowed to be present (see GDTF 1.2 page 39).
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
-    pub normal: HashMap<Break, u16>, // dmx_break => offset // TODO same validations as Offset
+    pub normal: HashMap<Break, i32>,
     pub overwrite: Option<Offset>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Offset {
     pub dmx_break: Break,
-    pub offset: u16, // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
+    /// should support "Universe.Address" format according to standard, but that is not supported currently
+    pub offset: i32,
 }
 
 #[cfg(test)]
