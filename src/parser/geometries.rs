@@ -27,16 +27,12 @@ struct GeometryDuplicate<'a> {
 // functions on that. That reduces the amount of argument we have to pass around
 // and allows the functions to share some common state :). It is somewhat more
 // Java-like though ("everything's a class").
-pub fn parse_geometries(
-    geometries: &mut Geometries,
-    ft: &Node,
-    problems: &mut Problems,
-) -> Result<(), Error> {
+pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Problems) -> () {
     let g = match ft.find_child_by_tag_name("Geometries") {
         Ok(g) => g,
         Err(p) => {
             p.handled_by("leaving geometries empty", problems);
-            return Ok(());
+            return;
         }
     };
 
@@ -139,8 +135,6 @@ pub fn parse_geometries(
     }
 
     // TODO return rename_lookup for later use when parsing modes
-
-    Ok(())
 }
 
 /// (top level name, duplicate geometry name) => renamed name
@@ -781,7 +775,7 @@ mod tests {
         let ft = doc.root_element();
         let mut problems: Problems = vec![];
         let mut geometries = Geometries::default();
-        parse_geometries(&mut geometries, &ft, &mut problems).unwrap();
+        parse_geometries(&mut geometries, &ft, &mut problems);
         (problems, geometries)
     }
 }
