@@ -7,7 +7,7 @@ use super::errors::*;
 
 use crate::{
     geometries::Geometries,
-    geometry_type::{GeometryType, Offset, Offsets},
+    geometry::{Geometry, Offset, Offsets, Type},
     types::name::{Name, NameError},
     Problems,
 };
@@ -56,7 +56,11 @@ pub fn parse_geometries(
     for (i, n) in top_level_geometries.clone().enumerate() {
         if let Ok(graph_ind) = parse_element(i, n, None, &mut gcx) {
             parsed_top_level_geometries.push((graph_ind, n));
-            if let GeometryType::Reference { name, .. } = &gcx.geometries.graph()[graph_ind] {
+            if let Geometry {
+                name,
+                t: Type::Reference { .. },
+            } = &gcx.geometries.graph()[graph_ind]
+            {
                 ProblemType::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
                 but it is useless because a top-level GeometryReference can only be used for a DMX mode \
                 that is offset from another one, which is useless because one can just change the start address in \
@@ -85,7 +89,7 @@ pub fn parse_geometries(
             let duplicate_top_level = gcx.geometries.top_level_geometry_index(duplicate_parent);
 
             if original_top_level != duplicate_top_level {
-                let duplicate_top_level_name = gcx.geometries.graph()[duplicate_top_level].name();
+                let duplicate_top_level_name = &gcx.geometries.graph()[duplicate_top_level].name;
                 suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name)
                     .try_into()
                     .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid
@@ -161,9 +165,8 @@ fn handle_renamed_geometry<'a>(
         if let Some(duplicate_top_level) = duplicate_top_level {
             rename_lookup.insert(
                 (
-                    gcx.geometries.graph()[duplicate_top_level]
-                        .name()
-                        .to_owned(),
+                    // TODO index may panic, replace with geometries.graph().node_weight(ind)
+                    gcx.geometries.graph()[duplicate_top_level].name.to_owned(),
                     dup.name.clone(),
                 ),
                 suggested_name.clone(),
@@ -211,7 +214,10 @@ fn parse_named_element<'a>(
         "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
         | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster" | "Display"
         | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support" | "Magnet" => {
-            let geometry = GeometryType::Geometry { name };
+            let geometry = Geometry {
+                name,
+                t: Type::General,
+            };
             add_to_geometries(geometry, parent_graph_ind, n, gcx)
         }
         "GeometryReference" => {
@@ -229,7 +235,7 @@ fn parse_named_element<'a>(
 }
 
 fn add_to_geometries(
-    geometry: GeometryType,
+    geometry: Geometry,
     parent_graph_ind: Option<NodeIndex>,
     n: Node,
     gcx: &mut GeometryParsingContext,
@@ -286,7 +292,7 @@ fn parse_geometry_reference<'a>(
     n: Node<'a, 'a>,
     name: Name,
     gcx: &mut GeometryParsingContext<'a>,
-) -> Result<GeometryType, ()> {
+) -> Result<Geometry, ()> {
     let ref_ind = match get_index_of_referenced_geometry(n, gcx.geometries, &name) {
         Ok(i) => i,
         Err(p) => {
@@ -296,10 +302,12 @@ fn parse_geometry_reference<'a>(
     };
     let offsets = parse_reference_offsets(&n, &name, gcx.problems);
 
-    let geometry = GeometryType::Reference {
+    let geometry = Geometry {
         name,
-        offsets,
-        reference: ref_ind,
+        t: Type::Reference {
+            offsets,
+            reference: ref_ind,
+        },
     };
 
     Ok(geometry)
@@ -545,10 +553,9 @@ mod tests {
         assert_eq!(geometries.graph().node_count(), 4);
 
         let element_2 = &geometries.graph()[geometries.names()[&"Element 2".try_into().unwrap()]];
-        if let GeometryType::Reference {
+        if let Geometry {
             name,
-            reference,
-            offsets,
+            t: Type::Reference { reference, offsets },
         } = element_2
         {
             assert_eq!(name, "Element 2");
@@ -562,7 +569,7 @@ mod tests {
             assert_eq!(offsets.normal[&1], 3);
             assert_eq!(offsets.normal[&2], 4);
             assert_eq!(
-                geometries.graph()[reference.to_owned()].name(),
+                geometries.graph()[reference.to_owned()].name,
                 "AbstractElement"
             );
         } else {
@@ -623,23 +630,29 @@ mod tests {
         assert!(matches!(
             g3_children
                 .iter()
-                .find(|g| g.name() == "Geometry 2 (in Geometry 3)")
+                .find(|g| g.name == "Geometry 2 (in Geometry 3)")
                 .unwrap(),
-            GeometryType::Geometry { .. }
+            Geometry {
+                t: Type::General,
+                ..
+            }
+        ));
+        assert!(matches!(
+            g3_children.iter().find(|g| g.name == "Geometry 1").unwrap(),
+            Geometry {
+                t: Type::General,
+                ..
+            }
         ));
         assert!(matches!(
             g3_children
                 .iter()
-                .find(|g| g.name() == "Geometry 1")
+                .find(|g| g.name == "GeometryReference 3")
                 .unwrap(),
-            GeometryType::Geometry { .. }
-        ));
-        assert!(matches!(
-            g3_children
-                .iter()
-                .find(|g| g.name() == "GeometryReference 3")
-                .unwrap(),
-            GeometryType::Reference { .. }
+            Geometry {
+                t: Type::Reference { .. },
+                ..
+            }
         ));
 
         assert_eq!(3, g3_children.len());
@@ -684,17 +697,14 @@ mod tests {
         let t1 = geometries.get_index(&"Top 1".try_into().unwrap()).unwrap();
         assert!(geometries.is_top_level(t1));
         let t1_children = geometries.children_geometries(t1).collect::<Vec<_>>();
+        t1_children.iter().find(|g| g.name == "Element 1").unwrap();
         t1_children
             .iter()
-            .find(|g| g.name() == "Element 1")
+            .find(|g| g.name == "Element 1 (duplicate 1)")
             .unwrap();
         t1_children
             .iter()
-            .find(|g| g.name() == "Element 1 (duplicate 1)")
-            .unwrap();
-        t1_children
-            .iter()
-            .find(|g| g.name() == "Top 2 (in Top 1)")
+            .find(|g| g.name == "Top 2 (in Top 1)")
             .unwrap();
         assert_eq!(t1_children.len(), 3);
 
@@ -709,15 +719,15 @@ mod tests {
         let t2d_children = geometries.children_geometries(t2d).collect::<Vec<_>>();
         t2d_children
             .iter()
-            .find(|g| g.name() == "Element 1 (in Top 2 (duplicate 1)) (duplicate 1)")
+            .find(|g| g.name == "Element 1 (in Top 2 (duplicate 1)) (duplicate 1)")
             .unwrap();
         t2d_children
             .iter()
-            .find(|g| g.name() == "Element 1 (in Top 2 (duplicate 1))")
+            .find(|g| g.name == "Element 1 (in Top 2 (duplicate 1))")
             .unwrap();
         t2d_children
             .iter()
-            .find(|g| g.name() == "Top 2 (in Top 2 (duplicate 1))")
+            .find(|g| g.name == "Top 2 (in Top 2 (duplicate 1))")
             .unwrap();
         assert_eq!(t2d_children.len(), 3);
 
@@ -726,10 +736,12 @@ mod tests {
         let t3_children = geometries.children_geometries(t3).collect::<Vec<_>>();
         let reference = t3_children
             .iter()
-            .find(|g| g.name() == "Element 1 (in Top 3)")
+            .find(|g| g.name == "Element 1 (in Top 3)")
             .unwrap();
         assert_eq!(t3_children.len(), 1);
-        assert!(matches!(reference, GeometryType::Reference { reference, .. } if *reference == t2));
+        assert!(
+            matches!(reference, Geometry { t: Type::Reference{ reference, ..}, .. } if *reference == t2)
+        );
     }
 
     #[test]

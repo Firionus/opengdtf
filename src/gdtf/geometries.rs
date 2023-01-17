@@ -6,7 +6,7 @@ use petgraph::visit::Walker;
 use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
-use crate::geometry_type::GeometryType;
+use crate::geometry::Geometry;
 use crate::types::name::Name;
 
 use super::errors::GeometryError;
@@ -25,14 +25,14 @@ pub struct Geometries {
     graph: GeometryGraph,
 }
 
-type GeometryGraph = Graph<GeometryType, (), Directed>;
+type GeometryGraph = Graph<Geometry, (), Directed>;
 
 impl Geometries {
     /// Adds a top level geometry and returns its graph index.
     ///
     /// When the geometry name is already taken, does nothing and returns an Error.
-    pub fn add_top_level(&mut self, geometry: GeometryType) -> Result<NodeIndex, GeometryError> {
-        let new_name = geometry.name().to_owned();
+    pub fn add_top_level(&mut self, geometry: Geometry) -> Result<NodeIndex, GeometryError> {
+        let new_name = geometry.name.to_owned();
         match self.names.entry(new_name) {
             Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
             Vacant(entry) => Ok(*entry.insert(self.graph.add_node(geometry))),
@@ -45,10 +45,10 @@ impl Geometries {
     /// already taken, does nothing and returns an Err.
     pub fn add(
         &mut self,
-        geometry: GeometryType,
+        geometry: Geometry,
         parent_graph_index: NodeIndex,
     ) -> Result<NodeIndex, GeometryError> {
-        let new_name = geometry.name().to_owned();
+        let new_name = geometry.name.to_owned();
         let parent_graph_index = self.validate_index(parent_graph_index)?;
         match self.names.entry(new_name) {
             Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
@@ -99,10 +99,7 @@ impl Geometries {
     /// Returns an iterator over the children of geometry with given graph index
     ///
     /// If no geometry with given graph index exists, an empty iterator is returned.
-    pub fn children_geometries(
-        &self,
-        graph_index: NodeIndex,
-    ) -> impl Iterator<Item = &GeometryType> {
+    pub fn children_geometries(&self, graph_index: NodeIndex) -> impl Iterator<Item = &Geometry> {
         self.graph.neighbors(graph_index).map(|i| &self.graph[i])
     }
 
@@ -121,9 +118,9 @@ impl Geometries {
             Some(n) => n,
             None => return "".to_string(),
         };
-        let mut qualified_name = n.name().to_string();
+        let mut qualified_name = n.name.to_string();
         self.ancestors(graph_index).for_each(|parent_index| {
-            qualified_name = format!("{}.{}", self.graph[parent_index].name(), qualified_name)
+            qualified_name = format!("{}.{}", self.graph[parent_index].name, qualified_name)
             // TODO prepending like this probably isn't particularly performant
         });
         qualified_name
@@ -153,6 +150,8 @@ impl Walker<&Geometries> for GeometryAncestors {
 
 #[cfg(test)]
 mod tests {
+    use crate::geometry::Type;
+
     use super::*;
 
     #[test]
@@ -161,27 +160,31 @@ mod tests {
         let nonexistent_graph_index = NodeIndex::new(42);
 
         let a = g
-            .add_top_level(GeometryType::Geometry {
+            .add_top_level(Geometry {
                 name: "a".try_into().unwrap(),
+                t: Type::General,
             })
             .unwrap();
         let b = g
-            .add_top_level(GeometryType::Geometry {
+            .add_top_level(Geometry {
                 name: "b".try_into().unwrap(),
+                t: Type::General,
             })
             .unwrap();
         let a0 = g
             .add(
-                GeometryType::Geometry {
+                Geometry {
                     name: "a0".try_into().unwrap(),
+                    t: Type::General,
                 },
                 a,
             )
             .unwrap();
         let a0a = g
             .add(
-                GeometryType::Geometry {
+                Geometry {
                     name: "a0a".try_into().unwrap(),
+                    t: Type::General,
                 },
                 a0,
             )
@@ -189,15 +192,17 @@ mod tests {
 
         // adding same name again does not work
         assert!(matches!(
-            g.add_top_level(GeometryType::Geometry {
+            g.add_top_level(Geometry {
                 name: "a".try_into().unwrap(),
+                t: Type::General,
             }),
             Err(GeometryError::NameAlreadyTaken(i))
         if i == a));
         assert!(matches!(
             g.add(
-                GeometryType::Geometry {
+                Geometry {
                     name: "a0a".try_into().unwrap(),
+                    t: Type::General,
                 },
                 b
             ),
@@ -206,8 +211,9 @@ mod tests {
 
         assert!(matches!(
             g.add(
-                GeometryType::Geometry {
+                Geometry {
                     name: "c".try_into().unwrap(),
+                    t: Type::General,
                 },
                 nonexistent_graph_index
             ),
