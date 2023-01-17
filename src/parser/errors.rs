@@ -4,7 +4,10 @@ use roxmltree::TextPos;
 use thiserror::Error;
 use zip::result::ZipError;
 
-use crate::{types::name::Name, Problems};
+use crate::{
+    types::{dmx_break::Break, name::Name},
+    Problems,
+};
 
 use super::utils::XmlPosition;
 
@@ -98,7 +101,7 @@ pub enum ProblemType {
         "duplicate DMXBreak attribute {duplicate_break} in GeometryReference '{geometry_reference}'"
     )]
     DuplicateDmxBreak {
-        duplicate_break: u16,
+        duplicate_break: Break,
         geometry_reference: Name,
     },
     #[error("unexpected GeometryReference '{0}' as top-level Geometry")]

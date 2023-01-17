@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::name::Name;
+use crate::types::{dmx_break::Break, name::Name};
 use petgraph::graph::NodeIndex;
 
 /// A geometry node in the geometry graph
@@ -10,7 +10,7 @@ pub struct Geometry {
     pub t: Type,
 }
 
-/// The Geometry Type
+/// The Geometry Type as indicated by the XML tag name
 #[derive(Debug, Clone)]
 pub enum Type {
     General,
@@ -26,14 +26,14 @@ pub enum Type {
 // breaks are allowed to be present (see GDTF 1.2 page 39).
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
-    pub normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
+    pub normal: HashMap<Break, u16>, // dmx_break => offset // TODO same validations as Offset
     pub overwrite: Option<Offset>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Offset {
-    pub dmx_break: u16, // TODO 0 disallowed?, is there an upper limit on breaks?
-    pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
+    pub dmx_break: Break,
+    pub offset: u16, // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
 #[cfg(test)]

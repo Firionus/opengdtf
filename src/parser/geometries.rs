@@ -398,6 +398,8 @@ mod tests {
 
     #[cfg(test)]
     mod parse_reference_offsets {
+        use crate::types::dmx_break::Break;
+
         use super::*;
 
         #[test]
@@ -413,13 +415,13 @@ mod tests {
             assert_eq!(
                 offsets.overwrite,
                 Some(Offset {
-                    dmx_break: 1,
+                    dmx_break: 1.try_into().unwrap(),
                     offset: 4
                 })
             );
             assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1], 1);
-            assert_eq!(offsets.normal[&2], 2);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 1);
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 2);
         }
 
         #[test]
@@ -435,14 +437,14 @@ mod tests {
             assert_eq!(
                 offsets.overwrite,
                 Some(Offset {
-                    dmx_break: 3,
+                    dmx_break: 3.try_into().unwrap(),
                     offset: 4
                 })
             );
             assert_eq!(offsets.normal.len(), 3);
-            assert_eq!(offsets.normal[&1], 6);
-            assert_eq!(offsets.normal[&2], 5);
-            assert_eq!(offsets.normal[&3], 4);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
+            assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
         }
 
         #[test]
@@ -458,13 +460,13 @@ mod tests {
             assert_eq!(
                 offsets.overwrite,
                 Some(Offset {
-                    dmx_break: 3,
+                    dmx_break: 3.try_into().unwrap(),
                     offset: 4
                 })
             );
             assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1], 6);
-            assert_eq!(offsets.normal[&3], 4);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
+            assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
         }
 
         #[test]
@@ -479,8 +481,8 @@ mod tests {
             assert_eq!(problems.len(), 1);
             assert_eq!(offsets.overwrite, None);
             assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1], 6);
-            assert_eq!(offsets.normal[&2], 5);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
         }
 
         #[test]
@@ -497,11 +499,11 @@ mod tests {
             assert!(matches!(
                 problems.pop().unwrap().problem_type(),
                 ProblemType::DuplicateDmxBreak {
-                    duplicate_break: 2,
+                    duplicate_break,
                     ..
                 }
-            ));
-            assert_eq!(offsets.normal[&2], 2); // higher element takes precedence
+            if duplicate_break == &Break::try_from(2).unwrap()));
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 2); // higher element takes precedence
         }
 
         #[test]
@@ -562,12 +564,12 @@ mod tests {
             assert_eq!(
                 offsets.overwrite,
                 Some(Offset {
-                    dmx_break: 1,
+                    dmx_break: 1.try_into().unwrap(),
                     offset: 2
                 })
             );
-            assert_eq!(offsets.normal[&1], 3);
-            assert_eq!(offsets.normal[&2], 4);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 3);
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 4);
             assert_eq!(
                 geometries.graph()[reference.to_owned()].name,
                 "AbstractElement"
