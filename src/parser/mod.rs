@@ -1,5 +1,6 @@
 mod errors;
 mod geometries;
+mod problems;
 mod utils;
 
 use std::io::{Read, Seek};
@@ -7,17 +8,13 @@ use std::io::{Read, Seek};
 use strum::EnumString;
 use uuid::Uuid;
 
-use crate::{parser::utils::AssignOrHandle, Gdtf};
+use crate::Gdtf;
 
-pub use self::errors::{Error, Problem};
+pub use self::errors::Error;
+pub use self::problems::{HandledProblem, Problem, ProblemType, Problems};
 
-use self::{
-    errors::{HandledProblem, ProblemType},
-    geometries::parse_geometries,
-    utils::GetFromNode,
-};
-
-pub type Problems = Vec<HandledProblem>;
+use self::utils::AssignOrHandle;
+use self::{geometries::parse_geometries, utils::GetFromNode};
 
 #[derive(Debug)]
 pub struct Parsed {

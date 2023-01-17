@@ -3,13 +3,13 @@ use std::collections::{hash_map::Entry::Vacant, HashMap};
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
 
-use super::errors::*;
+use super::problems::HandleProblem;
 
 use crate::{
     geometries::Geometries,
     geometry::{Geometry, Offset, Offsets, Type},
     types::name::{Name, NameError},
-    Problems,
+    Problem, ProblemType, Problems,
 };
 
 use super::utils::GetFromNode;

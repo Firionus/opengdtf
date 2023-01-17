@@ -6,9 +6,9 @@ use roxmltree::Node;
 use roxmltree::TextPos;
 
 use crate::types::name::Name;
+use crate::Problem;
+use crate::ProblemType;
 use crate::Problems;
-
-use super::errors::*;
 
 // TODO fix warning later, it is only a memory usage problem, due to an enum
 // variant in `ProblemType` with many fields
@@ -169,6 +169,8 @@ impl XmlPosition for Node<'_, '_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::problems::HandleProblem;
+
     use super::*;
 
     #[test]
