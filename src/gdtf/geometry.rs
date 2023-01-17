@@ -24,7 +24,7 @@ pub enum Type {
 // each `Offsets` in a `GeometryReference` contains precisely the breaks
 // required by channels operating on the referenced geometry. No more or less
 // breaks are allowed to be present (see GDTF 1.2 page 39).
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
     pub normal: HashMap<u16, u16>, // dmx_break => offset // TODO same validations as Offset
     pub overwrite: Option<Offset>,
@@ -36,17 +36,14 @@ pub struct Offset {
     pub offset: u16,    // TODO more than 512 disallowed, 0 disallowed? negative disallowed?
 }
 
-impl Offsets {
-    pub fn new() -> Self {
-        Offsets {
-            normal: HashMap::new(),
-            overwrite: None,
-        }
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Default for Offsets {
-    fn default() -> Self {
-        Self::new()
+    #[test]
+    fn offsets_default_is_empty() {
+        let offsets = Offsets::default();
+        assert_eq!(offsets.normal.len(), 0);
+        assert_eq!(offsets.overwrite, None);
     }
 }

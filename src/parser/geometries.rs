@@ -342,7 +342,7 @@ fn parse_reference_offsets(&n: &Node, n_name: &Name, problems: &mut Problems) ->
         .filter(|n| n.tag_name().name() == "Break")
         .rev(); // start at last element, which provides the Overwrite offset if present
 
-    let mut offsets = Offsets::new();
+    let mut offsets = Offsets::default();
 
     nodes.next().and_then(|last_break| {
         let dmx_break = last_break
@@ -509,7 +509,7 @@ mod tests {
             let xml = r#"<GeometryReference />"#;
             let (problems, offsets) = run_parse_reference_offsets(xml);
             assert_eq!(problems.len(), 0);
-            assert_eq!(offsets, Offsets::new());
+            assert_eq!(offsets, Offsets::default());
         }
 
         fn run_parse_reference_offsets(xml: &str) -> (Problems, Offsets) {
