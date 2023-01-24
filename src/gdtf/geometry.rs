@@ -33,7 +33,7 @@ pub struct Offsets {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Offset {
     pub dmx_break: Break,
-    /// should support "Universe.Address" format according to standard, but that is not supported currently
+    /// should support "Universe.Address" format according to standard, but that is not implemented at the moment
     pub offset: i32,
 }
 

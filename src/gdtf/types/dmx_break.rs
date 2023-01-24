@@ -1,6 +1,5 @@
+use std::num::ParseIntError;
 use std::str::FromStr;
-
-use crate::gdtf::errors::BreakError;
 
 /// DMX Break, which is an unsigned integer bigger than 0
 #[derive(derive_more::Display, derive_more::DebugCustom, Clone, Copy, PartialEq, Eq, Hash)]
@@ -22,8 +21,17 @@ impl FromStr for Break {
     type Err = BreakError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse::<u16>()
-            .map_err(|err| BreakError::from(err))?
-            .try_into()
+        s.parse::<u16>().map_err(BreakError::from)?.try_into()
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum BreakError {
+    #[error("DMX breaks of value 0 are not allowed")]
+    ZeroBreak(),
+    #[error("could not parse as valid integer: {source}")]
+    NonIntegerBreak {
+        #[from]
+        source: ParseIntError,
+    },
 }

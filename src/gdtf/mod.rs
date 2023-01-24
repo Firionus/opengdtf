@@ -4,7 +4,6 @@ use uuid::Uuid;
 use self::{dmx_modes::DmxMode, geometries::Geometries};
 
 pub mod dmx_modes;
-mod errors;
 pub mod geometries;
 pub mod geometry;
 pub mod types;
@@ -45,6 +44,7 @@ impl Default for Gdtf {
     }
 }
 
+// TODO move to types module
 #[derive(Debug, EnumString, PartialEq, strum::Display)]
 pub enum DataVersion {
     #[strum(to_string = "1.0")]

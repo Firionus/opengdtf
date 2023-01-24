@@ -9,8 +9,6 @@ use petgraph::{graph::NodeIndex, Directed, Graph};
 use crate::geometry::Geometry;
 use crate::types::name::Name;
 
-use super::errors::GeometryError;
-
 #[derive(Debug, Default, Getters)]
 #[getset(get = "pub")]
 pub struct Geometries {
@@ -146,6 +144,14 @@ impl Walker<&Geometries> for GeometryAncestors {
         self.i = context.parent_index(self.i)?;
         Some(self.i)
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum GeometryError {
+    #[error("geometry name already taken by geometry with index {0:?}")]
+    NameAlreadyTaken(NodeIndex),
+    #[error("missing geometry graph index {0:?}")]
+    MissingIndex(NodeIndex),
 }
 
 #[cfg(test)]

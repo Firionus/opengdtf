@@ -20,14 +20,6 @@ use thiserror::Error;
 #[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash, Display, DebugCustom)]
 pub struct Name(String);
 
-#[derive(Error, Debug)]
-#[error("invalid GDTF Name type due to chars '{invalid_chars}'; replaced with '□'")]
-pub struct NameError {
-    /// Name where all invalid chars were replaced with '□'
-    pub name: Name,
-    pub invalid_chars: String,
-}
-
 impl TryFrom<&str> for Name {
     type Error = NameError;
 
@@ -110,6 +102,14 @@ impl Name {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+
+#[derive(Error, Debug)]
+#[error("invalid GDTF Name type due to chars '{invalid_chars}'; replaced with '□'")]
+pub struct NameError {
+    /// Name where all invalid chars were replaced with '□'
+    pub name: Name,
+    pub invalid_chars: String,
 }
 
 #[cfg(test)]

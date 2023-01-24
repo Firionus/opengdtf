@@ -10,6 +10,8 @@ use crate::Problem;
 use crate::ProblemType;
 use crate::Problems;
 
+// TODO better name for module
+
 // TODO fix warning later, it is only a memory usage problem, due to an enum
 // variant in `ProblemType` with many fields
 #[allow(clippy::result_large_err)]

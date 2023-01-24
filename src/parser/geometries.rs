@@ -27,7 +27,7 @@ struct GeometryDuplicate<'a> {
 // functions on that. That reduces the amount of argument we have to pass around
 // and allows the functions to share some common state :). It is somewhat more
 // Java-like though ("everything's a class").
-pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Problems) -> () {
+pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Problems) {
     let g = match ft.find_child_by_tag_name("Geometries") {
         Ok(g) => g,
         Err(p) => {
