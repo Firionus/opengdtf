@@ -29,10 +29,10 @@ impl Geometries {
     /// Adds a top level geometry and returns its graph index.
     ///
     /// When the geometry name is already taken, does nothing and returns an Error.
-    pub fn add_top_level(&mut self, geometry: Geometry) -> Result<NodeIndex, GeometryError> {
+    pub fn add_top_level(&mut self, geometry: Geometry) -> Result<NodeIndex, GeometriesError> {
         let new_name = geometry.name.to_owned();
         match self.names.entry(new_name) {
-            Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
+            Occupied(entry) => Err(GeometriesError::NameAlreadyTaken(*entry.get())),
             Vacant(entry) => Ok(*entry.insert(self.graph.add_node(geometry))),
         }
     }
@@ -45,11 +45,11 @@ impl Geometries {
         &mut self,
         geometry: Geometry,
         parent_graph_index: NodeIndex,
-    ) -> Result<NodeIndex, GeometryError> {
+    ) -> Result<NodeIndex, GeometriesError> {
         let new_name = geometry.name.to_owned();
         let parent_graph_index = self.validate_index(parent_graph_index)?;
         match self.names.entry(new_name) {
-            Occupied(entry) => Err(GeometryError::NameAlreadyTaken(*entry.get())),
+            Occupied(entry) => Err(GeometriesError::NameAlreadyTaken(*entry.get())),
             Vacant(entry) => {
                 let new_ind = *entry.insert(self.graph.add_node(geometry));
                 self.graph.add_edge(parent_graph_index, new_ind, ());
@@ -66,9 +66,9 @@ impl Geometries {
     }
 
     /// Wraps the graph index in Ok if a geometry with this graph index exists
-    pub fn validate_index(&self, graph_index: NodeIndex) -> Result<NodeIndex, GeometryError> {
+    pub fn validate_index(&self, graph_index: NodeIndex) -> Result<NodeIndex, GeometriesError> {
         if self.graph.node_weight(graph_index).is_none() {
-            Err(GeometryError::MissingIndex(graph_index))
+            Err(GeometriesError::MissingIndex(graph_index))
         } else {
             Ok(graph_index)
         }
@@ -147,7 +147,7 @@ impl Walker<&Geometries> for GeometryAncestors {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum GeometryError {
+pub enum GeometriesError {
     #[error("geometry name already taken by geometry with index {0:?}")]
     NameAlreadyTaken(NodeIndex),
     #[error("missing geometry graph index {0:?}")]
@@ -202,7 +202,7 @@ mod tests {
                 name: "a".try_into().unwrap(),
                 t: Type::General,
             }),
-            Err(GeometryError::NameAlreadyTaken(i))
+            Err(GeometriesError::NameAlreadyTaken(i))
         if i == a));
         assert!(matches!(
             g.add(
@@ -212,7 +212,7 @@ mod tests {
                 },
                 b
             ),
-            Err(GeometryError::NameAlreadyTaken(i))
+            Err(GeometriesError::NameAlreadyTaken(i))
         if i == a0a));
 
         assert!(matches!(
@@ -223,7 +223,7 @@ mod tests {
                 },
                 nonexistent_graph_index
             ),
-            Err(GeometryError::MissingIndex(i))
+            Err(GeometriesError::MissingIndex(i))
         if i == nonexistent_graph_index));
 
         assert_eq!(g.get_index(&"a".try_into().unwrap()), Some(a));

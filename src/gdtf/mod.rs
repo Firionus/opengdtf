@@ -1,7 +1,6 @@
-use strum::EnumString;
 use uuid::Uuid;
 
-use self::{dmx_modes::DmxMode, geometries::Geometries};
+use self::{dmx_modes::DmxMode, geometries::Geometries, types::data_version::DataVersion};
 
 pub mod dmx_modes;
 pub mod geometries;
@@ -42,15 +41,4 @@ impl Default for Gdtf {
             dmx_modes: Default::default(),
         }
     }
-}
-
-// TODO move to types module
-#[derive(Debug, EnumString, PartialEq, strum::Display)]
-pub enum DataVersion {
-    #[strum(to_string = "1.0")]
-    V1_0,
-    #[strum(to_string = "1.1")]
-    V1_1,
-    #[strum(to_string = "1.2")]
-    V1_2,
 }
