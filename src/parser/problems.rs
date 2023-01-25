@@ -1,5 +1,5 @@
-//! The problems system is the core error handling mechanism in the GDTF parser. See the unit tests of this module for
-//! an example of how to do it.
+//! The problems system is the core error handling mechanism in the GDTF parser.
+//! See the unit tests of this module for an example of how to do it.
 
 use roxmltree::TextPos;
 

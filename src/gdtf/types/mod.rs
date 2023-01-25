@@ -1,4 +1,5 @@
-/// Domain data types for GDTF
+//! Domain data types for GDTF
+
 pub mod data_version;
 pub mod dmx_break;
 pub mod name;
