@@ -1,7 +1,7 @@
 //! The problems system is the core error handling mechanism in the GDTF parser.
 //! See the unit tests of this module for an example of how to do it.
 
-use roxmltree::TextPos;
+use roxmltree::{Node, TextPos};
 
 use crate::types::{dmx_break::Break, name::Name};
 
@@ -14,21 +14,21 @@ pub type Problems = Vec<HandledProblem>;
 #[derive(thiserror::Error, Debug)]
 #[error("{p}; {action}")]
 pub struct HandledProblem {
-    p: Problem,
+    p: ProblemAt,
     pub action: String,
 }
 
 /// A recoverable problem in a GDTF file, with position information.
 #[derive(thiserror::Error, Debug)]
 #[error("{p} (line {at})")]
-pub struct Problem {
-    p: ProblemType,
+pub struct ProblemAt {
+    p: Problem,
     at: TextPos,
 }
 
-/// A recoverable kind problem in a GDTF file.
+/// A recoverable kind of problem in a GDTF file.
 #[derive(thiserror::Error, Debug)]
-pub enum ProblemType {
+pub enum Problem {
     #[error("missing node '{missing}' as child of '{parent}'")]
     XmlNodeMissing { missing: String, parent: String },
     #[error("missing attribute '{attr}' on <{tag}>")]
@@ -67,26 +67,22 @@ pub enum ProblemType {
     },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
-    Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
+        Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
     )]
     Unexpected(String),
 }
 
-impl ProblemType {
+impl Problem {
     /// Add position information to problem based on Node where it occured.
-    pub(crate) fn at(self, node: &roxmltree::Node) -> Problem {
-        Problem {
+    pub(crate) fn at(self, node: &Node) -> ProblemAt {
+        ProblemAt {
             p: self,
             at: node.position(),
         }
     }
 }
 
-pub(crate) trait HandleProblem<T, S: Into<String>> {
-    fn handled_by(self, action: S, problems: &mut Problems) -> Option<T>;
-}
-
-impl Problem {
+impl ProblemAt {
     /// Specify what action was taken to resolve the problem and then push it
     /// onto the problems.
     pub fn handled_by<T: Into<String>>(self, action: T, problems: &mut Problems) {
@@ -97,11 +93,15 @@ impl Problem {
     }
 }
 
-impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, Problem> {
+pub(crate) trait HandleProblem<T, S: Into<String>> {
+    fn ok_or_handled_by(self, action: S, problems: &mut Problems) -> Option<T>;
+}
+
+impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
     /// Specify what action will be taken to resolve a possible Err(Problem),
     /// push it onto problems and return None. If the result is Ok(v), Some(v)
     /// is returned instead.
-    fn handled_by(self, action: S, problems: &mut Problems) -> Option<T> {
+    fn ok_or_handled_by(self, action: S, problems: &mut Problems) -> Option<T> {
         match self {
             Ok(t) => Some(t),
             Err(p) => {
@@ -113,7 +113,7 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, Problem> {
 }
 
 impl HandledProblem {
-    pub fn problem_type(&self) -> &ProblemType {
+    pub fn problem_type(&self) -> &Problem {
         &self.p.p
     }
 }
@@ -130,8 +130,7 @@ mod tests {
         let node = binding.root_element();
 
         // encounter a problem
-
-        ProblemType::UnexpectedXmlNode("whatsThis".into())
+        Problem::UnexpectedXmlNode("whatsThis".into())
             .at(&node)
             .handled_by("ignoring node", &mut problems);
 
@@ -139,9 +138,9 @@ mod tests {
             &problems[0],
             HandledProblem {
                 action,
-                p: Problem {
+                p: ProblemAt {
                     at,
-                    p: ProblemType::UnexpectedXmlNode(..)
+                    p: Problem::UnexpectedXmlNode(..)
                 }
             } if action == "ignoring node" && at == &TextPos{row: 1, col: 1}
         ))

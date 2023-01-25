@@ -9,7 +9,7 @@ use crate::{
     geometries::Geometries,
     geometry::{Geometry, Offset, Offsets, Type},
     types::name::{Name, NameError},
-    Problem, ProblemType, Problems,
+    Problem, ProblemAt, Problems,
 };
 
 use super::utils::GetFromNode;
@@ -57,7 +57,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut P
                 t: Type::Reference { .. },
             } = &gcx.geometries.graph()[graph_ind]
             {
-                ProblemType::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
+                Problem::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
                 but it is useless because a top-level GeometryReference can only be used for a DMX mode \
                 that is offset from another one, which is useless because one can just change the start address in \
                 the console", gcx.problems);
@@ -125,7 +125,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut P
             dedup_ind = match dedup_ind.checked_add(1) {
                 Some(v) => v,
                 None => {
-                    ProblemType::DuplicateGeometryName(dup.name)
+                    Problem::DuplicateGeometryName(dup.name)
                         .at(&dup.xml_node)
                         .handled_by("deduplication failed, ignoring node", gcx.problems);
                     break;
@@ -147,7 +147,7 @@ fn handle_renamed_geometry<'a>(
     rename_lookup: &mut GeometryRenameLookup,
     duplicate_top_level: Option<NodeIndex>,
 ) {
-    ProblemType::DuplicateGeometryName(dup.name.clone())
+    Problem::DuplicateGeometryName(dup.name.clone())
         .at(&dup.xml_node)
         .handled_by(format!("renamed to {}", suggested_name), gcx.problems);
     if let Ok(graph_ind) = parse_named_element(
@@ -220,7 +220,7 @@ fn parse_named_element<'a>(
             // don't parse children of GeometryReference as geometries
         }
         tag => {
-            ProblemType::UnexpectedXmlNode(tag.into())
+            Problem::UnexpectedXmlNode(tag.into())
                 .at(&n)
                 .handled_by("ignoring node", gcx.problems);
             Err(())
@@ -239,7 +239,7 @@ fn add_to_geometries(
         None => gcx.geometries.add_top_level(geometry),
     }
     .map_err(|err| {
-        ProblemType::Unexpected(err.to_string())
+        Problem::Unexpected(err.to_string())
             .at(&n)
             .handled_by("ignoring node", gcx.problems)
     })?;
@@ -314,15 +314,15 @@ fn get_index_of_referenced_geometry(
     n: Node,
     geometries: &mut Geometries,
     name: &Name,
-) -> Result<NodeIndex, Problem> {
+) -> Result<NodeIndex, ProblemAt> {
     let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
     let ref_ind = geometries
         .get_index(&ref_string)
-        .ok_or_else(|| ProblemType::UnknownGeometry(ref_string.clone()).at(&n))?;
+        .ok_or_else(|| Problem::UnknownGeometry(ref_string.clone()).at(&n))?;
     if geometries.is_top_level(ref_ind) {
         Ok(ref_ind)
     } else {
-        Err(ProblemType::NonTopLevelGeometryReferenced {
+        Err(Problem::NonTopLevelGeometryReferenced {
             target: ref_string,
             geometry_reference: name.to_owned(),
         }
@@ -341,10 +341,10 @@ fn parse_reference_offsets(&n: &Node, n_name: &Name, problems: &mut Problems) ->
     nodes.next().and_then(|last_break| {
         let dmx_break = last_break
             .parse_required_attribute("DMXBreak")
-            .handled_by("ignoring node", problems)?;
+            .ok_or_handled_by("ignoring node", problems)?;
         let offset = last_break
             .parse_required_attribute("DMXOffset")
-            .handled_by("ignoring node", problems)?;
+            .ok_or_handled_by("ignoring node", problems)?;
         offsets.overwrite = Some(Offset { dmx_break, offset });
         Some(())
     });
@@ -353,13 +353,13 @@ fn parse_reference_offsets(&n: &Node, n_name: &Name, problems: &mut Problems) ->
         if let (Some(dmx_break), Some(offset)) = (
             element
                 .parse_required_attribute("DMXBreak")
-                .handled_by("ignoring node", problems),
+                .ok_or_handled_by("ignoring node", problems),
             element
                 .parse_required_attribute("DMXOffset")
-                .handled_by("ignoring node", problems),
+                .ok_or_handled_by("ignoring node", problems),
         ) {
             if offsets.normal.contains_key(&dmx_break) {
-                ProblemType::DuplicateDmxBreak {
+                Problem::DuplicateDmxBreak {
                     duplicate_break: dmx_break,
                     geometry_reference: n_name.to_owned(),
                 }
@@ -492,7 +492,7 @@ mod tests {
             assert_eq!(problems.len(), 1);
             assert!(matches!(
                 problems.pop().unwrap().problem_type(),
-                ProblemType::DuplicateDmxBreak {
+                Problem::DuplicateDmxBreak {
                     duplicate_break,
                     ..
                 }
@@ -599,13 +599,13 @@ mod tests {
 
         for p in problems[0..6].iter() {
             assert!(
-                matches!(p.problem_type(), ProblemType::XmlAttributeMissing { attr, .. } if attr == "Name")
+                matches!(p.problem_type(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
             );
         }
 
         assert!(matches!(
             problems[6].problem_type(),
-            ProblemType::DuplicateGeometryName(dup) if dup == "Geometry 2"
+            Problem::DuplicateGeometryName(dup) if dup == "Geometry 2"
         ));
 
         let b = geometries.get_index(&"Beam 1".try_into().unwrap()).unwrap();
@@ -686,7 +686,7 @@ mod tests {
         for p in problems.iter() {
             assert!(matches!(
                 p.problem_type(),
-                ProblemType::DuplicateGeometryName(..)
+                Problem::DuplicateGeometryName(..)
             ))
         }
 
@@ -760,7 +760,7 @@ mod tests {
         assert_eq!(problems.len(), 1);
         assert!(matches!(
             problems[0].problem_type(),
-            ProblemType::NonTopLevelGeometryReferenced { .. },
+            Problem::NonTopLevelGeometryReferenced { .. },
         ));
 
         assert_eq!(geometries.graph().node_count(), 3);

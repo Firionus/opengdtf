@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::Gdtf;
 
 pub use self::errors::Error;
-pub use self::problems::{HandledProblem, Problem, ProblemType, Problems};
+pub use self::problems::{HandledProblem, Problem, ProblemAt, Problems};
 
 use self::types::yes_no::YesNoEnum;
 use self::utils::AssignOrHandle;
