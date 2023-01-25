@@ -1,11 +1,12 @@
 mod errors;
 mod geometries;
 mod problems;
+mod types;
 mod utils;
 
 use std::io::{Read, Seek};
 
-use strum::EnumString;
+use roxmltree::Node;
 use uuid::Uuid;
 
 use crate::Gdtf;
@@ -13,142 +14,189 @@ use crate::Gdtf;
 pub use self::errors::Error;
 pub use self::problems::{HandledProblem, Problem, ProblemType, Problems};
 
+use self::types::yes_no::YesNoEnum;
 use self::utils::AssignOrHandle;
 use self::{geometries::parse_geometries, utils::GetFromNode};
 
-#[derive(Debug)]
-pub struct Parsed {
+#[derive(Debug, Default)]
+pub struct ParsedGdtf {
     pub gdtf: Gdtf,
     pub problems: Problems,
 }
 
-pub fn parse<T: Read + Seek>(reader: T) -> Result<Parsed, Error> {
+pub fn parse<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, Error> {
     let mut zip = zip::ZipArchive::new(reader)?;
     let mut description_file = zip
         .by_name("description.xml")
         .map_err(Error::DescriptionXmlMissing)?;
-    let mut description = String::new();
+
+    let size: usize = description_file.size().try_into().unwrap_or(0);
+    let mut description = String::with_capacity(size);
+
     description_file
         .read_to_string(&mut description)
         .map_err(Error::InvalidDescriptionXml)?;
 
-    parse_description(&description[..])
+    parse_description(description)
 }
 
-fn parse_description(description_content: &str) -> Result<Parsed, Error> {
-    let doc = roxmltree::Document::parse(description_content)?;
-
-    let mut gdtf = Gdtf::default();
-
-    let mut problems: Problems = vec![];
-
-    let root_node = doc
+fn parse_description(description: String) -> Result<ParsedGdtf, Error> {
+    let doc = roxmltree::Document::parse(&description)?;
+    let gdtf = doc
         .descendants()
         .find(|n| n.has_tag_name("GDTF"))
         .ok_or(Error::NoRootNode)?;
 
-    root_node
-        .parse_required_attribute("DataVersion")
-        .assign_or_handle(&mut gdtf.data_version, &mut problems);
-    // TODO communicate how we handle version that aren't v1.2 here, if applicable
+    let mut parsed = ParsedGdtf::default();
+    parsed.parse(gdtf);
 
-    let ft = match root_node.children().find(|n| n.has_tag_name("FixtureType")) {
-        Some(ft) => ft,
-        None => {
-            ProblemType::XmlNodeMissing {
-                missing: "FixtureType".to_owned(),
-                parent: "GDTF".to_owned(),
+    Ok(parsed)
+}
+
+impl ParsedGdtf {
+    fn parse(&mut self, gdtf: Node) {
+        gdtf.parse_required_attribute("DataVersion")
+            .assign_or_handle(&mut self.gdtf.data_version, &mut self.problems);
+
+        self.parse_fixture_type(gdtf);
+    }
+
+    fn parse_fixture_type(&mut self, gdtf: Node) {
+        let fixture_type = match gdtf.find_child_by_tag_name("FixtureType") {
+            Ok(g) => g,
+            Err(p) => {
+                p.handled_by("returning empty fixture type", &mut self.problems);
+                return;
             }
-            .at(&root_node)
-            .handled_by("returning empty fixture type", &mut problems);
-            return Ok(Parsed { gdtf, problems });
-        }
-    };
+        };
 
-    let geometries = &mut gdtf.geometries;
+        fixture_type
+            .parse_required_attribute("FixtureTypeID")
+            .assign_or_handle(&mut self.gdtf.fixture_type_id, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("Name")
+            .assign_or_handle(&mut self.gdtf.name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("ShortName")
+            .assign_or_handle(&mut self.gdtf.short_name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("LongName")
+            .assign_or_handle(&mut self.gdtf.long_name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("Description")
+            .assign_or_handle(&mut self.gdtf.description, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("Manufacturer")
+            .assign_or_handle(&mut self.gdtf.manufacturer, &mut self.problems);
 
-    parse_geometries(geometries, &ft, &mut problems);
+        self.parse_ref_ft(fixture_type);
+        self.parse_can_have_children(fixture_type);
 
-    ft.parse_required_attribute("FixtureTypeID")
-        .assign_or_handle(&mut gdtf.fixture_type_id, &mut problems);
+        parse_geometries(&mut self.gdtf.geometries, &fixture_type, &mut self.problems);
+    }
 
-    // empty string as ref_ft is not considered a problem, just parses to None
-    // while the DIN requires this attribute, semantically and in practice it is usually absent and the GDTF builder encodes absence as empty string
-    // TODO test this behavior
-    gdtf.ref_ft =
-        match ft.map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| !s.is_empty())) {
+    /// Parse RefFT attribute
+    ///
+    /// Even though the DIN requires this attribute, both a missing RefFT
+    /// attribute or an empty string (used by GDTF Builder) are parsed to `None`
+    /// without raising a Problem. Only invalid UUIDs cause a Problem. This
+    /// behavior is useful since both semantically and in practice this
+    /// attribute is often absent.
+    fn parse_ref_ft(&mut self, fixture_type: Node) {
+        self.gdtf.ref_ft = match fixture_type
+            .map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| !s.is_empty()))
+        {
             Some(Ok(v)) => Some(v),
             Some(Err(p)) => {
-                p.handled_by("setting ref_ft to None", &mut problems);
+                p.handled_by("setting ref_ft to None", &mut self.problems);
                 None
             }
             None => None,
         };
-
-    // TODO test this, I wanna see the error output :)
-    match ft.parse_attribute::<YesNoEnum>("CanHaveChildren") {
-        Some(Ok(v)) => gdtf.can_have_children = v.into(),
-        Some(Err(p)) => p.handled_by(
-            format!("using default value {}", gdtf.can_have_children),
-            &mut problems,
-        ),
-        None => (),
     }
 
-    ft.parse_required_attribute("Name")
-        .assign_or_handle(&mut gdtf.name, &mut problems);
-
-    ft.parse_required_attribute("ShortName")
-        .assign_or_handle(&mut gdtf.short_name, &mut problems);
-
-    ft.parse_required_attribute("LongName")
-        .assign_or_handle(&mut gdtf.long_name, &mut problems);
-
-    ft.parse_required_attribute("Description")
-        .assign_or_handle(&mut gdtf.description, &mut problems);
-
-    ft.parse_required_attribute("Manufacturer")
-        .assign_or_handle(&mut gdtf.manufacturer, &mut problems);
-
-    Ok(Parsed { gdtf, problems })
-}
-
-#[derive(strum::Display, EnumString)]
-enum YesNoEnum {
-    #[strum(to_string = "Yes")]
-    Yes,
-    #[strum(to_string = "No")]
-    No,
-}
-
-impl From<YesNoEnum> for bool {
-    fn from(value: YesNoEnum) -> Self {
-        match value {
-            YesNoEnum::Yes => true,
-            YesNoEnum::No => false,
+    fn parse_can_have_children(&mut self, fixture_type: Node) {
+        if let Some(result) = fixture_type.parse_attribute::<YesNoEnum>("CanHaveChildren") {
+            result
+                .map(bool::from)
+                .assign_or_handle(&mut self.gdtf.can_have_children, &mut self.problems)
         }
     }
 }
 
+// allow unwrap/expect eplicitly, because clippy.toml config doesn't work properly yet
+// fixed in https://github.com/rust-lang/rust-clippy/pull/9686
+// TODO remove once Clippy 0.1.67 is available
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests {
+    use roxmltree::Document;
+
     use super::*;
 
     #[test]
     fn xml_error() {
-        let invalid_xml = "<this></that>";
+        let invalid_xml = "<this></that>".to_string();
         let res = parse_description(invalid_xml);
-        let e = res.unwrap_err();
-        assert!(matches!(&e, Error::InvalidXml(..)));
-        let msg: String = format!("{}", e);
-        assert!(msg == "invalid XML: expected 'this' tag, not 'that' at 1:7");
+        assert!(matches!(res, Err(Error::InvalidXml(..))));
     }
 
     #[test]
     fn no_root_node_error() {
-        let invalid_xml = "<this></this>";
+        let invalid_xml = "<this></this>".to_string();
         let res = parse_description(invalid_xml);
-        let e = res.unwrap_err();
-        assert!(matches!(&e, Error::NoRootNode));
+        assert!(matches!(res, Err(Error::NoRootNode)));
+    }
+
+    #[test]
+    fn test_parsing_ref_ft() {
+        assert_ref_ft_after_parsing(r#"<FixtureType />"#, None, 0);
+        assert_ref_ft_after_parsing(r#"<FixtureType RefFT="" />"#, None, 0);
+        assert_ref_ft_after_parsing(
+            r#"<FixtureType RefFT="00000000-0000-0000-0000-000000000000" />"#,
+            Some(Uuid::nil()),
+            0,
+        );
+        assert_ref_ft_after_parsing(r#"<FixtureType RefFT="this is not a UUID" />"#, None, 1);
+    }
+
+    fn assert_ref_ft_after_parsing(input: &str, expected: Option<Uuid>, expected_problems: usize) {
+        let doc = Document::parse(input).unwrap();
+        let n = doc.root().first_element_child().unwrap();
+        assert!(n.has_tag_name("FixtureType"));
+        let mut parsed = ParsedGdtf::default();
+
+        // ensure we don't just test against the default value of None
+        parsed.gdtf.ref_ft = Some(Uuid::parse_str("eff34b75-c498-4265-896d-6d390fc39143").unwrap());
+
+        parsed.parse_ref_ft(n);
+        assert_eq!(parsed.gdtf.ref_ft, expected);
+        assert_eq!(parsed.problems.len(), expected_problems);
+    }
+
+    #[test]
+    fn test_parsing_can_have_children() {
+        assert_can_have_children_after_parsing(r#"<FixtureType />"#, true, 0);
+        assert_can_have_children_after_parsing(r#"<FixtureType CanHaveChildren="Yes" />"#, true, 0);
+        assert_can_have_children_after_parsing(r#"<FixtureType CanHaveChildren="No" />"#, false, 0);
+        assert_can_have_children_after_parsing(
+            r#"<FixtureType CanHaveChildren="Not Yes or No but some other String" />"#,
+            true,
+            1,
+        );
+    }
+
+    fn assert_can_have_children_after_parsing(
+        input: &str,
+        expected: bool,
+        expected_problems: usize,
+    ) {
+        let doc = Document::parse(input).unwrap();
+        let n = doc.root().first_element_child().unwrap();
+        assert!(n.has_tag_name("FixtureType"));
+        let mut parsed = ParsedGdtf::default();
+        parsed.parse_can_have_children(n);
+        assert_eq!(parsed.gdtf.can_have_children, expected);
+        assert_eq!(parsed.problems.len(), expected_problems);
     }
 }

@@ -86,6 +86,7 @@ impl GetFromNode for Node<'_, '_> {
     }
 
     fn find_child_by_tag_name(&self, tag: &str) -> Result<Node, Problem> {
+        // TODO docstring
         match self.children().find(|n| n.has_tag_name(tag)) {
             Some(n) => Ok(n),
             None => Err(ProblemType::XmlNodeMissing {

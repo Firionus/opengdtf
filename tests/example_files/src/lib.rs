@@ -10,7 +10,7 @@ pub use duplicate_filenames::check_for_duplicate_filenames;
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse, Error, Parsed};
+use opengdtf::{parse, Error, ParsedGdtf};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
@@ -52,8 +52,8 @@ pub struct ParsedInfo {
     pub geometries: Vec<String>,
 }
 
-impl From<Result<Parsed, Error>> for OutputEnum {
-    fn from(value: Result<Parsed, Error>) -> Self {
+impl From<Result<ParsedGdtf, Error>> for OutputEnum {
+    fn from(value: Result<ParsedGdtf, Error>) -> Self {
         match value {
             Ok(parsed) => OutputEnum::Ok(ParsedInfo {
                 manufacturer: parsed.gdtf.manufacturer,
@@ -108,7 +108,7 @@ pub fn opened_examples_iter() -> impl Iterator<Item = (DirEntry, File)> {
 }
 
 pub fn parsed_examples_iter(
-) -> impl Iterator<Item = (DirEntry, File, Result<Parsed, opengdtf::Error>)> {
+) -> impl Iterator<Item = (DirEntry, File, Result<ParsedGdtf, opengdtf::Error>)> {
     opened_examples_iter().map(|(entry, file)| {
         let parse_result = parse(&file);
         (entry, file, parse_result)
@@ -116,7 +116,7 @@ pub fn parsed_examples_iter(
 }
 
 pub fn examples_update_output_iter(
-) -> impl Iterator<Item = (DirEntry, File, Result<Parsed, opengdtf::Error>)> {
+) -> impl Iterator<Item = (DirEntry, File, Result<ParsedGdtf, opengdtf::Error>)> {
     // clean outputs
     remove_dir_all(&*OUTPUTS_DIR).unwrap();
     create_dir_all(&*OUTPUTS_DIR).unwrap();
