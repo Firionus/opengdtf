@@ -3,7 +3,10 @@ use std::collections::{hash_map::Entry::Vacant, HashMap};
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
 
-use super::problems::HandleProblem;
+use super::{
+    parse_xml::{GetXmlAttribute, GetXmlNode},
+    problems::HandleProblem,
+};
 
 use crate::{
     geometries::Geometries,
@@ -11,8 +14,6 @@ use crate::{
     types::name::{Name, NameError},
     Problem, ProblemAt, Problems,
 };
-
-use super::utils::GetFromNode;
 
 struct GeometryDuplicate<'a> {
     /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
@@ -28,7 +29,7 @@ struct GeometryDuplicate<'a> {
 // and allows the functions to share some common state :). It is somewhat more
 // Java-like though ("everything's a class").
 pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut Problems) {
-    let g = match ft.find_child_by_tag_name("Geometries") {
+    let g = match ft.find_required_child("Geometries") {
         Ok(g) => g,
         Err(p) => {
             p.handled_by("leaving geometries empty", problems);
@@ -88,7 +89,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut P
                 let duplicate_top_level_name = &gcx.geometries.graph()[duplicate_top_level].name;
                 suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name)
                     .try_into()
-                    .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid
+                    .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid
                 if !gcx.geometries.names().contains_key(&suggested_name) {
                     handle_renamed_geometry(
                         &dup,
@@ -111,7 +112,7 @@ pub fn parse_geometries(geometries: &mut Geometries, ft: &Node, problems: &mut P
             // TODO, does this actually count up, or just appends `(duplicate i)` EVERY SINGLE TIME?
             suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
                 .try_into()
-                .unwrap_or_else(|e: NameError| e.name); // safe, because added chars are valid;
+                .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid;
             if !gcx.geometries.names().contains_key(&suggested_name) {
                 handle_renamed_geometry(
                     &dup,
@@ -252,7 +253,7 @@ fn get_unique_geometry_name<'a>(
     parent_graph_ind: Option<NodeIndex>,
     gcx: &mut GeometryParsingContext<'a>,
 ) -> Option<Name> {
-    let name = n.get_name(node_index_in_xml_parent, gcx.problems);
+    let name = n.name(node_index_in_xml_parent, gcx.problems);
     match gcx.geometries.names().get(&name) {
         None => Some(name),
         Some(duplicate_graph_ind) => {
@@ -491,7 +492,7 @@ mod tests {
             let (mut problems, offsets) = run_parse_reference_offsets(xml);
             assert_eq!(problems.len(), 1);
             assert!(matches!(
-                problems.pop().unwrap().problem_type(),
+                problems.pop().unwrap().problem(),
                 Problem::DuplicateDmxBreak {
                     duplicate_break,
                     ..
@@ -599,12 +600,12 @@ mod tests {
 
         for p in problems[0..6].iter() {
             assert!(
-                matches!(p.problem_type(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
+                matches!(p.problem(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
             );
         }
 
         assert!(matches!(
-            problems[6].problem_type(),
+            problems[6].problem(),
             Problem::DuplicateGeometryName(dup) if dup == "Geometry 2"
         ));
 
@@ -684,10 +685,7 @@ mod tests {
 
         assert_eq!(problems.len(), 6);
         for p in problems.iter() {
-            assert!(matches!(
-                p.problem_type(),
-                Problem::DuplicateGeometryName(..)
-            ))
+            assert!(matches!(p.problem(), Problem::DuplicateGeometryName(..)))
         }
 
         let t1 = geometries.get_index(&"Top 1".try_into().unwrap()).unwrap();
@@ -759,7 +757,7 @@ mod tests {
 
         assert_eq!(problems.len(), 1);
         assert!(matches!(
-            problems[0].problem_type(),
+            problems[0].problem(),
             Problem::NonTopLevelGeometryReferenced { .. },
         ));
 

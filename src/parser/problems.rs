@@ -5,8 +5,6 @@ use roxmltree::{Node, TextPos};
 
 use crate::types::{dmx_break::Break, name::Name};
 
-use super::utils::XmlPosition;
-
 pub type Problems = Vec<HandledProblem>;
 
 /// A recoverable problem in a GDTF file, with position information and info on
@@ -77,7 +75,7 @@ impl Problem {
     pub(crate) fn at(self, node: &Node) -> ProblemAt {
         ProblemAt {
             p: self,
-            at: node.position(),
+            at: node.document().text_pos_at(node.range().start),
         }
     }
 }
@@ -113,7 +111,7 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
 }
 
 impl HandledProblem {
-    pub fn problem_type(&self) -> &Problem {
+    pub fn problem(&self) -> &Problem {
         &self.p.p
     }
 }

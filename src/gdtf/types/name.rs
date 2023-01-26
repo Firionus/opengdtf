@@ -51,7 +51,7 @@ impl TryFrom<&str> for Name {
             Ok(name)
         } else {
             Err(NameError {
-                name,
+                fixed: name,
                 invalid_chars,
             })
         }
@@ -87,7 +87,7 @@ impl PartialEq<&str> for Name {
 }
 
 impl Name {
-    /// construct the default name based on the XML tag name and the 0-based XML
+    /// Construct the default name based on the XML tag name and the 0-based XML
     /// node index in its parent.
     ///
     /// In case of invalid characters, the characters in question are replaced
@@ -108,7 +108,7 @@ impl Name {
 #[error("invalid GDTF Name type due to chars '{invalid_chars}'; replaced with '□'")]
 pub struct NameError {
     /// Name where all invalid chars were replaced with '□'
-    pub name: Name,
+    pub fixed: Name,
     pub invalid_chars: String,
 }
 
@@ -125,17 +125,17 @@ mod tests {
         assert!(matches!(
             Name::try_from("a.b"),
             Err(NameError {
-                name,
+                fixed,
                 invalid_chars,
-            }) if name == "a□b" && invalid_chars == "."
+            }) if fixed == "a□b" && invalid_chars == "."
         ));
 
         assert!(matches!(
             Name::try_from("a]b"),
             Err(NameError {
-                name,
+                fixed,
                 invalid_chars,
-            }) if name == "a□b" && invalid_chars == "]"
+            }) if fixed == "a□b" && invalid_chars == "]"
         ));
 
         assert_eq!("yay", format!("{}", Name::try_from("yay").unwrap()));

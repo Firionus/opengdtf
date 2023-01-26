@@ -1,8 +1,8 @@
 mod errors;
 mod geometries;
+mod parse_xml;
 mod problems;
 mod types;
-mod utils;
 
 use std::io::{Read, Seek};
 
@@ -11,12 +11,16 @@ use uuid::Uuid;
 
 use crate::Gdtf;
 
-pub use self::errors::Error;
-pub use self::problems::{HandledProblem, Problem, ProblemAt, Problems};
+pub use self::{
+    errors::Error,
+    problems::{HandledProblem, Problem, ProblemAt, Problems},
+};
 
-use self::types::yes_no::YesNoEnum;
-use self::utils::AssignOrHandle;
-use self::{geometries::parse_geometries, utils::GetFromNode};
+use self::{
+    geometries::parse_geometries,
+    parse_xml::{get_xml_attribute::GetXmlAttribute, AssignOrHandle, GetXmlNode},
+    types::yes_no::YesNoEnum,
+};
 
 #[derive(Debug, Default)]
 pub struct ParsedGdtf {
@@ -62,7 +66,7 @@ impl ParsedGdtf {
     }
 
     fn parse_fixture_type(&mut self, gdtf: Node) {
-        let fixture_type = match gdtf.find_child_by_tag_name("FixtureType") {
+        let fixture_type = match gdtf.find_required_child("FixtureType") {
             Ok(g) => g,
             Err(p) => {
                 p.handled_by("returning empty fixture type", &mut self.problems);
