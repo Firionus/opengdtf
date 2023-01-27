@@ -65,9 +65,7 @@ impl<'a> GeometriesParser<'a> {
         let top_level_geometries = geometries.children().filter(|n| n.is_element());
         let mut parsed: Vec<(NodeIndex, Node)> = Default::default();
         for (i, n) in top_level_geometries.enumerate() {
-            if let Some((graph_ind, _)) = self.parse_element(i, n, None) {
-                // TODO we have to consider ContinueParsing here
-                parsed.push((graph_ind, n));
+            if let Some((graph_ind, continue_parsing)) = self.parse_element(i, n, None) {
                 if let Geometry {
                     name,
                     t: Type::Reference { .. },
@@ -77,6 +75,9 @@ impl<'a> GeometriesParser<'a> {
                     but it is useless because a top-level GeometryReference can only be used for a DMX mode \
                     that is offset from another one, which is useless because one can just change the start address on \
                     the lighting console", self.problems);
+                }
+                if let ContinueParsing::Children = continue_parsing {
+                    parsed.push((graph_ind, n));
                 }
             };
         }
@@ -429,8 +430,6 @@ mod tests {
 
     use std::ops::Not;
 
-    // TODO test top level geometry reference handling
-
     #[test]
     fn test_parse_break_node() {
         let xml = r#"<Break DMXBreak="1" DMXOffset="1" />"#;
@@ -669,6 +668,31 @@ mod tests {
             && offsets.normal[&1.try_into().unwrap()] == 3
             && offsets.normal[&2.try_into().unwrap()] == 4
         ));
+    }
+    #[test]
+    fn top_level_geometry_reference() {
+        let ft_str = r#"
+    <FixtureType>
+        <Geometries>
+            <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+            <GeometryReference Geometry="AbstractElement" Name="Top Level Reference" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Break DMXBreak="1" DMXOffset="5"/>
+                <Break DMXBreak="2" DMXOffset="6"/>
+                <Break DMXBreak="1" DMXOffset="3"/>
+            </GeometryReference>
+        </Geometries>
+    </FixtureType>
+            "#;
+
+        let (geometries, rename_lookup, problems) = parse_geometries(ft_str);
+
+        assert_eq!(problems.len(), 1);
+        assert!(matches!(
+            problems[0].problem(),
+            Problem::UnexpectedTopLevelGeometryReference(..)
+        ));
+        assert!(rename_lookup.is_empty());
+        assert_eq!(geometries.graph().node_count(), 2);
     }
 
     #[test]

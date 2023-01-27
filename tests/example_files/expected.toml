@@ -42,6 +42,22 @@ geometries = [
     'Base.Yoke.Head.Beam',
 ]
 
+[73969ce3b5a9091bbc2e7bbd9b00b71b]
+filename = 'Ayrton@Bora@V2.13_-_Soft_V2XX_-_CTOGobo.gdtf'
+saved_on = '2023-01-11T23:25:31.929301323Z'
+comment = ''
+manufacturer = 'Ayrton'
+name = 'Bora'
+fixture_type_id = '909fff22-c13f-4fb0-adf6-021df77890e0'
+problems = []
+geometries = [
+    'Base',
+    'Base.Pigtail',
+    'Base.Yoke',
+    'Base.Yoke.Head',
+    'Base.Yoke.Head.Beam',
+]
+
 [f9075f03262dc09b2cd5d23d28c93d46]
 filename = 'Robe_Lighting@Robin_ParFect_150_RGBA@2022-11-10__DMX_Input_adjustment.gdtf'
 saved_on = '2023-01-11T23:25:28.474007793Z'
@@ -99,22 +115,6 @@ geometries = [
     'Base.Pigtail.Ethernet',
     'Base.Pigtail.Power IN',
     'Base.Pigtail.Video OUT',
-    'Base.Yoke',
-    'Base.Yoke.Head',
-    'Base.Yoke.Head.Beam',
-]
-
-[73969ce3b5a9091bbc2e7bbd9b00b71b]
-filename = 'Ayrton@Bora@V2.13_-_Soft_V2XX_-_CTOGobo.gdtf'
-saved_on = '2023-01-11T23:25:31.929301323Z'
-comment = ''
-manufacturer = 'Ayrton'
-name = 'Bora'
-fixture_type_id = '909fff22-c13f-4fb0-adf6-021df77890e0'
-problems = []
-geometries = [
-    'Base',
-    'Base.Pigtail',
     'Base.Yoke',
     'Base.Yoke.Head',
     'Base.Yoke.Head.Beam',
@@ -399,6 +399,21 @@ geometries = [
     'LED',
 ]
 
+[e9017250b1ca944a4b144f6376a7186f]
+filename = 'Ayrton@MagicDot_R@V2.2_3D_Low.gdtf'
+saved_on = '2023-01-11T23:25:32.561876076Z'
+comment = ''
+manufacturer = 'Ayrton'
+name = 'MagicDot R'
+fixture_type_id = '10466b85-6349-465c-a5fa-8ff6f2a0183b'
+problems = []
+geometries = [
+    'Base',
+    'Base.Yoke',
+    'Base.Yoke.Head',
+    'Base.Yoke.Head.Beam',
+]
+
 [d71e66832defbc96fec9bc43521e936f]
 filename = 'Ayrton@MagicBurst@V2.3_3D_Low.gdtf'
 saved_on = '2023-01-11T23:25:32.110048499Z'
@@ -495,21 +510,6 @@ geometries = [
     'Base.Pigtail.DMX 5Pin Out',
     'Base.Pigtail.Ethernet',
     'Base.Pigtail.Power Input',
-    'Base.Yoke',
-    'Base.Yoke.Head',
-    'Base.Yoke.Head.Beam',
-]
-
-[e9017250b1ca944a4b144f6376a7186f]
-filename = 'Ayrton@MagicDot_R@V2.2_3D_Low.gdtf'
-saved_on = '2023-01-11T23:25:32.561876076Z'
-comment = ''
-manufacturer = 'Ayrton'
-name = 'MagicDot R'
-fixture_type_id = '10466b85-6349-465c-a5fa-8ff6f2a0183b'
-problems = []
-geometries = [
-    'Base',
     'Base.Yoke',
     'Base.Yoke.Head',
     'Base.Yoke.Head.Beam',
@@ -1206,26 +1206,26 @@ geometries = ['Omega Adapter']
 
 [d2fb1ed87c3ba1583ad453a5ffc3102e]
 filename = 'Robe_Lighting@Robin_Spiider@2022-12-19__Pixel_subfixture_order_update.gdtf'
-saved_on = '2023-01-11T23:25:25.528799646Z'
+saved_on = '2023-01-27T16:14:09.371968947Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Spiider'
 fixture_type_id = 'ff00403f-eedc-4e89-8ff2-cd5976365896'
 problems = [
-    '''duplicate Geometry name 'Ethernet OUT' (line 2136:11); renamed to Ethernet OUT (in Base RGB)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2135:11); renamed to Ethernet IN (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2134:11); renamed to DMX 3Pin OUT (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 2133:11); renamed to DMX 3Pin IN (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2132:11); renamed to DMX 5Pin OUT (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2131:11); renamed to DMX 5Pin IN (in Base RGB)''',
-    '''duplicate Geometry name 'Power IN' (line 2130:11); renamed to Power IN (in Base RGB)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2051:11); renamed to Ethernet OUT (in Base PRGB)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2050:11); renamed to Ethernet IN (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2049:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
     '''duplicate Geometry name 'DMX 3Pin IN' (line 2048:11); renamed to DMX 3Pin IN (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2047:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 2133:11); renamed to DMX 3Pin IN (in Base RGB)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2049:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2134:11); renamed to DMX 3Pin OUT (in Base RGB)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 2046:11); renamed to DMX 5Pin IN (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2131:11); renamed to DMX 5Pin IN (in Base RGB)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2047:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2132:11); renamed to DMX 5Pin OUT (in Base RGB)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2050:11); renamed to Ethernet IN (in Base PRGB)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2135:11); renamed to Ethernet IN (in Base RGB)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2051:11); renamed to Ethernet OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2136:11); renamed to Ethernet OUT (in Base RGB)''',
     '''duplicate Geometry name 'Power IN' (line 2045:11); renamed to Power IN (in Base PRGB)''',
+    '''duplicate Geometry name 'Power IN' (line 2130:11); renamed to Power IN (in Base RGB)''',
 ]
 geometries = [
     'Base PRGB',
@@ -2127,16 +2127,16 @@ geometries = [
 
 [fd4bd29860609228f4d52bdb9e3e6790]
 filename = 'Robe_Lighting@Robin_iBar_15@2022-12-06__DMX_channel_revision.gdtf'
-saved_on = '2023-01-11T23:25:26.107110731Z'
+saved_on = '2023-01-27T16:14:09.858792761Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin iBar 15'
 fixture_type_id = 'c78402d8-280d-493f-b695-2426023919e7'
 problems = [
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2570:13); renamed to DMX 5Pin OUT (in Legs RGBD)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 2569:13); renamed to DMX 5Pin IN (in Legs RGBD)''',
-    '''duplicate Geometry name 'Power OUT' (line 2568:13); renamed to Power OUT (in Legs RGBD)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2570:13); renamed to DMX 5Pin OUT (in Legs RGBD)''',
     '''duplicate Geometry name 'Power IN' (line 2567:13); renamed to Power IN (in Legs RGBD)''',
+    '''duplicate Geometry name 'Power OUT' (line 2568:13); renamed to Power OUT (in Legs RGBD)''',
 ]
 geometries = [
     'LED',
@@ -2723,17 +2723,17 @@ geometries = [
 
 [34202556121b8e1cdd99ea5931c93b68]
 filename = 'Robe_Lighting@pixelPATT@2022-12-06__RDM_revision__DMX_channel_geometry_update.gdtf'
-saved_on = '2023-01-11T23:25:25.658221067Z'
+saved_on = '2023-01-27T16:14:09.473792093Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'pixelPATT'
 fixture_type_id = '41a5c4f0-9c42-4068-bee8-4478b2283f98'
 problems = [
-    '''duplicate Geometry name 'Ethernet' (line 1931:11); renamed to Ethernet (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 1930:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
     '''duplicate Geometry name 'DMX 3Pin IN' (line 1929:11); renamed to DMX 3Pin IN (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1928:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 1930:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 1927:11); renamed to DMX 5Pin IN (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1928:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'Ethernet' (line 1931:11); renamed to Ethernet (in Base PRGB)''',
     '''duplicate Geometry name 'Power IN' (line 1926:11); renamed to Power IN (in Base PRGB)''',
 ]
 geometries = [
@@ -2798,26 +2798,26 @@ geometries = [
 
 [5145d245e505ad5877fa1b2b27a3160a]
 filename = 'Robe_Lighting@Robin_iSpiider@2022-11-23__DMX_shutter_revision__Thumbnails_updated__Wiring_revision.gdtf'
-saved_on = '2023-01-11T23:25:29.296150362Z'
+saved_on = '2023-01-27T16:14:12.989330248Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin iSpiider'
 fixture_type_id = '9b811c7c-4d2c-4ad7-9eac-3533be07e92f'
 problems = [
-    '''duplicate Geometry name 'Ethernet OUT' (line 3855:11); renamed to Ethernet OUT (in Base RGB)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 3854:11); renamed to Ethernet IN (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 3853:11); renamed to DMX 3Pin OUT (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 3852:11); renamed to DMX 3Pin IN (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 3851:11); renamed to DMX 5Pin OUT (in Base RGB)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 3850:11); renamed to DMX 5Pin IN (in Base RGB)''',
-    '''duplicate Geometry name 'Power IN' (line 3849:11); renamed to Power IN (in Base RGB)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 3770:11); renamed to Ethernet OUT (in Base PRGB)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 3769:11); renamed to Ethernet IN (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 3768:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
     '''duplicate Geometry name 'DMX 3Pin IN' (line 3767:11); renamed to DMX 3Pin IN (in Base PRGB)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 3766:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 3852:11); renamed to DMX 3Pin IN (in Base RGB)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 3768:11); renamed to DMX 3Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 3853:11); renamed to DMX 3Pin OUT (in Base RGB)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 3765:11); renamed to DMX 5Pin IN (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 3850:11); renamed to DMX 5Pin IN (in Base RGB)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 3766:11); renamed to DMX 5Pin OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 3851:11); renamed to DMX 5Pin OUT (in Base RGB)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 3769:11); renamed to Ethernet IN (in Base PRGB)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 3854:11); renamed to Ethernet IN (in Base RGB)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 3770:11); renamed to Ethernet OUT (in Base PRGB)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 3855:11); renamed to Ethernet OUT (in Base RGB)''',
     '''duplicate Geometry name 'Power IN' (line 3764:11); renamed to Power IN (in Base PRGB)''',
+    '''duplicate Geometry name 'Power IN' (line 3849:11); renamed to Power IN (in Base RGB)''',
 ]
 geometries = [
     'Base PRGB',
@@ -3527,95 +3527,95 @@ geometries = [
 
 [b545a8d32a841a46cc118fc4fa5c8c1d]
 filename = 'Robe_Lighting@Robin_Tetra2@2022-12-05__Geometry_names_revision.gdtf'
-saved_on = '2023-01-11T23:25:28.195180441Z'
+saved_on = '2023-01-27T16:14:11.905850378Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Tetra2'
 fixture_type_id = '5a7b5195-af40-4bda-a658-cbaa98dff9c0'
 problems = [
-    '''duplicate Geometry name 'Ethernet OUT' (line 2342:11); renamed to Ethernet OUT (in Base 3)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2341:11); renamed to Ethernet IN (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2340:11); renamed to DMX 5Pin OUT (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2339:11); renamed to DMX 5Pin IN (in Base 3)''',
-    '''duplicate Geometry name 'Power OUT' (line 2338:11); renamed to Power OUT (in Base 3)''',
-    '''duplicate Geometry name 'Power IN' (line 2337:11); renamed to Power IN (in Base 3)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2334:11); renamed to Ethernet OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2333:11); renamed to Ethernet IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2332:11); renamed to DMX 5Pin OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2331:11); renamed to DMX 5Pin IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2330:11); renamed to Power OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2329:11); renamed to Power IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2256:11); renamed to Ethernet OUT (in Base 5)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2255:11); renamed to Ethernet IN (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2254:11); renamed to DMX 5Pin OUT (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2253:11); renamed to DMX 5Pin IN (in Base 5)''',
-    '''duplicate Geometry name 'Power OUT' (line 2252:11); renamed to Power OUT (in Base 5)''',
-    '''duplicate Geometry name 'Power IN' (line 2251:11); renamed to Power IN (in Base 5)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2248:11); renamed to Ethernet OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2247:11); renamed to Ethernet IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2246:11); renamed to DMX 5Pin OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2245:11); renamed to DMX 5Pin IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2244:11); renamed to Power OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2243:11); renamed to Power IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2168:11); renamed to Ethernet OUT (in Base 4)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2167:11); renamed to Ethernet IN (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2166:11); renamed to DMX 5Pin OUT (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2165:11); renamed to DMX 5Pin IN (in Base 4)''',
-    '''duplicate Geometry name 'Power OUT' (line 2164:11); renamed to Power OUT (in Base 4)''',
-    '''duplicate Geometry name 'Power IN' (line 2163:11); renamed to Power IN (in Base 4)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2160:11); renamed to Ethernet OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2159:11); renamed to Ethernet IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2158:11); renamed to DMX 5Pin OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2157:11); renamed to DMX 5Pin IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2156:11); renamed to Power OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2155:11); renamed to Power IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2082:11); renamed to Ethernet OUT (in Base 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2081:11); renamed to Ethernet IN (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2080:11); renamed to DMX 5Pin OUT (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2079:11); renamed to DMX 5Pin IN (in Base 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2078:11); renamed to Power OUT (in Base 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2077:11); renamed to Power IN (in Base 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2074:11); renamed to Ethernet OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2073:11); renamed to Ethernet IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2072:11); renamed to DMX 5Pin OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2071:11); renamed to DMX 5Pin IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2070:11); renamed to Power OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2069:11); renamed to Power IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2032:11); renamed to Ethernet OUT (in Base 2)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2031:11); renamed to Ethernet IN (in Base 2)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2030:11); renamed to DMX 5Pin OUT (in Base 2)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2029:11); renamed to DMX 5Pin IN (in Base 2)''',
-    '''duplicate Geometry name 'Power OUT' (line 2028:11); renamed to Power OUT (in Base 2)''',
-    '''duplicate Geometry name 'Power IN' (line 2027:11); renamed to Power IN (in Base 2)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2024:11); renamed to Ethernet OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2023:11); renamed to Ethernet IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2022:11); renamed to DMX 5Pin OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2021:11); renamed to DMX 5Pin IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2020:11); renamed to Power OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2019:11); renamed to Power IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 1980:11); renamed to Ethernet OUT (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 1979:11); renamed to Ethernet IN (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1978:11); renamed to DMX 5Pin OUT (duplicate 1)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 1977:11); renamed to DMX 5Pin IN (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 1976:11); renamed to Power OUT (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2021:11); renamed to DMX 5Pin IN (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2029:11); renamed to DMX 5Pin IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2071:11); renamed to DMX 5Pin IN (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2079:11); renamed to DMX 5Pin IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2157:11); renamed to DMX 5Pin IN (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2165:11); renamed to DMX 5Pin IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2245:11); renamed to DMX 5Pin IN (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2253:11); renamed to DMX 5Pin IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2331:11); renamed to DMX 5Pin IN (in Base 3)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2339:11); renamed to DMX 5Pin IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1978:11); renamed to DMX 5Pin OUT (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2022:11); renamed to DMX 5Pin OUT (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2030:11); renamed to DMX 5Pin OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2072:11); renamed to DMX 5Pin OUT (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2080:11); renamed to DMX 5Pin OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2158:11); renamed to DMX 5Pin OUT (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2166:11); renamed to DMX 5Pin OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2246:11); renamed to DMX 5Pin OUT (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2254:11); renamed to DMX 5Pin OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2332:11); renamed to DMX 5Pin OUT (in Base 3)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2340:11); renamed to DMX 5Pin OUT (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 1979:11); renamed to Ethernet IN (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2023:11); renamed to Ethernet IN (in Base 2)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2031:11); renamed to Ethernet IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2073:11); renamed to Ethernet IN (in Base 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2081:11); renamed to Ethernet IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2159:11); renamed to Ethernet IN (in Base 4)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2167:11); renamed to Ethernet IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2247:11); renamed to Ethernet IN (in Base 5)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2255:11); renamed to Ethernet IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2333:11); renamed to Ethernet IN (in Base 3)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2341:11); renamed to Ethernet IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 1980:11); renamed to Ethernet OUT (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2024:11); renamed to Ethernet OUT (in Base 2)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2032:11); renamed to Ethernet OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2074:11); renamed to Ethernet OUT (in Base 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2082:11); renamed to Ethernet OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2160:11); renamed to Ethernet OUT (in Base 4)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2168:11); renamed to Ethernet OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2248:11); renamed to Ethernet OUT (in Base 5)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2256:11); renamed to Ethernet OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2334:11); renamed to Ethernet OUT (in Base 3)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2342:11); renamed to Ethernet OUT (in Base 3) (duplicate 1)''',
     '''duplicate Geometry name 'Power IN' (line 1975:11); renamed to Power IN (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2019:11); renamed to Power IN (in Base 2)''',
+    '''duplicate Geometry name 'Power IN' (line 2027:11); renamed to Power IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2069:11); renamed to Power IN (in Base 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2077:11); renamed to Power IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2155:11); renamed to Power IN (in Base 4)''',
+    '''duplicate Geometry name 'Power IN' (line 2163:11); renamed to Power IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2243:11); renamed to Power IN (in Base 5)''',
+    '''duplicate Geometry name 'Power IN' (line 2251:11); renamed to Power IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2329:11); renamed to Power IN (in Base 3)''',
+    '''duplicate Geometry name 'Power IN' (line 2337:11); renamed to Power IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 1976:11); renamed to Power OUT (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2020:11); renamed to Power OUT (in Base 2)''',
+    '''duplicate Geometry name 'Power OUT' (line 2028:11); renamed to Power OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2070:11); renamed to Power OUT (in Base 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2078:11); renamed to Power OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2156:11); renamed to Power OUT (in Base 4)''',
+    '''duplicate Geometry name 'Power OUT' (line 2164:11); renamed to Power OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2244:11); renamed to Power OUT (in Base 5)''',
+    '''duplicate Geometry name 'Power OUT' (line 2252:11); renamed to Power OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2330:11); renamed to Power OUT (in Base 3)''',
+    '''duplicate Geometry name 'Power OUT' (line 2338:11); renamed to Power OUT (in Base 3) (duplicate 1)''',
 ]
 geometries = [
     'Base 1',
     'Base 1.Pigtail 4',
-    'Base 1.Pigtail 4.DMX 5Pin IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.DMX 5Pin OUT (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Ethernet IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Ethernet OUT (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Power IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Power OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 4.DMX 5Pin IN (in Base 1)',
+    'Base 1.Pigtail 4.DMX 5Pin OUT (in Base 1)',
+    'Base 1.Pigtail 4.Ethernet IN (in Base 1)',
+    'Base 1.Pigtail 4.Ethernet OUT (in Base 1)',
+    'Base 1.Pigtail 4.Power IN (in Base 1)',
+    'Base 1.Pigtail 4.Power OUT (in Base 1)',
     'Base 1.Pigtail 5',
-    'Base 1.Pigtail 5.DMX 5Pin IN (in Base 1)',
-    'Base 1.Pigtail 5.DMX 5Pin OUT (in Base 1)',
-    'Base 1.Pigtail 5.Ethernet IN (in Base 1)',
-    'Base 1.Pigtail 5.Ethernet OUT (in Base 1)',
-    'Base 1.Pigtail 5.Power IN (in Base 1)',
-    'Base 1.Pigtail 5.Power OUT (in Base 1)',
+    'Base 1.Pigtail 5.DMX 5Pin IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.DMX 5Pin OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Ethernet IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Ethernet OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Power IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Power OUT (in Base 1) (duplicate 1)',
     'Base 1.Yoke 1',
     'Base 1.Yoke 1.Array 1',
     'Base 1.Yoke 1.Array 1.Zoom1 1',
@@ -3642,19 +3642,19 @@ geometries = [
     'Base 1.Yoke 1.Array 1.Zoom1 2.Pixel18empty 5',
     'Base 2',
     'Base 2.Pigtail 2',
-    'Base 2.Pigtail 2.DMX 5Pin IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.DMX 5Pin OUT (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Ethernet IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Ethernet OUT (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Power IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Power OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 2.DMX 5Pin IN (in Base 2)',
+    'Base 2.Pigtail 2.DMX 5Pin OUT (in Base 2)',
+    'Base 2.Pigtail 2.Ethernet IN (in Base 2)',
+    'Base 2.Pigtail 2.Ethernet OUT (in Base 2)',
+    'Base 2.Pigtail 2.Power IN (in Base 2)',
+    'Base 2.Pigtail 2.Power OUT (in Base 2)',
     'Base 2.Pigtail 3',
-    'Base 2.Pigtail 3.DMX 5Pin IN (in Base 2)',
-    'Base 2.Pigtail 3.DMX 5Pin OUT (in Base 2)',
-    'Base 2.Pigtail 3.Ethernet IN (in Base 2)',
-    'Base 2.Pigtail 3.Ethernet OUT (in Base 2)',
-    'Base 2.Pigtail 3.Power IN (in Base 2)',
-    'Base 2.Pigtail 3.Power OUT (in Base 2)',
+    'Base 2.Pigtail 3.DMX 5Pin IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.DMX 5Pin OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Ethernet IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Ethernet OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Power IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Power OUT (in Base 2) (duplicate 1)',
     'Base 2.Yoke 2',
     'Base 2.Yoke 2.Array 2',
     'Base 2.Yoke 2.Array 2.Pattern mode 2',
@@ -3682,19 +3682,19 @@ geometries = [
     'Base 2.Yoke 2.Array 2.Pattern mode 2.Zoom2 2.Pixel18empty 4',
     'Base 3',
     'Base 3.Pigtail 10',
-    'Base 3.Pigtail 10.DMX 5Pin IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.DMX 5Pin OUT (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Ethernet IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Ethernet OUT (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Power IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Power OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 10.DMX 5Pin IN (in Base 3)',
+    'Base 3.Pigtail 10.DMX 5Pin OUT (in Base 3)',
+    'Base 3.Pigtail 10.Ethernet IN (in Base 3)',
+    'Base 3.Pigtail 10.Ethernet OUT (in Base 3)',
+    'Base 3.Pigtail 10.Power IN (in Base 3)',
+    'Base 3.Pigtail 10.Power OUT (in Base 3)',
     'Base 3.Pigtail 11',
-    'Base 3.Pigtail 11.DMX 5Pin IN (in Base 3)',
-    'Base 3.Pigtail 11.DMX 5Pin OUT (in Base 3)',
-    'Base 3.Pigtail 11.Ethernet IN (in Base 3)',
-    'Base 3.Pigtail 11.Ethernet OUT (in Base 3)',
-    'Base 3.Pigtail 11.Power IN (in Base 3)',
-    'Base 3.Pigtail 11.Power OUT (in Base 3)',
+    'Base 3.Pigtail 11.DMX 5Pin IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.DMX 5Pin OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Ethernet IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Ethernet OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Power IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Power OUT (in Base 3) (duplicate 1)',
     'Base 3.Yoke 3',
     'Base 3.Yoke 3.Array 3',
     'Base 3.Yoke 3.Array 3.Zoom3 1',
@@ -3721,19 +3721,19 @@ geometries = [
     'Base 3.Yoke 3.Array 3.Zoom3 2.Pixel1RGB 5 3',
     'Base 4',
     'Base 4.Pigtail 6',
-    'Base 4.Pigtail 6.DMX 5Pin IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.DMX 5Pin OUT (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Ethernet IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Ethernet OUT (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Power IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Power OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 6.DMX 5Pin IN (in Base 4)',
+    'Base 4.Pigtail 6.DMX 5Pin OUT (in Base 4)',
+    'Base 4.Pigtail 6.Ethernet IN (in Base 4)',
+    'Base 4.Pigtail 6.Ethernet OUT (in Base 4)',
+    'Base 4.Pigtail 6.Power IN (in Base 4)',
+    'Base 4.Pigtail 6.Power OUT (in Base 4)',
     'Base 4.Pigtail 7',
-    'Base 4.Pigtail 7.DMX 5Pin IN (in Base 4)',
-    'Base 4.Pigtail 7.DMX 5Pin OUT (in Base 4)',
-    'Base 4.Pigtail 7.Ethernet IN (in Base 4)',
-    'Base 4.Pigtail 7.Ethernet OUT (in Base 4)',
-    'Base 4.Pigtail 7.Power IN (in Base 4)',
-    'Base 4.Pigtail 7.Power OUT (in Base 4)',
+    'Base 4.Pigtail 7.DMX 5Pin IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.DMX 5Pin OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Ethernet IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Ethernet OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Power IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Power OUT (in Base 4) (duplicate 1)',
     'Base 4.Yoke 4',
     'Base 4.Yoke 4.Array 4',
     'Base 4.Yoke 4.Array 4.Zoom4 1',
@@ -3760,19 +3760,19 @@ geometries = [
     'Base 4.Yoke 4.Array 4.Zoom4 2.Pixel18RGBW 4',
     'Base 5',
     'Base 5.Pigtail 8',
-    'Base 5.Pigtail 8.DMX 5Pin IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.DMX 5Pin OUT (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Ethernet IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Ethernet OUT (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Power IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Power OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 8.DMX 5Pin IN (in Base 5)',
+    'Base 5.Pigtail 8.DMX 5Pin OUT (in Base 5)',
+    'Base 5.Pigtail 8.Ethernet IN (in Base 5)',
+    'Base 5.Pigtail 8.Ethernet OUT (in Base 5)',
+    'Base 5.Pigtail 8.Power IN (in Base 5)',
+    'Base 5.Pigtail 8.Power OUT (in Base 5)',
     'Base 5.Pigtail 9',
-    'Base 5.Pigtail 9.DMX 5Pin IN (in Base 5)',
-    'Base 5.Pigtail 9.DMX 5Pin OUT (in Base 5)',
-    'Base 5.Pigtail 9.Ethernet IN (in Base 5)',
-    'Base 5.Pigtail 9.Ethernet OUT (in Base 5)',
-    'Base 5.Pigtail 9.Power IN (in Base 5)',
-    'Base 5.Pigtail 9.Power OUT (in Base 5)',
+    'Base 5.Pigtail 9.DMX 5Pin IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.DMX 5Pin OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Ethernet IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Ethernet OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Power IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Power OUT (in Base 5) (duplicate 1)',
     'Base 5.Yoke 5',
     'Base 5.Yoke 5.Array 5',
     'Base 5.Yoke 5.Array 5.Pattern mode 5',
@@ -3844,6 +3844,21 @@ geometries = [
     'Pixel RGBW',
 ]
 
+[78b57f191598c3c7be247874edf0a635]
+filename = 'Test@Channel_Layout_Test_v1-2@replicated_v1-1_channel_layout_test.gdtf'
+saved_on = '2023-01-11T23:25:32.737648506Z'
+comment = ''
+manufacturer = 'Test'
+name = 'Channel Layout Test v1-2'
+fixture_type_id = '28c12512-96d4-4597-9e2c-6f1e470d6798'
+problems = []
+geometries = [
+    'AbstractElement',
+    'Main',
+    'Main.Element 1',
+    'Main.Element 2',
+]
+
 [94f8dac8517237b646a21a6fb08ed8b4]
 filename = 'Ayrton@Zonda_9_FX@V1.18_DimmerCorrection_STD_EXT2.gdtf'
 saved_on = '2023-01-11T23:25:32.533446873Z'
@@ -3903,21 +3918,6 @@ geometries = [
     'LENS 3',
     'LENS 4',
     'Zonda',
-]
-
-[78b57f191598c3c7be247874edf0a635]
-filename = 'Test@Channel_Layout_Test_v1-2@replicated_v1-1_channel_layout_test.gdtf'
-saved_on = '2023-01-11T23:25:32.737648506Z'
-comment = ''
-manufacturer = 'Test'
-name = 'Channel Layout Test v1-2'
-fixture_type_id = '28c12512-96d4-4597-9e2c-6f1e470d6798'
-problems = []
-geometries = [
-    'AbstractElement',
-    'Main',
-    'Main.Element 1',
-    'Main.Element 2',
 ]
 
 [2b91cbed8882ec2623ab138c3d3c6bb8]
@@ -4019,14 +4019,14 @@ geometries = [
 
 [bba4bdb5e09e9f3f2796cc6f7d4f54dd]
 filename = 'Robe_Lighting@Robin_100_LEDBeam@2022-11-10__DMX_Input_adjustment.gdtf'
-saved_on = '2023-01-11T23:25:27.288338075Z'
+saved_on = '2023-01-27T16:14:11.030759964Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin 100 LEDBeam'
 fixture_type_id = 'f74cac5f-1bea-4195-8b75-f9e466a0b802'
 problems = [
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1836:11); renamed to DMX 5Pin OUT (in Base no zones)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 1835:11); renamed to DMX 5Pin IN (in Base no zones)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1836:11); renamed to DMX 5Pin OUT (in Base no zones)''',
 ]
 geometries = [
     'Base',
@@ -4446,114 +4446,114 @@ geometries = [
 
 [eb183adacf27b2848cdf72030f9b78d1]
 filename = 'Robe_Lighting@Robin_Tetra1@2022-12-05__DMX_channel_geometry_revision.gdtf'
-saved_on = '2023-01-11T23:25:29.024288911Z'
+saved_on = '2023-01-27T16:14:12.720447195Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Tetra1'
 fixture_type_id = '980db5c1-7315-47ba-9ae7-bf841b62ffa8'
 problems = [
-    '''duplicate Geometry name 'Ethernet OUT' (line 2166:11); renamed to Ethernet OUT (in Base 3)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2165:11); renamed to Ethernet IN (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2164:11); renamed to DMX 5Pin OUT (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2163:11); renamed to DMX 5Pin IN (in Base 3)''',
-    '''duplicate Geometry name 'Power OUT' (line 2162:11); renamed to Power OUT (in Base 3)''',
-    '''duplicate Geometry name 'Power IN' (line 2161:11); renamed to Power IN (in Base 3)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2158:11); renamed to Ethernet OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2157:11); renamed to Ethernet IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2155:11); renamed to DMX 5Pin IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2154:11); renamed to Power OUT (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2153:11); renamed to Power IN (in Base 3) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2112:11); renamed to Ethernet OUT (in Base 5)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2111:11); renamed to Ethernet IN (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2110:11); renamed to DMX 5Pin OUT (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2109:11); renamed to DMX 5Pin IN (in Base 5)''',
-    '''duplicate Geometry name 'Power OUT' (line 2108:11); renamed to Power OUT (in Base 5)''',
-    '''duplicate Geometry name 'Power IN' (line 2107:11); renamed to Power IN (in Base 5)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2104:11); renamed to Ethernet OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2103:11); renamed to Ethernet IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2102:11); renamed to DMX 5Pin OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2101:11); renamed to DMX 5Pin IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2100:11); renamed to Power OUT (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2099:11); renamed to Power IN (in Base 5) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2056:11); renamed to Ethernet OUT (in Base 4)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2055:11); renamed to Ethernet IN (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2054:11); renamed to DMX 5Pin OUT (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2053:11); renamed to DMX 5Pin IN (in Base 4)''',
-    '''duplicate Geometry name 'Power OUT' (line 2052:11); renamed to Power OUT (in Base 4)''',
-    '''duplicate Geometry name 'Power IN' (line 2051:11); renamed to Power IN (in Base 4)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2048:11); renamed to Ethernet OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2047:11); renamed to Ethernet IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2046:11); renamed to DMX 5Pin OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2045:11); renamed to DMX 5Pin IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 2044:11); renamed to Power OUT (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2043:11); renamed to Power IN (in Base 4) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 2002:11); renamed to Ethernet OUT (in Base 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 2001:11); renamed to Ethernet IN (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2000:11); renamed to DMX 5Pin OUT (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 1999:11); renamed to DMX 5Pin IN (in Base 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 1998:11); renamed to Power OUT (in Base 1)''',
-    '''duplicate Geometry name 'Power IN' (line 1997:11); renamed to Power IN (in Base 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 1994:11); renamed to Ethernet OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 1993:11); renamed to Ethernet IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1992:11); renamed to DMX 5Pin OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 1991:11); renamed to DMX 5Pin IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 1990:11); renamed to Power OUT (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 1989:11); renamed to Power IN (in Base 1) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 1975:11); renamed to Ethernet OUT (in Base 2)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 1974:11); renamed to Ethernet IN (in Base 2)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1973:11); renamed to DMX 5Pin OUT (in Base 2)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 1972:11); renamed to DMX 5Pin IN (in Base 2)''',
-    '''duplicate Geometry name 'Power OUT' (line 1971:11); renamed to Power OUT (in Base 2)''',
-    '''duplicate Geometry name 'Power IN' (line 1970:11); renamed to Power IN (in Base 2)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 1967:11); renamed to Ethernet OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 1966:11); renamed to Ethernet IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1965:11); renamed to DMX 5Pin OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 1964:11); renamed to DMX 5Pin IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 1963:11); renamed to Power OUT (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Power IN' (line 1962:11); renamed to Power IN (in Base 2) (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet OUT' (line 1946:11); renamed to Ethernet OUT (duplicate 1)''',
-    '''duplicate Geometry name 'Ethernet IN' (line 1945:11); renamed to Ethernet IN (duplicate 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1944:11); renamed to DMX 5Pin OUT (duplicate 1)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 1943:11); renamed to DMX 5Pin IN (duplicate 1)''',
-    '''duplicate Geometry name 'Power OUT' (line 1942:11); renamed to Power OUT (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 1964:11); renamed to DMX 5Pin IN (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 1972:11); renamed to DMX 5Pin IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 1991:11); renamed to DMX 5Pin IN (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 1999:11); renamed to DMX 5Pin IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2045:11); renamed to DMX 5Pin IN (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2053:11); renamed to DMX 5Pin IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2101:11); renamed to DMX 5Pin IN (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2109:11); renamed to DMX 5Pin IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2155:11); renamed to DMX 5Pin IN (in Base 3)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2163:11); renamed to DMX 5Pin IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1944:11); renamed to DMX 5Pin OUT (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1965:11); renamed to DMX 5Pin OUT (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1973:11); renamed to DMX 5Pin OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1992:11); renamed to DMX 5Pin OUT (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2000:11); renamed to DMX 5Pin OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2046:11); renamed to DMX 5Pin OUT (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2054:11); renamed to DMX 5Pin OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2102:11); renamed to DMX 5Pin OUT (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2110:11); renamed to DMX 5Pin OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base 3)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2164:11); renamed to DMX 5Pin OUT (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 1945:11); renamed to Ethernet IN (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 1966:11); renamed to Ethernet IN (in Base 2)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 1974:11); renamed to Ethernet IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 1993:11); renamed to Ethernet IN (in Base 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2001:11); renamed to Ethernet IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2047:11); renamed to Ethernet IN (in Base 4)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2055:11); renamed to Ethernet IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2103:11); renamed to Ethernet IN (in Base 5)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2111:11); renamed to Ethernet IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2157:11); renamed to Ethernet IN (in Base 3)''',
+    '''duplicate Geometry name 'Ethernet IN' (line 2165:11); renamed to Ethernet IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 1946:11); renamed to Ethernet OUT (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 1967:11); renamed to Ethernet OUT (in Base 2)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 1975:11); renamed to Ethernet OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 1994:11); renamed to Ethernet OUT (in Base 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2002:11); renamed to Ethernet OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2048:11); renamed to Ethernet OUT (in Base 4)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2056:11); renamed to Ethernet OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2104:11); renamed to Ethernet OUT (in Base 5)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2112:11); renamed to Ethernet OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2158:11); renamed to Ethernet OUT (in Base 3)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2166:11); renamed to Ethernet OUT (in Base 3) (duplicate 1)''',
     '''duplicate Geometry name 'Power IN' (line 1941:11); renamed to Power IN (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 1962:11); renamed to Power IN (in Base 2)''',
+    '''duplicate Geometry name 'Power IN' (line 1970:11); renamed to Power IN (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 1989:11); renamed to Power IN (in Base 1)''',
+    '''duplicate Geometry name 'Power IN' (line 1997:11); renamed to Power IN (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2043:11); renamed to Power IN (in Base 4)''',
+    '''duplicate Geometry name 'Power IN' (line 2051:11); renamed to Power IN (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2099:11); renamed to Power IN (in Base 5)''',
+    '''duplicate Geometry name 'Power IN' (line 2107:11); renamed to Power IN (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2153:11); renamed to Power IN (in Base 3)''',
+    '''duplicate Geometry name 'Power IN' (line 2161:11); renamed to Power IN (in Base 3) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 1942:11); renamed to Power OUT (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 1963:11); renamed to Power OUT (in Base 2)''',
+    '''duplicate Geometry name 'Power OUT' (line 1971:11); renamed to Power OUT (in Base 2) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 1990:11); renamed to Power OUT (in Base 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 1998:11); renamed to Power OUT (in Base 1) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2044:11); renamed to Power OUT (in Base 4)''',
+    '''duplicate Geometry name 'Power OUT' (line 2052:11); renamed to Power OUT (in Base 4) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2100:11); renamed to Power OUT (in Base 5)''',
+    '''duplicate Geometry name 'Power OUT' (line 2108:11); renamed to Power OUT (in Base 5) (duplicate 1)''',
+    '''duplicate Geometry name 'Power OUT' (line 2154:11); renamed to Power OUT (in Base 3)''',
+    '''duplicate Geometry name 'Power OUT' (line 2162:11); renamed to Power OUT (in Base 3) (duplicate 1)''',
 ]
 geometries = [
     'Base 1',
     'Base 1.Pigtail 4',
-    'Base 1.Pigtail 4.DMX 5Pin IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.DMX 5Pin OUT (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Ethernet IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Ethernet OUT (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Power IN (in Base 1) (duplicate 1)',
-    'Base 1.Pigtail 4.Power OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 4.DMX 5Pin IN (in Base 1)',
+    'Base 1.Pigtail 4.DMX 5Pin OUT (in Base 1)',
+    'Base 1.Pigtail 4.Ethernet IN (in Base 1)',
+    'Base 1.Pigtail 4.Ethernet OUT (in Base 1)',
+    'Base 1.Pigtail 4.Power IN (in Base 1)',
+    'Base 1.Pigtail 4.Power OUT (in Base 1)',
     'Base 1.Pigtail 5',
-    'Base 1.Pigtail 5.DMX 5Pin IN (in Base 1)',
-    'Base 1.Pigtail 5.DMX 5Pin OUT (in Base 1)',
-    'Base 1.Pigtail 5.Ethernet IN (in Base 1)',
-    'Base 1.Pigtail 5.Ethernet OUT (in Base 1)',
-    'Base 1.Pigtail 5.Power IN (in Base 1)',
-    'Base 1.Pigtail 5.Power OUT (in Base 1)',
+    'Base 1.Pigtail 5.DMX 5Pin IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.DMX 5Pin OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Ethernet IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Ethernet OUT (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Power IN (in Base 1) (duplicate 1)',
+    'Base 1.Pigtail 5.Power OUT (in Base 1) (duplicate 1)',
     'Base 1.Yoke 1',
     'Base 1.Yoke 1.Array 1',
     'Base 1.Yoke 1.Array 1.Zoom1 1',
     'Base 1.Yoke 1.Array 1.Zoom1 1.Flower1 1',
     'Base 2',
     'Base 2.Pigtail 2',
-    'Base 2.Pigtail 2.DMX 5Pin IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.DMX 5Pin OUT (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Ethernet IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Ethernet OUT (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Power IN (in Base 2) (duplicate 1)',
-    'Base 2.Pigtail 2.Power OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 2.DMX 5Pin IN (in Base 2)',
+    'Base 2.Pigtail 2.DMX 5Pin OUT (in Base 2)',
+    'Base 2.Pigtail 2.Ethernet IN (in Base 2)',
+    'Base 2.Pigtail 2.Ethernet OUT (in Base 2)',
+    'Base 2.Pigtail 2.Power IN (in Base 2)',
+    'Base 2.Pigtail 2.Power OUT (in Base 2)',
     'Base 2.Pigtail 3',
-    'Base 2.Pigtail 3.DMX 5Pin IN (in Base 2)',
-    'Base 2.Pigtail 3.DMX 5Pin OUT (in Base 2)',
-    'Base 2.Pigtail 3.Ethernet IN (in Base 2)',
-    'Base 2.Pigtail 3.Ethernet OUT (in Base 2)',
-    'Base 2.Pigtail 3.Power IN (in Base 2)',
-    'Base 2.Pigtail 3.Power OUT (in Base 2)',
+    'Base 2.Pigtail 3.DMX 5Pin IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.DMX 5Pin OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Ethernet IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Ethernet OUT (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Power IN (in Base 2) (duplicate 1)',
+    'Base 2.Pigtail 3.Power OUT (in Base 2) (duplicate 1)',
     'Base 2.Yoke 2',
     'Base 2.Yoke 2.Array 2',
     'Base 2.Yoke 2.Array 2.Pattern mode 2',
@@ -4561,19 +4561,19 @@ geometries = [
     'Base 2.Yoke 2.Array 2.Pattern mode 2.Zoom2 1.Flower1 2',
     'Base 3',
     'Base 3.Pigtail 10',
-    'Base 3.Pigtail 10.DMX 5Pin IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.DMX 5Pin OUT (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Ethernet IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Ethernet OUT (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Power IN (in Base 3) (duplicate 1)',
-    'Base 3.Pigtail 10.Power OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 10.DMX 5Pin IN (in Base 3)',
+    'Base 3.Pigtail 10.DMX 5Pin OUT (in Base 3)',
+    'Base 3.Pigtail 10.Ethernet IN (in Base 3)',
+    'Base 3.Pigtail 10.Ethernet OUT (in Base 3)',
+    'Base 3.Pigtail 10.Power IN (in Base 3)',
+    'Base 3.Pigtail 10.Power OUT (in Base 3)',
     'Base 3.Pigtail 11',
-    'Base 3.Pigtail 11.DMX 5Pin IN (in Base 3)',
-    'Base 3.Pigtail 11.DMX 5Pin OUT (in Base 3)',
-    'Base 3.Pigtail 11.Ethernet IN (in Base 3)',
-    'Base 3.Pigtail 11.Ethernet OUT (in Base 3)',
-    'Base 3.Pigtail 11.Power IN (in Base 3)',
-    'Base 3.Pigtail 11.Power OUT (in Base 3)',
+    'Base 3.Pigtail 11.DMX 5Pin IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.DMX 5Pin OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Ethernet IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Ethernet OUT (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Power IN (in Base 3) (duplicate 1)',
+    'Base 3.Pigtail 11.Power OUT (in Base 3) (duplicate 1)',
     'Base 3.Yoke 3',
     'Base 3.Yoke 3.Array 3',
     'Base 3.Yoke 3.Array 3.Zoom3 1',
@@ -4589,19 +4589,19 @@ geometries = [
     'Base 3.Yoke 3.Array 3.Zoom3 1.Pixel9RGB 3',
     'Base 4',
     'Base 4.Pigtail 6',
-    'Base 4.Pigtail 6.DMX 5Pin IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.DMX 5Pin OUT (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Ethernet IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Ethernet OUT (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Power IN (in Base 4) (duplicate 1)',
-    'Base 4.Pigtail 6.Power OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 6.DMX 5Pin IN (in Base 4)',
+    'Base 4.Pigtail 6.DMX 5Pin OUT (in Base 4)',
+    'Base 4.Pigtail 6.Ethernet IN (in Base 4)',
+    'Base 4.Pigtail 6.Ethernet OUT (in Base 4)',
+    'Base 4.Pigtail 6.Power IN (in Base 4)',
+    'Base 4.Pigtail 6.Power OUT (in Base 4)',
     'Base 4.Pigtail 7',
-    'Base 4.Pigtail 7.DMX 5Pin IN (in Base 4)',
-    'Base 4.Pigtail 7.DMX 5Pin OUT (in Base 4)',
-    'Base 4.Pigtail 7.Ethernet IN (in Base 4)',
-    'Base 4.Pigtail 7.Ethernet OUT (in Base 4)',
-    'Base 4.Pigtail 7.Power IN (in Base 4)',
-    'Base 4.Pigtail 7.Power OUT (in Base 4)',
+    'Base 4.Pigtail 7.DMX 5Pin IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.DMX 5Pin OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Ethernet IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Ethernet OUT (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Power IN (in Base 4) (duplicate 1)',
+    'Base 4.Pigtail 7.Power OUT (in Base 4) (duplicate 1)',
     'Base 4.Yoke 4',
     'Base 4.Yoke 4.Array 4',
     'Base 4.Yoke 4.Array 4.Zoom4 1',
@@ -4617,19 +4617,19 @@ geometries = [
     'Base 4.Yoke 4.Array 4.Zoom4 1.Pixel9RGBW 4',
     'Base 5',
     'Base 5.Pigtail 8',
-    'Base 5.Pigtail 8.DMX 5Pin IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.DMX 5Pin OUT (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Ethernet IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Ethernet OUT (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Power IN (in Base 5) (duplicate 1)',
-    'Base 5.Pigtail 8.Power OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 8.DMX 5Pin IN (in Base 5)',
+    'Base 5.Pigtail 8.DMX 5Pin OUT (in Base 5)',
+    'Base 5.Pigtail 8.Ethernet IN (in Base 5)',
+    'Base 5.Pigtail 8.Ethernet OUT (in Base 5)',
+    'Base 5.Pigtail 8.Power IN (in Base 5)',
+    'Base 5.Pigtail 8.Power OUT (in Base 5)',
     'Base 5.Pigtail 9',
-    'Base 5.Pigtail 9.DMX 5Pin IN (in Base 5)',
-    'Base 5.Pigtail 9.DMX 5Pin OUT (in Base 5)',
-    'Base 5.Pigtail 9.Ethernet IN (in Base 5)',
-    'Base 5.Pigtail 9.Ethernet OUT (in Base 5)',
-    'Base 5.Pigtail 9.Power IN (in Base 5)',
-    'Base 5.Pigtail 9.Power OUT (in Base 5)',
+    'Base 5.Pigtail 9.DMX 5Pin IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.DMX 5Pin OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Ethernet IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Ethernet OUT (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Power IN (in Base 5) (duplicate 1)',
+    'Base 5.Pigtail 9.Power OUT (in Base 5) (duplicate 1)',
     'Base 5.Yoke 5',
     'Base 5.Yoke 5.Array 5',
     'Base 5.Yoke 5.Array 5.Zoom5 1',
@@ -5391,42 +5391,42 @@ geometries = [
 
 [4301fee8bb58309c4cbc15d1993d4ec4]
 filename = 'Robe_Lighting@Robin_TetraX@2022-12-05__DMX_channel_geometry_revision.gdtf'
-saved_on = '2023-01-11T23:25:24.772303823Z'
+saved_on = '2023-01-27T16:14:08.714088237Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin TetraX'
 fixture_type_id = 'a6efd99b-a079-4cae-a21b-c600dfdbbdd8'
 problems = [
-    '''duplicate Geometry name 'Ethernet' (line 2211:11); renamed to Ethernet (in Base 3)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2210:11); renamed to DMX 3Pin OUT (in Base 3)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 2209:11); renamed to DMX 3Pin IN (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2208:11); renamed to DMX 5Pin OUT (in Base 3)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2207:11); renamed to DMX 5Pin IN (in Base 3)''',
-    '''duplicate Geometry name 'Power IN' (line 2206:11); renamed to Power IN (in Base 3)''',
-    '''duplicate Geometry name 'Ethernet' (line 2159:11); renamed to Ethernet (in Base 5)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2158:11); renamed to DMX 3Pin OUT (in Base 5)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 2157:11); renamed to DMX 3Pin IN (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base 5)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2155:11); renamed to DMX 5Pin IN (in Base 5)''',
-    '''duplicate Geometry name 'Power IN' (line 2154:11); renamed to Power IN (in Base 5)''',
-    '''duplicate Geometry name 'Ethernet' (line 2105:11); renamed to Ethernet (in Base 4)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2104:11); renamed to DMX 3Pin OUT (in Base 4)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 2103:11); renamed to DMX 3Pin IN (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2102:11); renamed to DMX 5Pin OUT (in Base 4)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2101:11); renamed to DMX 5Pin IN (in Base 4)''',
-    '''duplicate Geometry name 'Power IN' (line 2100:11); renamed to Power IN (in Base 4)''',
-    '''duplicate Geometry name 'Ethernet' (line 2053:11); renamed to Ethernet (in Base 1)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2052:11); renamed to DMX 3Pin OUT (in Base 1)''',
-    '''duplicate Geometry name 'DMX 3Pin IN' (line 2051:11); renamed to DMX 3Pin IN (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2050:11); renamed to DMX 5Pin OUT (in Base 1)''',
-    '''duplicate Geometry name 'DMX 5Pin IN' (line 2049:11); renamed to DMX 5Pin IN (in Base 1)''',
-    '''duplicate Geometry name 'Power IN' (line 2048:11); renamed to Power IN (in Base 1)''',
-    '''duplicate Geometry name 'Ethernet' (line 2001:11); renamed to Ethernet (in Base 2)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2000:11); renamed to DMX 3Pin OUT (in Base 2)''',
     '''duplicate Geometry name 'DMX 3Pin IN' (line 1999:11); renamed to DMX 3Pin IN (in Base 2)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1998:11); renamed to DMX 5Pin OUT (in Base 2)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 2051:11); renamed to DMX 3Pin IN (in Base 1)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 2103:11); renamed to DMX 3Pin IN (in Base 4)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 2157:11); renamed to DMX 3Pin IN (in Base 5)''',
+    '''duplicate Geometry name 'DMX 3Pin IN' (line 2209:11); renamed to DMX 3Pin IN (in Base 3)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2000:11); renamed to DMX 3Pin OUT (in Base 2)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2052:11); renamed to DMX 3Pin OUT (in Base 1)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2104:11); renamed to DMX 3Pin OUT (in Base 4)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2158:11); renamed to DMX 3Pin OUT (in Base 5)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2210:11); renamed to DMX 3Pin OUT (in Base 3)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 1997:11); renamed to DMX 5Pin IN (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2049:11); renamed to DMX 5Pin IN (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2101:11); renamed to DMX 5Pin IN (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2155:11); renamed to DMX 5Pin IN (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin IN' (line 2207:11); renamed to DMX 5Pin IN (in Base 3)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 1998:11); renamed to DMX 5Pin OUT (in Base 2)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2050:11); renamed to DMX 5Pin OUT (in Base 1)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2102:11); renamed to DMX 5Pin OUT (in Base 4)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base 5)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2208:11); renamed to DMX 5Pin OUT (in Base 3)''',
+    '''duplicate Geometry name 'Ethernet' (line 2001:11); renamed to Ethernet (in Base 2)''',
+    '''duplicate Geometry name 'Ethernet' (line 2053:11); renamed to Ethernet (in Base 1)''',
+    '''duplicate Geometry name 'Ethernet' (line 2105:11); renamed to Ethernet (in Base 4)''',
+    '''duplicate Geometry name 'Ethernet' (line 2159:11); renamed to Ethernet (in Base 5)''',
+    '''duplicate Geometry name 'Ethernet' (line 2211:11); renamed to Ethernet (in Base 3)''',
     '''duplicate Geometry name 'Power IN' (line 1996:11); renamed to Power IN (in Base 2)''',
+    '''duplicate Geometry name 'Power IN' (line 2048:11); renamed to Power IN (in Base 1)''',
+    '''duplicate Geometry name 'Power IN' (line 2100:11); renamed to Power IN (in Base 4)''',
+    '''duplicate Geometry name 'Power IN' (line 2154:11); renamed to Power IN (in Base 5)''',
+    '''duplicate Geometry name 'Power IN' (line 2206:11); renamed to Power IN (in Base 3)''',
 ]
 geometries = [
     'Base 1',
@@ -5620,17 +5620,17 @@ geometries = [
 
 [fbd01cf4d3c5916d976836e626790434]
 filename = 'Robe_Lighting@Robin_Tarrantula@2022-12-05__Geometry_names_revision.gdtf'
-saved_on = '2023-01-11T23:25:29.874285575Z'
+saved_on = '2023-01-27T16:14:13.572891389Z'
 comment = ''
 manufacturer = 'Robe Lighting'
 name = 'Robin Tarrantula'
 fixture_type_id = '2faf8a74-1cdd-4894-817f-79fd093c6128'
 problems = [
-    '''duplicate Geometry name 'Ethernet OUT' (line 2160:11); renamed to Ethernet OUT (in Base rgb)''',
-    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2158:11); renamed to DMX 3Pin OUT (in Base rgb)''',
     '''duplicate Geometry name 'DMX 3Pin IN' (line 2157:11); renamed to DMX 3Pin IN (in Base rgb)''',
-    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base rgb)''',
+    '''duplicate Geometry name 'DMX 3Pin OUT' (line 2158:11); renamed to DMX 3Pin OUT (in Base rgb)''',
     '''duplicate Geometry name 'DMX 5Pin IN' (line 2155:11); renamed to DMX 5Pin IN (in Base rgb)''',
+    '''duplicate Geometry name 'DMX 5Pin OUT' (line 2156:11); renamed to DMX 5Pin OUT (in Base rgb)''',
+    '''duplicate Geometry name 'Ethernet OUT' (line 2160:11); renamed to Ethernet OUT (in Base rgb)''',
     '''duplicate Geometry name 'Power IN' (line 2154:11); renamed to Power IN (in Base rgb)''',
 ]
 geometries = [
