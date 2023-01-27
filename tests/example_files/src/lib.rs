@@ -59,19 +59,23 @@ impl From<Result<ParsedGdtf, Error>> for OutputEnum {
                 manufacturer: parsed.gdtf.manufacturer,
                 name: parsed.gdtf.name,
                 fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
-                problems: parsed
-                    .problems
-                    .into_iter()
-                    .map(|p| format!("{p}"))
-                    .collect(),
+                problems: {
+                    let mut problem_strings: Vec<String> = parsed
+                        .problems
+                        .into_iter()
+                        .map(|p| format!("{p}"))
+                        .collect();
+                    problem_strings.sort();
+                    problem_strings
+                },
                 geometries: {
-                    let mut qualified_names = parsed
+                    let mut qualified_names: Vec<String> = parsed
                         .gdtf
                         .geometries
                         .graph()
                         .node_indices()
                         .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
-                        .collect::<Vec<String>>();
+                        .collect();
                     qualified_names.sort();
                     qualified_names
                 },

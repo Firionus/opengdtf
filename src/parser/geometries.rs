@@ -1,4 +1,4 @@
-use std::collections::{hash_map::Entry::Vacant, HashMap};
+use std::collections::{hash_map::Entry::Vacant, HashMap, HashSet, VecDeque};
 
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
@@ -22,7 +22,7 @@ pub(crate) struct GeometriesParser<'a> {
     geometries: &'a mut Geometries,
     problems: &'a mut Problems,
     /// Queue to hold geometries with duplicate names for later deduplication
-    duplicates: Vec<Duplicate<'a>>,
+    duplicates: VecDeque<Duplicate<'a>>,
 }
 
 impl<'a> GeometriesParser<'a> {
@@ -65,7 +65,8 @@ impl<'a> GeometriesParser<'a> {
         let top_level_geometries = geometries.children().filter(|n| n.is_element());
         let mut parsed: Vec<(NodeIndex, Node)> = Default::default();
         for (i, n) in top_level_geometries.enumerate() {
-            if let Some(graph_ind) = self.parse_element(i, n, None) {
+            if let Some((graph_ind, _)) = self.parse_element(i, n, None) {
+                // TODO we have to consider ContinueParsing here
                 parsed.push((graph_ind, n));
                 if let Geometry {
                     name,
@@ -87,24 +88,32 @@ impl<'a> GeometriesParser<'a> {
         let children = parent_xml.children().filter(|n| n.is_element());
 
         for (i, n) in children.enumerate() {
-            if let Some(graph_ind) = self.parse_element(i, n, Some(parent_tree)) {
+            if let Some((graph_ind, ContinueParsing::Children)) =
+                self.parse_element(i, n, Some(parent_tree))
+            {
                 self.add_children(n, graph_ind)
             }
         }
     }
 
-    /// Parse the geometry element. If the result is None, the caller should not
-    /// parse the child elements.
+    /// Parse the geometry element and add it to geometries. If the result is
+    /// None or ContinueParsing::No, the caller should not parse the child
+    /// elements.
+    // TODO should it return Geometry like parse_named_element
     fn parse_element(
+        // TODO is fn name good?
         &mut self,
         node_index_in_xml_parent: usize,
         n: Node<'a, 'a>,
         parent_graph_ind: Option<NodeIndex>,
-    ) -> Option<NodeIndex> {
-        // TODO replace with Option<NodeIndex> throughout
+    ) -> Option<(NodeIndex, ContinueParsing)> {
         let name = self.name(n, node_index_in_xml_parent, parent_graph_ind)?;
 
-        self.parse_named_element(n, name, parent_graph_ind)
+        let (geometry, continue_parsing) = self.parse_named_element(n, name)?;
+        Some((
+            self.add_to_geometries(geometry, parent_graph_ind, n)?,
+            continue_parsing,
+        ))
     }
 
     /// Get geometry name or, if name is already present, add to duplicates and
@@ -119,7 +128,7 @@ impl<'a> GeometriesParser<'a> {
         match self.geometries.names().get(&name) {
             None => Some(name),
             Some(duplicate_graph_ind) => {
-                self.duplicates.push(Duplicate {
+                self.duplicates.push_back(Duplicate {
                     n,
                     parent_graph_ind,
                     name,
@@ -130,29 +139,27 @@ impl<'a> GeometriesParser<'a> {
         }
     }
 
-    /// Parse the geometry element with the given name. If the result is None,
-    /// the caller should not parse the child elements.
+    /// Parse the geometry element with the given name. If the result is None or
+    /// ContinueParsing::No, the caller should not parse the child elements.
     fn parse_named_element(
+        // TODO is name "element" right?
         &mut self,
         n: Node,
         name: Name,
-        parent_graph_ind: Option<NodeIndex>,
-    ) -> Option<NodeIndex> {
+    ) -> Option<(Geometry, ContinueParsing)> {
         match n.tag_name().name() {
             "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
             | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
             | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
-            | "Magnet" => {
-                let geometry = Geometry {
+            | "Magnet" => Some((
+                Geometry {
                     name,
                     t: Type::General,
-                };
-                self.add_to_geometries(geometry, parent_graph_ind, n)
-            }
+                },
+                ContinueParsing::Children,
+            )),
             "GeometryReference" => {
-                let geometry = self.named_geometry_reference(n, name)?;
-                self.add_to_geometries(geometry, parent_graph_ind, n)
-                    .and(None) // all children of geometry reference were already parsed
+                Some((self.named_geometry_reference(n, name)?, ContinueParsing::No))
             }
             tag => {
                 Problem::UnexpectedXmlNode(tag.into())
@@ -218,53 +225,59 @@ impl<'a> GeometriesParser<'a> {
 
     // TODO clean up methods below
     fn parse_duplicates(&mut self) -> GeometryLookup {
-        let mut rename_lookup = Default::default();
+        let mut rename_lookup = GeometryLookup::default();
+        let mut renamed_top_level_geometries = HashSet::<NodeIndex>::new();
 
-        while let Some(dup) = self.duplicates.pop() {
+        while let Some(dup) = self.duplicates.pop_front() {
             let mut suggested_name: Name = dup.name.clone();
 
-            // check if duplicate and original are in different top level geometry, if yes, suggest semantic renaming
-            let duplicate_top_level = if let Some(duplicate_parent) = dup.parent_graph_ind {
+            if let Some(duplicate_parent) = dup.parent_graph_ind {
                 let original_top_level = self
                     .geometries
                     .top_level_geometry_index(dup.duplicate_graph_ind);
                 let duplicate_top_level =
                     self.geometries.top_level_geometry_index(duplicate_parent);
 
-                if original_top_level != duplicate_top_level {
-                    let duplicate_top_level_name =
-                        &self.geometries.graph()[duplicate_top_level].name;
-                    suggested_name = format!("{} (in {})", dup.name, duplicate_top_level_name)
-                        .try_into()
-                        .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid
+                if !renamed_top_level_geometries.contains(&duplicate_top_level)
+                    && original_top_level != duplicate_top_level
+                {
+                    self.apply_semantic_renaming(
+                        &mut suggested_name,
+                        &dup.name,
+                        duplicate_top_level,
+                    );
                     if !self.geometries.names().contains_key(&suggested_name) {
                         self.handle_renamed_geometry(
                             &dup,
                             &suggested_name,
-                            &mut rename_lookup,
-                            Some(duplicate_top_level),
+                            &mut renamed_top_level_geometries,
+                        );
+                        rename_lookup.insert(
+                            (
+                                // TODO index may panic, replace with geometries.graph().node_weight(ind)
+                                self.geometries.graph()[duplicate_top_level].name.to_owned(),
+                                dup.name.clone(),
+                            ),
+                            suggested_name.clone(),
                         );
                         continue;
                     }
                 }
-                Some(duplicate_top_level)
-            } else {
-                None
             };
 
             // increment index until unique name is found
             let mut dedup_ind: u16 = 1;
+            let mut incremented_name;
             loop {
                 // TODO, does this actually count up, or just appends `(duplicate i)` EVERY SINGLE TIME?
-                suggested_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
+                incremented_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
                     .try_into()
                     .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid;
-                if !self.geometries.names().contains_key(&suggested_name) {
+                if !self.geometries.names().contains_key(&incremented_name) {
                     self.handle_renamed_geometry(
                         &dup,
-                        &suggested_name,
-                        &mut rename_lookup,
-                        duplicate_top_level,
+                        &incremented_name,
+                        &mut renamed_top_level_geometries,
                     );
                     break;
                 }
@@ -282,32 +295,47 @@ impl<'a> GeometriesParser<'a> {
         rename_lookup
     }
 
+    fn apply_semantic_renaming(
+        &mut self,
+        suggested_name: &mut Name,
+        duplicate_name: &Name,
+        duplicate_top_level: NodeIndex,
+    ) {
+        let duplicate_top_level_name = &self.geometries.graph()[duplicate_top_level].name;
+        *suggested_name = format!("{} (in {})", duplicate_name, duplicate_top_level_name)
+            .try_into()
+            .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid
+    }
+
     fn handle_renamed_geometry(
         &mut self,
         dup: &Duplicate<'a>,
         suggested_name: &Name,
-        rename_lookup: &mut GeometryLookup,
-        duplicate_top_level: Option<NodeIndex>,
+        renamed_top_level_geometries: &mut HashSet<NodeIndex>,
     ) {
         Problem::DuplicateGeometryName(dup.name.clone())
             .at(&dup.n)
             .handled_by(format!("renamed to {}", suggested_name), self.problems);
-        if let Some(graph_ind) =
-            self.parse_named_element(dup.n, suggested_name.clone(), dup.parent_graph_ind)
+
+        if let Some((geometry, continue_parsing)) =
+            self.parse_named_element(dup.n, suggested_name.clone())
         {
-            if let Some(duplicate_top_level) = duplicate_top_level {
-                rename_lookup.insert(
-                    (
-                        // TODO index may panic, replace with geometries.graph().node_weight(ind)
-                        self.geometries.graph()[duplicate_top_level].name.to_owned(),
-                        dup.name.clone(),
-                    ),
-                    suggested_name.clone(),
-                );
-            };
-            self.add_children(dup.n, graph_ind);
+            if let Some(graph_ind) = self.add_to_geometries(geometry, dup.parent_graph_ind, dup.n) {
+                if self.geometries.is_top_level(graph_ind) {
+                    renamed_top_level_geometries.insert(graph_ind);
+                }
+
+                if let ContinueParsing::Children = continue_parsing {
+                    self.add_children(dup.n, graph_ind);
+                }
+            }
         }
     }
+}
+
+enum ContinueParsing {
+    Children,
+    No,
 }
 
 struct Duplicate<'a> {
@@ -320,7 +348,30 @@ struct Duplicate<'a> {
 }
 
 /// (top level name, duplicate geometry name) => renamed name
-type GeometryLookup = HashMap<(Name, Name), Name>; // TODO make its own newtype or similar and implement lookup methods that respect renames
+#[derive(Default, derive_more::DebugCustom, derive_more::IntoIterator)]
+pub(crate) struct GeometryLookup(HashMap<(Name, Name), Name>);
+
+#[allow(dead_code)] // TODO remove once dependent code is written
+impl GeometryLookup {
+    pub(crate) fn deduplicated_name(&self, top_level_geometry: Name, geometry: Name) -> Name {
+        match self.0.get(&(top_level_geometry, geometry.clone())) {
+            Some(deduplicated_name) => deduplicated_name.clone(),
+            None => geometry,
+        }
+    }
+
+    fn insert(&mut self, k: (Name, Name), v: Name) -> Option<Name> {
+        self.0.insert(k, v)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
 
 fn parse_reference_offsets(n: Node, name: &Name, problems: &mut Problems) -> Offsets {
     let mut offsets = Offsets::default();
@@ -331,7 +382,8 @@ fn parse_reference_offsets(n: Node, name: &Name, problems: &mut Problems) -> Off
         .rev(); // start at last element, which provides the Overwrite offset if present
 
     if let Some(last_break) = nodes.next() {
-        offsets.overwrite = parse_break(last_break).ok_or_handled_by("ignoring node", problems);
+        offsets.overwrite = parse_break(last_break)
+            .ok_or_handled_by("ignoring node and setting overwrite to None", problems);
     };
 
     for n in nodes {
@@ -377,6 +429,8 @@ mod tests {
 
     use std::ops::Not;
 
+    // TODO test top level geometry reference handling
+
     #[test]
     fn test_parse_break_node() {
         let xml = r#"<Break DMXBreak="1" DMXOffset="1" />"#;
@@ -396,12 +450,14 @@ mod tests {
 
     #[cfg(test)]
     mod parse_reference_offsets {
+        // TODO nesting testing modules, I don't know... Just make a new module if things need separation?
         use crate::types::dmx_break::Break;
 
         use super::*;
 
         #[test]
         fn basic_test() {
+            // TODO overlap with smoke test below?
             let xml = r#"
     <GeometryReference>
         <Break DMXBreak="1" DMXOffset="1"/>
@@ -468,12 +524,34 @@ mod tests {
         }
 
         #[test]
-        fn handles_broken_overwrite() {
+        fn handles_overwrite_with_missing_argument() {
             let xml = r#"
     <GeometryReference>
         <Break DMXBreak="1" DMXOffset="6"/>
         <Break DMXBreak="2" DMXOffset="5"/>
         <Break MissingDMXBreak="3" DMXOffset="4"/>
+    </GeometryReference>"#;
+            let (problems, offsets) = run_parse_reference_offsets(xml);
+            assert_eq!(problems.len(), 0);
+            assert_eq!(
+                offsets.overwrite,
+                Some(Offset {
+                    dmx_break: 1.try_into().unwrap(),
+                    offset: 4
+                })
+            );
+            assert_eq!(offsets.normal.len(), 2);
+            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
+            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
+        }
+
+        #[test]
+        fn handles_overwrite_with_invalid_argument() {
+            let xml = r#"
+    <GeometryReference>
+        <Break DMXBreak="1" DMXOffset="6"/>
+        <Break DMXBreak="2" DMXOffset="5"/>
+        <Break DMXBreak="0" DMXOffset="4"/> <!-- breaks must be bigger than 0 -->
     </GeometryReference>"#;
             let (problems, offsets) = run_parse_reference_offsets(xml);
             assert_eq!(problems.len(), 1);
@@ -525,260 +603,293 @@ mod tests {
         }
     }
 
-    // TODO re-enable and update these tests, then clean them up
+    fn name_from(name: &str) -> Name {
+        Name::try_from(name).unwrap()
+    }
 
-    //     #[test]
-    //     fn geometries_smoke_test() {
-    //         let ft_str = r#"
-    // <FixtureType>
-    //     <Geometries>
-    //         <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-    //         <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-    //             <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-    //                 <Break DMXBreak="1" DMXOffset="1"/>
-    //                 <Break DMXBreak="2" DMXOffset="1"/>
-    //                 <Break DMXBreak="1" DMXOffset="1"/>
-    //             </GeometryReference>
-    //             <GeometryReference Geometry="AbstractElement" Name="Element 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-    //                 <Break DMXBreak="1" DMXOffset="3"/>
-    //                 <Break DMXBreak="2" DMXOffset="4"/>
-    //                 <Break DMXBreak="1" DMXOffset="2"/>
-    //             </GeometryReference>
-    //         </Geometry>
-    //     </Geometries>
-    // </FixtureType>
-    //         "#;
+    #[test]
+    fn geometries_smoke_test() {
+        let ft_str = r#"
+    <FixtureType>
+        <Geometries>
+            <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+            <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                    <Break DMXBreak="1" DMXOffset="1"/>
+                    <Break DMXBreak="2" DMXOffset="1"/>
+                    <Break DMXBreak="1" DMXOffset="1"/>
+                </GeometryReference>
+                <GeometryReference Geometry="AbstractElement" Name="Element 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                    <Break DMXBreak="1" DMXOffset="3"/>
+                    <Break DMXBreak="2" DMXOffset="4"/>
+                    <Break DMXBreak="1" DMXOffset="2"/>
+                </GeometryReference>
+            </Geometry>
+        </Geometries>
+    </FixtureType>
+            "#;
 
-    //         let (problems, geometries) = run_parse_geometries(ft_str);
+        let (geometries, rename_lookup, problems) = parse_geometries(ft_str);
 
-    //         assert!(problems.is_empty());
-    //         assert_eq!(geometries.graph().node_count(), 4);
+        assert!(problems.is_empty());
+        assert!(rename_lookup.is_empty());
+        assert_eq!(geometries.graph().node_count(), 4);
 
-    //         let element_2 = &geometries.graph()[geometries.names()[&"Element 2".try_into().unwrap()]];
-    //         if let Geometry {
-    //             name,
-    //             t: Type::Reference { reference, offsets },
-    //         } = element_2
-    //         {
-    //             assert_eq!(name, "Element 2");
-    //             assert_eq!(
-    //                 offsets.overwrite,
-    //                 Some(Offset {
-    //                     dmx_break: 1.try_into().unwrap(),
-    //                     offset: 2
-    //                 })
-    //             );
-    //             assert_eq!(offsets.normal[&1.try_into().unwrap()], 3);
-    //             assert_eq!(offsets.normal[&2.try_into().unwrap()], 4);
-    //             assert_eq!(
-    //                 geometries.graph()[reference.to_owned()].name,
-    //                 "AbstractElement"
-    //             );
-    //         } else {
-    //             panic!("shouldn't happen")
-    //         };
-    //     }
+        let abstract_element = geometries.get_index(&name_from("AbstractElement")).unwrap();
+        assert!(geometries.is_top_level(abstract_element));
 
-    // #[test]
-    // /// Geometries should really have a Name attribute, but according to GDTF
-    // /// 1.2 (DIN SPEC 15800:2022-02), the default value for "Name" type values
-    // /// is: "object type with an index in parent".
-    // /// I think the reasonable choice is to still report these problems, but
-    // /// report which default name was assigned. If there are name duplicates in
-    // /// default names, they can be handled and report like any other.
-    // fn geometry_names_missing() {
-    //     let (problems, geometries) = run_parse_geometries(
-    //         r#"
-    //         <FixtureType>
-    //             <Geometries>
-    //                 <Beam /> <!--default name "Beam 1"-->
-    //                 <Geometry /> <!--default name "Geometry 2"-->
-    //                 <Geometry> <!--default name "Geometry 3"-->
-    //                     <Geometry /> <!--default name "Geometry 1"-->
-    //                     <Geometry /> <!--default name "Geometry 2", deduplicated to "Geometry 2 (in Geometry 3)"-->
-    //                     <GeometryReference Geometry="Geometry 2"/> <!--default name "GeometryReference 3"-->
-    //                 </Geometry>
-    //             </Geometries>
-    //         </FixtureType>
-    //         "#,
-    //     );
+        let main = geometries.get_index(&name_from("Main")).unwrap();
+        assert!(geometries.is_top_level(main));
+        assert_eq!(geometries.count_children(main), 2);
 
-    //     for p in problems[0..6].iter() {
-    //         assert!(
-    //             matches!(p.problem(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
-    //         );
-    //     }
+        let element_1 = geometries.get_index(&name_from("Element 1")).unwrap();
+        assert_eq!(geometries.parent_index(element_1).unwrap(), main);
 
-    //     assert!(matches!(
-    //         problems[6].problem(),
-    //         Problem::DuplicateGeometryName(dup) if dup == "Geometry 2"
-    //     ));
+        let element_2 = geometries.get_index(&name_from("Element 2")).unwrap();
+        assert_eq!(geometries.parent_index(element_1).unwrap(), main);
 
-    //     let b = geometries.get_index(&"Beam 1".try_into().unwrap()).unwrap();
-    //     assert!(geometries.is_top_level(b) && geometries.count_children(b) == 0);
+        assert!(matches!(
+            &geometries.graph()[element_1],
+            Geometry {
+                t: Type::Reference { reference, offsets },
+                ..
+            } if reference == &abstract_element
+            && matches!(offsets.overwrite, Some(Offset{dmx_break, offset}) if dmx_break.value() == &1 && offset == 1)
+            && offsets.normal[&1.try_into().unwrap()] == 1
+            && offsets.normal[&2.try_into().unwrap()] == 1
+        ));
 
-    //     let g2 = geometries
-    //         .get_index(&"Geometry 2".try_into().unwrap())
-    //         .unwrap();
-    //     assert!(geometries.is_top_level(g2) && geometries.count_children(g2) == 0);
+        assert!(matches!(
+            &geometries.graph()[element_2],
+            Geometry {
+                t: Type::Reference { reference, offsets },
+                ..
+            } if reference == &abstract_element
+            && matches!(offsets.overwrite, Some(Offset{dmx_break, offset}) if dmx_break.value() == &1 && offset == 2)
+            && offsets.normal[&1.try_into().unwrap()] == 3
+            && offsets.normal[&2.try_into().unwrap()] == 4
+        ));
+    }
 
-    //     let g3 = geometries
-    //         .get_index(&"Geometry 3".try_into().unwrap())
-    //         .unwrap();
-    //     assert!(geometries.is_top_level(g3));
+    #[test]
+    /// Geometries should really have a Name attribute, but according to GDTF
+    /// 1.2 (DIN SPEC 15800:2022-02), the default value for "Name" type values
+    /// is: "object type with an index in parent".
+    /// I think the reasonable choice is to still report these problems, but
+    /// report which default name was assigned. If there are name duplicates in
+    /// default names, they can be handled and report like any other.
+    fn missing_geometry_names() {
+        let (geometries, rename_lookup, problems) = parse_geometries(
+            r#"
+            <FixtureType>
+                <Geometries>
+                    <Beam /> <!--default name "Beam 1"-->
+                    <Geometry /> <!--default name "Geometry 2"-->
+                    <Geometry> <!--default name "Geometry 3"-->
+                        <Geometry /> <!--default name "Geometry 1"-->
+                        <Geometry /> <!--default name "Geometry 2", deduplicated to "Geometry 2 (in Geometry 3)"-->
+                        <GeometryReference Geometry="Geometry 2"/> <!--default name "GeometryReference 3"-->
+                    </Geometry>
+                </Geometries>
+            </FixtureType>
+            "#,
+        );
 
-    //     let g3_children = geometries.children_geometries(g3).collect::<Vec<_>>();
+        for p in problems[0..6].iter() {
+            assert!(
+                matches!(p.problem(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
+            );
+        }
 
-    //     assert!(matches!(
-    //         g3_children
-    //             .iter()
-    //             .find(|g| g.name == "Geometry 2 (in Geometry 3)")
-    //             .unwrap(),
-    //         Geometry {
-    //             t: Type::General,
-    //             ..
-    //         }
-    //     ));
-    //     assert!(matches!(
-    //         g3_children.iter().find(|g| g.name == "Geometry 1").unwrap(),
-    //         Geometry {
-    //             t: Type::General,
-    //             ..
-    //         }
-    //     ));
-    //     assert!(matches!(
-    //         g3_children
-    //             .iter()
-    //             .find(|g| g.name == "GeometryReference 3")
-    //             .unwrap(),
-    //         Geometry {
-    //             t: Type::Reference { .. },
-    //             ..
-    //         }
-    //     ));
+        assert!(matches!(
+            problems[6].problem(),
+            Problem::DuplicateGeometryName(dup) if dup == "Geometry 2"
+        ));
 
-    //     assert_eq!(3, g3_children.len());
-    // }
+        assert_eq!(
+            rename_lookup.deduplicated_name(name_from("Geometry 3"), name_from("Geometry 2")),
+            "Geometry 2 (in Geometry 3)"
+        );
+        assert_eq!(rename_lookup.into_iter().count(), 1);
 
-    // #[test]
-    // fn geometry_duplicate_names() {
-    //     let ft_str = r#"
-    //     <FixtureType>
-    //         <Geometries>
-    //             <Geometry Name="Top 1">
-    //                 <Geometry Name="Element 1"/>
-    //                 <Geometry Name="Element 1"/> <!-- 2) rename to "Element 1 (duplicate 1)" -->
-    //                 <Geometry Name="Top 2"/> <!-- 3) rename to "Top 2 (in Top 1)" -->
-    //             </Geometry>
-    //             <Geometry Name="Top 2"/>
-    //             <Geometry Name="Top 2"> <!-- 1) rename to "Top 2 (duplicate 1)" -->
-    //                 <Geometry Name="Element 1"/> <!-- 5) rename to "Element 1 (in Top 2 (duplicate 1)) (duplicate 1)" -->
-    //                 <Geometry Name="Element 1 (in Top 2 (duplicate 1))"/>
-    //                 <Geometry Name="Top 2"/> <!-- 6) rename to "Top 2 (in Top 2 (duplicate 1))" -->
-    //             </Geometry>
-    //             <Geometry Name="Top 3">
-    //                 <GeometryReference Geometry="Top 2" Name="Element 1">
-    //                 <!-- 4) rename to "Element 1 (in Top 3)", should reference the one w/o children -->
-    //                     <Break DMXBreak="1" DMXOffset="1"/>
-    //                 </GeometryReference>
-    //             </Geometry>
-    //         </Geometries>
-    //     </FixtureType>
-    //             "#;
+        let b = geometries.get_index(&"Beam 1".try_into().unwrap()).unwrap();
+        assert!(geometries.is_top_level(b) && geometries.count_children(b) == 0);
 
-    //     let (problems, geometries) = run_parse_geometries(ft_str);
+        let g2 = geometries
+            .get_index(&"Geometry 2".try_into().unwrap())
+            .unwrap();
+        assert!(geometries.is_top_level(g2) && geometries.count_children(g2) == 0);
 
-    //     assert_eq!(problems.len(), 6);
-    //     for p in problems.iter() {
-    //         assert!(matches!(p.problem(), Problem::DuplicateGeometryName(..)))
-    //     }
+        let g3 = geometries
+            .get_index(&"Geometry 3".try_into().unwrap())
+            .unwrap();
+        assert!(geometries.is_top_level(g3));
 
-    //     let t1 = geometries.get_index(&"Top 1".try_into().unwrap()).unwrap();
-    //     assert!(geometries.is_top_level(t1));
-    //     let t1_children = geometries.children_geometries(t1).collect::<Vec<_>>();
-    //     t1_children.iter().find(|g| g.name == "Element 1").unwrap();
-    //     t1_children
-    //         .iter()
-    //         .find(|g| g.name == "Element 1 (duplicate 1)")
-    //         .unwrap();
-    //     t1_children
-    //         .iter()
-    //         .find(|g| g.name == "Top 2 (in Top 1)")
-    //         .unwrap();
-    //     assert_eq!(t1_children.len(), 3);
+        let g3_children = geometries.children_geometries(g3).collect::<Vec<_>>();
 
-    //     let t2 = geometries.get_index(&"Top 2".try_into().unwrap()).unwrap();
-    //     assert!(geometries.is_top_level(t2));
-    //     assert_eq!(geometries.count_children(t2), 0);
+        assert!(matches!(
+            g3_children
+                .iter()
+                .find(|g| g.name == "Geometry 2 (in Geometry 3)")
+                .unwrap(),
+            Geometry {
+                t: Type::General,
+                ..
+            }
+        ));
+        assert!(matches!(
+            g3_children.iter().find(|g| g.name == "Geometry 1").unwrap(),
+            Geometry {
+                t: Type::General,
+                ..
+            }
+        ));
+        assert!(matches!(
+            g3_children
+                .iter()
+                .find(|g| g.name == "GeometryReference 3")
+                .unwrap(),
+            Geometry {
+                t: Type::Reference { .. },
+                ..
+            }
+        ));
 
-    //     let t2d = geometries
-    //         .get_index(&"Top 2 (duplicate 1)".try_into().unwrap())
-    //         .unwrap();
-    //     assert!(geometries.is_top_level(t2d));
-    //     let t2d_children = geometries.children_geometries(t2d).collect::<Vec<_>>();
-    //     t2d_children
-    //         .iter()
-    //         .find(|g| g.name == "Element 1 (in Top 2 (duplicate 1)) (duplicate 1)")
-    //         .unwrap();
-    //     t2d_children
-    //         .iter()
-    //         .find(|g| g.name == "Element 1 (in Top 2 (duplicate 1))")
-    //         .unwrap();
-    //     t2d_children
-    //         .iter()
-    //         .find(|g| g.name == "Top 2 (in Top 2 (duplicate 1))")
-    //         .unwrap();
-    //     assert_eq!(t2d_children.len(), 3);
+        assert_eq!(3, g3_children.len());
+    }
 
-    //     let t3 = geometries.get_index(&"Top 3".try_into().unwrap()).unwrap();
-    //     assert!(geometries.is_top_level(t3));
-    //     let t3_children = geometries.children_geometries(t3).collect::<Vec<_>>();
-    //     let reference = t3_children
-    //         .iter()
-    //         .find(|g| g.name == "Element 1 (in Top 3)")
-    //         .unwrap();
-    //     assert_eq!(t3_children.len(), 1);
-    //     assert!(
-    //         matches!(reference, Geometry { t: Type::Reference{ reference, ..}, .. } if *reference == t2)
-    //     );
-    // }
+    #[test]
+    fn geometry_duplicate_names() {
+        let ft_str = r#"
+        <FixtureType>
+            <Geometries>
+                <Geometry Name="Top 1">
+                    <Geometry Name="Element 1"/>
+                    <Geometry Name="Element 1"/> <!-- 2) rename to "Element 1 (duplicate 2)" -->
+                    <Geometry Name="Top 2"/> <!-- 3) rename to "Top 2 (in Top 1)" -->
+                </Geometry>
+                <Geometry Name="Top 2"/>
+                <Geometry Name="Top 2"> <!-- 1) rename to "Top 2 (duplicate 1)" -->
+                    <Geometry Name="Element 1"/> <!-- 5) rename to "Element 1 (duplicate 3)" -->
+                    <Geometry Name="Element 1 (duplicate 1)"/>
+                    <Geometry Name="Top 2"/> <!-- 6) rename to "Top 2 (duplicate 2)" -->
+                </Geometry>
+                <Geometry Name="Top 3">
+                    <GeometryReference Geometry="Top 2" Name="Element 1">
+                    <!-- 4) rename to "Element 1 (in Top 3)", should reference the one w/o children -->
+                        <Break DMXBreak="1" DMXOffset="1"/>
+                    </GeometryReference>
+                </Geometry>
+            </Geometries>
+        </FixtureType>
+                "#;
 
-    //     #[test]
-    //     fn geometry_reference_to_non_top_level_geometry() {
-    //         let ft_str = r#"
-    // <FixtureType>
-    //     <Geometries>
-    //         <Geometry Name="Main 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-    //             <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-    //         </Geometry>
-    //         <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
-    //             <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}" />
-    //         </Geometry>
-    //     </Geometries>
-    // </FixtureType>
-    //         "#;
+        let (geometries, rename_lookup, problems) = parse_geometries(ft_str);
 
-    //         let (problems, geometries) = run_parse_geometries(ft_str);
+        assert_eq!(problems.len(), 6);
+        for p in problems.iter() {
+            assert!(matches!(p.problem(), Problem::DuplicateGeometryName(..)))
+        }
 
-    //         assert_eq!(problems.len(), 1);
-    //         assert!(matches!(
-    //             problems[0].problem(),
-    //             Problem::NonTopLevelGeometryReferenced { .. },
-    //         ));
+        // rename lookup only contains duplicates that are uniquely identifiable
+        // in a dmx mode through combination of top level geometry and name
+        assert_eq!(
+            rename_lookup.deduplicated_name(name_from("Top 1"), name_from("Top 2")),
+            "Top 2 (in Top 1)"
+        );
+        assert_eq!(
+            rename_lookup.deduplicated_name(name_from("Top 3"), name_from("Element 1")),
+            "Element 1 (in Top 3)"
+        );
+        assert_eq!(rename_lookup.into_iter().count(), 2);
 
-    //         assert_eq!(geometries.graph().node_count(), 3);
-    //         assert!(geometries
-    //             .names()
-    //             .contains_key(&"Element 1".try_into().unwrap())
-    //             .not());
-    //     }
+        let t1 = geometries.get_index(&"Top 1".try_into().unwrap()).unwrap();
+        assert!(geometries.is_top_level(t1));
+        let t1_children = geometries.children_geometries(t1).collect::<Vec<_>>();
+        t1_children.iter().find(|g| g.name == "Element 1").unwrap();
+        t1_children
+            .iter()
+            .find(|g| g.name == "Element 1 (duplicate 2)")
+            .unwrap();
+        t1_children
+            .iter()
+            .find(|g| g.name == "Top 2 (in Top 1)")
+            .unwrap();
+        assert_eq!(t1_children.len(), 3);
 
-    // fn run_parse_geometries(ft_str: &str) -> (Problems, Geometries) {
-    //     let doc = roxmltree::Document::parse(ft_str).unwrap();
-    //     let ft = doc.root_element();
-    //     let mut problems: Problems = vec![];
-    //     let mut geometries = Geometries::default();
-    //     parse_geometries(&mut geometries, &ft, &mut problems);
-    //     (problems, geometries)
-    // }
+        let t2 = geometries.get_index(&"Top 2".try_into().unwrap()).unwrap();
+        assert!(geometries.is_top_level(t2));
+        assert_eq!(geometries.count_children(t2), 0);
+
+        let t2d = geometries
+            .get_index(&"Top 2 (duplicate 1)".try_into().unwrap())
+            .unwrap();
+        assert!(geometries.is_top_level(t2d));
+        let t2d_children = geometries.children_geometries(t2d).collect::<Vec<_>>();
+        t2d_children
+            .iter()
+            .find(|g| g.name == "Element 1 (duplicate 1)")
+            .unwrap();
+        t2d_children
+            .iter()
+            .find(|g| g.name == "Element 1 (duplicate 3)")
+            .unwrap();
+        t2d_children
+            .iter()
+            .find(|g| g.name == "Top 2 (duplicate 2)")
+            .unwrap();
+        assert_eq!(t2d_children.len(), 3);
+
+        let t3 = geometries.get_index(&"Top 3".try_into().unwrap()).unwrap();
+        assert!(geometries.is_top_level(t3));
+        let t3_children = geometries.children_geometries(t3).collect::<Vec<_>>();
+        let reference = t3_children
+            .iter()
+            .find(|g| g.name == "Element 1 (in Top 3)")
+            .unwrap();
+        assert_eq!(t3_children.len(), 1);
+        assert!(
+            matches!(reference, Geometry { t: Type::Reference{ reference, ..}, .. } if *reference == t2)
+        );
+    }
+
+    #[test]
+    fn geometry_reference_to_non_top_level_geometry() {
+        let ft_str = r#"
+    <FixtureType>
+        <Geometries>
+            <Geometry Name="Main 2" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
+            </Geometry>
+            <Geometry Name="Main" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <GeometryReference Geometry="AbstractElement" Name="Element 1" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}" />
+            </Geometry>
+        </Geometries>
+    </FixtureType>
+            "#;
+
+        let (geometries, rename_lookup, problems) = parse_geometries(ft_str);
+
+        assert!(rename_lookup.is_empty());
+        assert_eq!(problems.len(), 1);
+        assert!(matches!(
+            problems[0].problem(),
+            Problem::NonTopLevelGeometryReferenced { .. },
+        ));
+
+        assert_eq!(geometries.graph().node_count(), 3);
+        assert!(geometries
+            .names()
+            .contains_key(&"Element 1".try_into().unwrap())
+            .not());
+    }
+
+    fn parse_geometries(ft_str: &str) -> (Geometries, GeometryLookup, Problems) {
+        let doc = roxmltree::Document::parse(ft_str).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Problems = vec![];
+        let mut geometries = Geometries::default();
+        let rename_lookup = GeometriesParser::new(&mut geometries, &mut problems).parse_from(&ft);
+        (geometries, rename_lookup, problems)
+    }
 }
