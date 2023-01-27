@@ -1,3 +1,6 @@
+#![allow(clippy::result_large_err)]
+// TODO fix warning later, it is only a memory usage problem, due to an enum
+// variant in `ProblemType` with many fields
 mod errors;
 mod geometries;
 mod parse_xml;
@@ -17,7 +20,7 @@ pub use self::{
 };
 
 use self::{
-    geometries::parse_geometries,
+    geometries::GeometriesParser,
     parse_xml::{get_xml_attribute::GetXmlAttribute, AssignOrHandle, GetXmlNode},
     types::yes_no::YesNoEnum,
 };
@@ -96,7 +99,8 @@ impl ParsedGdtf {
         self.parse_ref_ft(fixture_type);
         self.parse_can_have_children(fixture_type);
 
-        parse_geometries(&mut self.gdtf.geometries, &fixture_type, &mut self.problems);
+        GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
+            .parse_from(&fixture_type);
     }
 
     /// Parse RefFT attribute

@@ -6,9 +6,6 @@ use roxmltree::Node;
 
 use crate::{types::name::Name, Problem, ProblemAt, Problems};
 
-// TODO fix warning later, it is only a memory usage problem, due to an enum
-// variant in `ProblemType` with many fields
-#[allow(clippy::result_large_err)]
 pub(crate) trait GetXmlAttribute {
     fn required_attribute(&self, attr: &str) -> Result<&str, ProblemAt>;
 
@@ -92,9 +89,6 @@ impl GetXmlAttribute for Node<'_, '_> {
     }
 }
 
-// TODO fix warning later, it is only a memory usage problem, due to an enum
-// variant in `ProblemType` with many fields
-#[allow(clippy::result_large_err)]
 fn parse_attribute_content<T: FromStr>(
     node: &Node,
     content: &str,

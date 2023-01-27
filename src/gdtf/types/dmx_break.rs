@@ -25,6 +25,18 @@ impl FromStr for Break {
     }
 }
 
+impl Default for Break {
+    fn default() -> Self {
+        Self(1)
+    }
+}
+
+impl Break {
+    pub fn value(&self) -> &u16 {
+        &self.0
+    }
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum BreakError {
     #[error("DMX breaks of value 0 are not allowed")]

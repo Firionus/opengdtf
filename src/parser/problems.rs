@@ -89,6 +89,10 @@ impl ProblemAt {
             action: action.into(),
         });
     }
+
+    pub fn problem(&self) -> &Problem {
+        &self.p
+    }
 }
 
 pub(crate) trait HandleProblem<T, S: Into<String>> {
