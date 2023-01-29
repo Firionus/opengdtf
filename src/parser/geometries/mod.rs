@@ -72,7 +72,7 @@ impl<'a> GeometriesParser<'a> {
         let top_level_geometries = geometries.children().filter(|n| n.is_element());
         let mut parsed: Vec<(NodeIndex, Node)> = Default::default();
         for (i, n) in top_level_geometries.enumerate() {
-            if let Some((graph_ind, continue_parsing)) = self.parse_element(i, n, None, None) {
+            if let Some((graph_ind, continue_parsing)) = self.parse_geometry(i, n, None, None) {
                 if let Geometry {
                     name,
                     t: Type::Reference { .. },
@@ -102,7 +102,7 @@ impl<'a> GeometriesParser<'a> {
 
         for (i, n) in children.enumerate() {
             if let Some((graph_ind, ContinueParsing::Children)) =
-                self.parse_element(i, n, Some(parent_graph_ind), Some(top_level_graph_ind))
+                self.parse_geometry(i, n, Some(parent_graph_ind), Some(top_level_graph_ind))
             {
                 self.add_children(n, graph_ind, top_level_graph_ind)
             }
@@ -112,9 +112,7 @@ impl<'a> GeometriesParser<'a> {
     /// Parse the geometry element and add it to geometries. If the result is
     /// None or ContinueParsing::No, the caller should not parse the child
     /// elements.
-    // TODO should it return Geometry like parse_named_element
-    fn parse_element(
-        // TODO is fn name good?
+    fn parse_geometry(
         &mut self,
         node_index_in_xml_parent: usize,
         n: Node<'a, 'a>,
@@ -217,10 +215,6 @@ enum ContinueParsing {
     No,
 }
 
-// TODO refactor all GeometryReference stuff to own module (can still be in impl GeometriesParser block), currently it's just randomly strawn throughout
-
-// TODO move all deduplication into its own module
-
 #[allow(dead_code)] // TODO remove once dependent code is written
 impl GeometryLookup {
     pub(crate) fn deduplicated_name(&self, top_level_geometry: Name, geometry: Name) -> Name {
@@ -245,16 +239,19 @@ impl GeometryLookup {
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry::Offset;
+    use crate::{geometry::Offset, types::name::IntoValidName};
 
     use super::*;
 
     use std::ops::Not;
 
-    // TODO clean up these tests (move to other modules, check for duplication)
-
-    fn name_from(name: &str) -> Name {
-        Name::try_from(name).unwrap()
+    fn parse_geometries(ft_str: &str) -> (Geometries, GeometryLookup, Problems) {
+        let doc = roxmltree::Document::parse(ft_str).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Problems = vec![];
+        let mut geometries = Geometries::default();
+        let rename_lookup = GeometriesParser::new(&mut geometries, &mut problems).parse_from(&ft);
+        (geometries, rename_lookup, problems)
     }
 
     #[test]
@@ -285,17 +282,19 @@ mod tests {
         assert!(rename_lookup.is_empty());
         assert_eq!(geometries.graph().node_count(), 4);
 
-        let abstract_element = geometries.get_index(&name_from("AbstractElement")).unwrap();
+        let abstract_element = geometries
+            .get_index(&"AbstractElement".into_valid())
+            .unwrap();
         assert!(geometries.is_top_level(abstract_element));
 
-        let main = geometries.get_index(&name_from("Main")).unwrap();
+        let main = geometries.get_index(&"Main".into_valid()).unwrap();
         assert!(geometries.is_top_level(main));
         assert_eq!(geometries.count_children(main), 2);
 
-        let element_1 = geometries.get_index(&name_from("Element 1")).unwrap();
+        let element_1 = geometries.get_index(&"Element 1".into_valid()).unwrap();
         assert_eq!(geometries.parent_index(element_1).unwrap(), main);
 
-        let element_2 = geometries.get_index(&name_from("Element 2")).unwrap();
+        let element_2 = geometries.get_index(&"Element 2".into_valid()).unwrap();
         assert_eq!(geometries.parent_index(element_1).unwrap(), main);
 
         assert!(matches!(
@@ -320,6 +319,7 @@ mod tests {
             && offsets.normal[&2.try_into().unwrap()] == 4
         ));
     }
+
     #[test]
     fn top_level_geometry_reference_and_circular_reference() {
         let ft_str = r#"
@@ -393,7 +393,7 @@ mod tests {
         ));
 
         assert_eq!(
-            rename_lookup.deduplicated_name(name_from("Geometry 3"), name_from("Geometry 2")),
+            rename_lookup.deduplicated_name("Geometry 3".into_valid(), "Geometry 2".into_valid()),
             "Geometry 2 (in Geometry 3)"
         );
         assert_eq!(rename_lookup.into_iter().count(), 1);
@@ -480,11 +480,11 @@ mod tests {
         // rename lookup only contains duplicates that are uniquely identifiable
         // in a dmx mode through combination of top level geometry and name
         assert_eq!(
-            rename_lookup.deduplicated_name(name_from("Top 1"), name_from("Top 2")),
+            rename_lookup.deduplicated_name("Top 1".into_valid(), "Top 2".into_valid()),
             "Top 2 (in Top 1)"
         );
         assert_eq!(
-            rename_lookup.deduplicated_name(name_from("Top 3"), name_from("Element 1")),
+            rename_lookup.deduplicated_name("Top 3".into_valid(), "Element 1".into_valid()),
             "Element 1 (in Top 3)"
         );
         assert_eq!(rename_lookup.into_iter().count(), 2);
@@ -568,14 +568,5 @@ mod tests {
             .names()
             .contains_key(&"Element 1".try_into().unwrap())
             .not());
-    }
-
-    fn parse_geometries(ft_str: &str) -> (Geometries, GeometryLookup, Problems) {
-        let doc = roxmltree::Document::parse(ft_str).unwrap();
-        let ft = doc.root_element();
-        let mut problems: Problems = vec![];
-        let mut geometries = Geometries::default();
-        let rename_lookup = GeometriesParser::new(&mut geometries, &mut problems).parse_from(&ft);
-        (geometries, rename_lookup, problems)
     }
 }

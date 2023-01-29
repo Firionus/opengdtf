@@ -58,7 +58,7 @@ impl<'a> GeometriesParser<'a> {
             return Err(suggested_name);
         }
 
-        self.handle_renamed_geometry(dup, &suggested_name, dup.top_level_graph_ind);
+        self.handle_renamed_geometry(dup, &suggested_name);
         self.rename_lookup
             .insert((top_level_name, dup.name.clone()), suggested_name.clone());
         Ok(())
@@ -73,7 +73,7 @@ impl<'a> GeometriesParser<'a> {
             let incremented_name =
                 format!("{name_to_increment} (duplicate {dedup_ind})").into_valid();
             if !self.geometries.names().contains_key(&incremented_name) {
-                self.handle_renamed_geometry(&dup, &incremented_name, dup.top_level_graph_ind);
+                self.handle_renamed_geometry(&dup, &incremented_name);
                 return;
             }
         }
@@ -82,18 +82,13 @@ impl<'a> GeometriesParser<'a> {
             .handled_by("deduplication failed, ignoring node", self.problems);
     }
 
-    fn handle_renamed_geometry(
-        &mut self,
-        dup: &Duplicate<'a>,
-        suggested_name: &Name,
-        top_level_graph_ind: Option<NodeIndex>, // TODO isn't this in dup?
-    ) {
+    fn handle_renamed_geometry(&mut self, dup: &Duplicate<'a>, suggested_name: &Name) {
         let problem = Problem::DuplicateGeometryName(dup.name.clone()).at(&dup.n);
 
         if let Some((graph_ind, continue_parsing)) = self.add_named_geometry(
             dup.n,
             suggested_name.clone(),
-            top_level_graph_ind,
+            dup.top_level_graph_ind,
             dup.parent_graph_ind,
         ) {
             if self.geometries.is_top_level(graph_ind) {
@@ -103,7 +98,11 @@ impl<'a> GeometriesParser<'a> {
             problem.handled_by(format!("renamed to {suggested_name}"), self.problems);
 
             if let ContinueParsing::Children = continue_parsing {
-                self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
+                self.add_children(
+                    dup.n,
+                    graph_ind,
+                    dup.top_level_graph_ind.unwrap_or(graph_ind),
+                );
             }
         } else {
             problem.handled_by(
