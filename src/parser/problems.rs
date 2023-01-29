@@ -82,7 +82,7 @@ impl Problem {
     pub(crate) fn at(self, node: &Node) -> ProblemAt {
         ProblemAt {
             p: self,
-            at: node.document().text_pos_at(node.range().start),
+            at: node.document().text_pos_at(node.position()),
         }
     }
 }
