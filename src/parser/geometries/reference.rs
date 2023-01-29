@@ -162,9 +162,9 @@ mod tests {
             })
         );
         assert_eq!(offsets.normal.len(), 3);
-        assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-        assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
-        assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
+        assert_eq!(offsets.normal.get(&1.try_into().unwrap()).unwrap(), &6);
+        assert_eq!(offsets.normal.get(&2.try_into().unwrap()).unwrap(), &5);
+        assert_eq!(offsets.normal.get(&3.try_into().unwrap()).unwrap(), &4);
     }
 
     #[test]
@@ -185,8 +185,8 @@ mod tests {
             })
         );
         assert_eq!(offsets.normal.len(), 2);
-        assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-        assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
+        assert_eq!(offsets.normal.get(&1.try_into().unwrap()).unwrap(), &6);
+        assert_eq!(offsets.normal.get(&3.try_into().unwrap()).unwrap(), &4);
     }
 
     #[test]
@@ -207,8 +207,8 @@ mod tests {
             })
         );
         assert_eq!(offsets.normal.len(), 2);
-        assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-        assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
+        assert_eq!(offsets.normal.get(&1.try_into().unwrap()).unwrap(), &6);
+        assert_eq!(offsets.normal.get(&2.try_into().unwrap()).unwrap(), &5);
     }
 
     #[test]
@@ -223,8 +223,8 @@ mod tests {
         assert_eq!(problems.len(), 1);
         assert_eq!(offsets.overwrite, None);
         assert_eq!(offsets.normal.len(), 2);
-        assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-        assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
+        assert_eq!(offsets.normal.get(&1.try_into().unwrap()).unwrap(), &6);
+        assert_eq!(offsets.normal.get(&2.try_into().unwrap()).unwrap(), &5);
     }
 
     #[test]
@@ -245,7 +245,7 @@ mod tests {
                 ..
             }
         if duplicate_break == &Break::try_from(2).unwrap()));
-        assert_eq!(offsets.normal[&2.try_into().unwrap()], 2); // higher element takes precedence
+        assert_eq!(offsets.normal.get(&2.try_into().unwrap()).unwrap(), &2); // higher element takes precedence
     }
 
     #[test]

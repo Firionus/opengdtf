@@ -158,8 +158,9 @@ mod tests {
             None
         );
         assert_eq!(problems.len(), 2);
+        let mut problems = problems.iter();
         assert!(matches!(
-            &problems[0].problem(),
+            problems.next().unwrap().problem(),
             Problem::InvalidAttribute {
                         attr,
                         tag,
@@ -169,7 +170,7 @@ mod tests {
                 }
         if attr == "attr" && tag == "tag" && content == "300" && expected_type == "u8"));
         assert!(matches!(
-            &problems[1].problem(),
+            problems.next().unwrap().problem(),
             Problem::XmlAttributeMissing { attr, tag }
         if attr == "missing" && tag == "tag"));
     }

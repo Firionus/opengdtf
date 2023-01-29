@@ -73,10 +73,10 @@ impl<'a> GeometriesParser<'a> {
         let mut parsed: Vec<(NodeIndex, Node)> = Default::default();
         for (i, n) in top_level_geometries.enumerate() {
             if let Some((graph_ind, continue_parsing)) = self.parse_geometry(i, n, None, None) {
-                if let Geometry {
+                if let Some(Geometry {
                     name,
                     t: Type::Reference { .. },
-                } = &self.geometries.graph()[graph_ind]
+                }) = &self.geometries.graph().node_weight(graph_ind)
                 {
                     Problem::UnexpectedTopLevelGeometryReference(name.to_owned()).at(&n).handled_by("keeping GeometryReference, \
                     but it is useless because a top-level GeometryReference can only be used for a DMX mode \
@@ -185,10 +185,8 @@ impl<'a> GeometriesParser<'a> {
                 }
             }
         }?;
-        Some((
-            self.add_to_geometries(geometry, parent_graph_ind, n)?,
-            continue_parsing,
-        ))
+        let graph_ind = self.add_to_geometries(geometry, parent_graph_ind, n)?;
+        Some((graph_ind, continue_parsing))
     }
 
     fn add_to_geometries(
@@ -298,25 +296,25 @@ mod tests {
         assert_eq!(geometries.parent_index(element_1).unwrap(), main);
 
         assert!(matches!(
-            &geometries.graph()[element_1],
+            &geometries.graph().node_weight(element_1).unwrap(),
             Geometry {
                 t: Type::Reference { reference, offsets },
                 ..
             } if reference == &abstract_element
             && matches!(offsets.overwrite, Some(Offset{dmx_break, offset}) if dmx_break.value() == &1 && offset == 1)
-            && offsets.normal[&1.try_into().unwrap()] == 1
-            && offsets.normal[&2.try_into().unwrap()] == 1
+            && offsets.normal.get(&1.try_into().unwrap()).unwrap() == &1
+            && offsets.normal.get(&2.try_into().unwrap()).unwrap() == &1
         ));
 
         assert!(matches!(
-            &geometries.graph()[element_2],
+            &geometries.graph().node_weight(element_2).unwrap(),
             Geometry {
                 t: Type::Reference { reference, offsets },
                 ..
             } if reference == &abstract_element
             && matches!(offsets.overwrite, Some(Offset{dmx_break, offset}) if dmx_break.value() == &1 && offset == 2)
-            && offsets.normal[&1.try_into().unwrap()] == 3
-            && offsets.normal[&2.try_into().unwrap()] == 4
+            && offsets.normal.get(&1.try_into().unwrap()).unwrap() == &3
+            && offsets.normal.get(&2.try_into().unwrap()).unwrap() == &4
         ));
     }
 
@@ -343,13 +341,14 @@ mod tests {
 
         assert_eq!(problems.len(), 2);
 
+        let mut problems = problems.iter();
         assert!(matches!(
-            problems[0].problem(),
+            problems.next().unwrap().problem(),
             Problem::UnexpectedTopLevelGeometryReference(name)
             if name.as_str() == "Top Level Reference"
         ));
         assert!(matches!(
-            problems[1].problem(),
+            problems.next().unwrap().problem(),
             Problem::CircularGeometryReference { target, geometry_reference }
             if target.as_str() == "AbstractElement" && geometry_reference == "Circular Reference"
         ));
@@ -381,14 +380,15 @@ mod tests {
             "#,
         );
 
-        for p in problems[0..6].iter() {
+        let problems = problems.iter();
+        for p in problems.clone().take(6) {
             assert!(
                 matches!(p.problem(), Problem::XmlAttributeMissing { attr, .. } if attr == "Name")
             );
         }
 
         assert!(matches!(
-            problems[6].problem(),
+            problems.last().unwrap().problem(),
             Problem::DuplicateGeometryName(dup) if dup == "Geometry 2"
         ));
 
@@ -559,7 +559,7 @@ mod tests {
         assert!(rename_lookup.is_empty());
         assert_eq!(problems.len(), 1);
         assert!(matches!(
-            problems[0].problem(),
+            problems.get(0).unwrap().problem(),
             Problem::NonTopLevelGeometryReferenced { .. },
         ));
 

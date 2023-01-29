@@ -144,7 +144,7 @@ mod tests {
             .handled_by("ignoring node", &mut problems);
 
         assert!(matches!(
-            &problems[0],
+            problems.first().unwrap(),
             HandledProblem {
                 action,
                 p: ProblemAt {

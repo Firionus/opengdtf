@@ -98,7 +98,9 @@ impl Geometries {
     ///
     /// If no geometry with given graph index exists, an empty iterator is returned.
     pub fn children_geometries(&self, graph_index: NodeIndex) -> impl Iterator<Item = &Geometry> {
-        self.graph.neighbors(graph_index).map(|i| &self.graph[i])
+        self.graph
+            .neighbors(graph_index)
+            .map_while(|i| self.graph.node_weight(i))
     }
 
     /// Returns an iterator over the indices of all the ancestors of the
@@ -117,10 +119,12 @@ impl Geometries {
             None => return "".to_string(),
         };
         let mut qualified_name = n.name.to_string();
-        self.ancestors(graph_index).for_each(|parent_index| {
-            qualified_name = format!("{}.{}", self.graph[parent_index].name, qualified_name)
-            // TODO prepending like this probably isn't particularly performant
-        });
+        self.ancestors(graph_index)
+            .map_while(|i| self.graph.node_weight(i))
+            .for_each(|parent| {
+                qualified_name = format!("{}.{}", parent.name, qualified_name)
+                // TODO prepending like this probably isn't particularly performant
+            });
         qualified_name
     }
 

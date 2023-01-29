@@ -4,7 +4,8 @@
 
 
 A starting point to build a useful open-source [GDTF](https://gdtf-share.com/)
-libary in Rust. GDTF is a standard fixture format for entertainment lighting.
+libary in Rust.  
+GDTF is a standardized fixture format for entertainment lighting.
 
 :construction: Early initial development, not usable yet :construction:  
 If you are interested in helping out, open a thread in the Discussions and say
