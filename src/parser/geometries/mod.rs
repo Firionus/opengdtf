@@ -1,31 +1,33 @@
-use std::collections::{hash_map::Entry::Vacant, HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
 
-use super::{
-    parse_xml::{GetXmlAttribute, GetXmlNode},
-    problems::HandleProblem,
-};
+use self::deduplication::Duplicate;
+
+use super::parse_xml::{GetXmlAttribute, GetXmlNode};
 
 use crate::{
     geometries::Geometries,
-    geometry::{Geometry, Offset, Offsets, Type},
-    types::{
-        dmx_break::Break,
-        name::{IntoValidName, Name},
-    },
-    Problem, ProblemAt, Problems,
+    geometry::{Geometry, Type},
+    types::name::Name,
+    Problem, Problems,
 };
+
+mod deduplication;
+mod reference;
 
 pub(crate) struct GeometriesParser<'a> {
     geometries: &'a mut Geometries,
     problems: &'a mut Problems,
-    /// Queue to hold geometries with duplicate names for later deduplication
     duplicates: VecDeque<Duplicate<'a>>,
-    rename_lookup: GeometryLookup,
     renamed_top_level_geometries: HashSet<NodeIndex>,
+    rename_lookup: GeometryLookup,
 }
+
+/// maps (top level name, duplicate geometry name) => renamed name
+#[derive(Default, derive_more::DebugCustom, derive_more::IntoIterator)]
+pub(crate) struct GeometryLookup(HashMap<(Name, Name), Name>);
 
 impl<'a> GeometriesParser<'a> {
     pub(crate) fn new(geometries: &'a mut Geometries, problems: &'a mut Problems) -> Self {
@@ -33,21 +35,21 @@ impl<'a> GeometriesParser<'a> {
             geometries,
             problems,
             duplicates: Default::default(),
-            rename_lookup: Default::default(),
             renamed_top_level_geometries: Default::default(),
+            rename_lookup: Default::default(),
         }
     }
 
     /// Parse the geometries from the fixture type node into geometries.
     ///
     /// Returns a GeometryLookup that later should be used to look up geometries
-    /// by name, considering changed names for deduplication.
+    /// by name, considering names changed for deduplication.
     pub(crate) fn parse_from(mut self, fixture_type: &'a Node<'a, 'a>) -> GeometryLookup {
         let geometries = match fixture_type.find_required_child("Geometries") {
             Ok(geometries) => geometries,
             Err(p) => {
                 p.handled_by("leaving geometries empty", self.problems);
-                return Default::default();
+                return self.rename_lookup;
             }
         };
 
@@ -142,13 +144,13 @@ impl<'a> GeometriesParser<'a> {
         match self.geometries.names().get(&name) {
             None => Some(name),
             Some(duplicate_graph_ind) => {
-                self.duplicates.push_back(Duplicate {
+                self.duplicates.push_back(Duplicate::new(
+                    name,
                     n,
                     parent_graph_ind,
                     top_level_graph_ind,
-                    name,
-                    duplicate_graph_ind: *duplicate_graph_ind,
-                });
+                    *duplicate_graph_ind,
+                ));
                 None
             }
         }
@@ -208,150 +210,6 @@ impl<'a> GeometriesParser<'a> {
         })
         .ok()
     }
-
-    fn named_geometry_reference(
-        &mut self,
-        n: Node,
-        name: Name,
-        top_level_graph_ind: Option<NodeIndex>,
-    ) -> Option<Geometry> {
-        let reference = self
-            .get_index_of_referenced_geometry(n, &name, top_level_graph_ind)
-            .ok_or_handled_by("not parsing node", self.problems)?;
-        let offsets = parse_reference_offsets(n, &name, self.problems);
-
-        let geometry = Geometry {
-            name,
-            t: Type::Reference { offsets, reference },
-        };
-
-        Some(geometry)
-    }
-
-    fn get_index_of_referenced_geometry(
-        &mut self,
-        n: Node,
-        name: &Name,
-        top_level_graph_ind: Option<NodeIndex>,
-    ) -> Result<NodeIndex, ProblemAt> {
-        let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
-        let ref_ind = self
-            .geometries
-            .get_index(&ref_string)
-            .ok_or_else(|| Problem::UnknownGeometry(ref_string.clone()).at(&n))?;
-        if !self.geometries.is_top_level(ref_ind) {
-            return Err(Problem::NonTopLevelGeometryReferenced {
-                target: ref_string,
-                geometry_reference: name.to_owned(),
-            }
-            .at(&n));
-        }
-        if let Some(top_level_graph_ind) = top_level_graph_ind {
-            if ref_ind == top_level_graph_ind {
-                return Err(Problem::CircularGeometryReference {
-                    target: ref_string,
-                    geometry_reference: name.to_owned(),
-                }
-                .at(&n));
-            }
-        };
-        Ok(ref_ind)
-    }
-
-    fn parse_duplicates(&mut self) {
-        while let Some(dup) = self.duplicates.pop_front() {
-            let name_to_increment = match self.try_renaming_with_top_level_name(&dup) {
-                Ok(()) => continue,
-                Err(name_to_increment) => name_to_increment,
-            };
-
-            self.try_renaming_by_incrementing_counter(dup, name_to_increment);
-        }
-    }
-
-    fn try_renaming_with_top_level_name(&mut self, dup: &Duplicate<'a>) -> Result<(), Name> {
-        let top_level_name = dup
-            .top_level_graph_ind
-            .filter(|top_level| !self.renamed_top_level_geometries.contains(top_level))
-            .filter(|duplicate_top_level| {
-                let original_top_level = self
-                    .geometries
-                    .top_level_geometry_index(dup.duplicate_graph_ind);
-                original_top_level != *duplicate_top_level
-            })
-            .and_then(|duplicate_top_level| {
-                Some(
-                    self.geometries
-                        .graph()
-                        .node_weight(duplicate_top_level)?
-                        .name
-                        .clone(),
-                )
-            })
-            .ok_or_else(|| dup.name.clone())?;
-
-        let suggested_name = format!("{} (in {top_level_name})", &dup.name).into_valid();
-
-        if self.geometries.names().contains_key(&suggested_name) {
-            return Err(suggested_name);
-        }
-
-        self.handle_renamed_geometry(dup, &suggested_name, dup.top_level_graph_ind);
-        self.rename_lookup
-            .insert((top_level_name, dup.name.clone()), suggested_name.clone());
-        Ok(())
-    }
-
-    fn try_renaming_by_incrementing_counter(
-        &mut self,
-        dup: Duplicate<'a>,
-        name_to_increment: Name,
-    ) {
-        for dedup_ind in 1..10_000 {
-            let incremented_name =
-                format!("{name_to_increment} (duplicate {dedup_ind})").into_valid();
-            if !self.geometries.names().contains_key(&incremented_name) {
-                self.handle_renamed_geometry(&dup, &incremented_name, dup.top_level_graph_ind);
-                return;
-            }
-        }
-        Problem::DuplicateGeometryName(dup.name.clone())
-            .at(&dup.n)
-            .handled_by("deduplication failed, ignoring node", self.problems);
-    }
-
-    fn handle_renamed_geometry(
-        &mut self,
-        dup: &Duplicate<'a>,
-        suggested_name: &Name,
-        top_level_graph_ind: Option<NodeIndex>, // TODO isn't this in dup?
-    ) {
-        let problem = Problem::DuplicateGeometryName(dup.name.clone()).at(&dup.n);
-
-        if let Some((graph_ind, continue_parsing)) = self.add_named_geometry(
-            dup.n,
-            suggested_name.clone(),
-            top_level_graph_ind,
-            dup.parent_graph_ind,
-        ) {
-            if self.geometries.is_top_level(graph_ind) {
-                self.renamed_top_level_geometries.insert(graph_ind);
-            }
-
-            problem.handled_by(format!("renamed to {suggested_name}"), self.problems);
-
-            if let ContinueParsing::Children = continue_parsing {
-                self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
-            }
-        } else {
-            problem.handled_by(
-                format!(
-                    "renamed to {suggested_name} but still ignoring node due to some other error"
-                ),
-                self.problems,
-            )
-        }
-    }
 }
 
 enum ContinueParsing {
@@ -362,20 +220,6 @@ enum ContinueParsing {
 // TODO refactor all GeometryReference stuff to own module (can still be in impl GeometriesParser block), currently it's just randomly strawn throughout
 
 // TODO move all deduplication into its own module
-struct Duplicate<'a> {
-    /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
-    name: Name,
-    n: Node<'a, 'a>,
-    /// None if duplicate is top-level
-    parent_graph_ind: Option<NodeIndex>,
-    top_level_graph_ind: Option<NodeIndex>,
-    duplicate_graph_ind: NodeIndex,
-}
-
-// TODO move up
-/// maps (top level name, duplicate geometry name) => renamed name
-#[derive(Default, derive_more::DebugCustom, derive_more::IntoIterator)]
-pub(crate) struct GeometryLookup(HashMap<(Name, Name), Name>);
 
 #[allow(dead_code)] // TODO remove once dependent code is written
 impl GeometryLookup {
@@ -399,231 +243,15 @@ impl GeometryLookup {
     }
 }
 
-fn parse_reference_offsets(n: Node, name: &Name, problems: &mut Problems) -> Offsets {
-    let mut offsets = Offsets::default();
-
-    let mut nodes = n
-        .children()
-        .filter(|n| n.tag_name().name() == "Break")
-        .rev(); // start at last element, which provides the Overwrite offset if present
-
-    if let Some(last_break) = nodes.next() {
-        offsets.overwrite = parse_break(last_break)
-            .ok_or_handled_by("ignoring node and setting overwrite to None", problems);
-    };
-
-    for n in nodes {
-        if let Ok(Offset { dmx_break, offset }) = parse_break(n) {
-            if offsets.normal.contains_key(&dmx_break) {
-                Problem::DuplicateDmxBreak {
-                    duplicate_break: dmx_break,
-                    geometry_reference: name.to_owned(),
-                }
-                .at(&n)
-                .handled_by("overwriting previous value", problems)
-            }
-            offsets.normal.insert(dmx_break, offset);
-        }
-    }
-
-    // add overwrite to normal if break not already present
-    if let Some(Offset { dmx_break, offset }) = offsets.overwrite {
-        if let Vacant(entry) = offsets.normal.entry(dmx_break) {
-            entry.insert(offset);
-        }
-    }
-
-    offsets
-}
-
-fn parse_break(n: Node) -> Result<Offset, ProblemAt> {
-    Ok(Offset {
-        dmx_break: n
-            .parse_attribute("DMXBreak")
-            .unwrap_or_else(|| Ok(Break::default()))?,
-        offset: n.parse_attribute("DMXOffset").unwrap_or(Ok(1))?,
-    })
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::geometry::Offset;
+
     use super::*;
 
     use std::ops::Not;
 
     // TODO clean up these tests (move to other modules, check for duplication)
-
-    #[test]
-    fn test_parse_break_node() {
-        let xml = r#"<Break DMXBreak="1" DMXOffset="1" />"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        assert!(matches!(
-            parse_break(doc.root_element()),
-            Ok(Offset{dmx_break, offset}) if dmx_break.value() == &1u16 && offset == 1
-        ));
-
-        let xml = r#"<Break DMXBreak="-1" DMXOffset="1" />"#;
-        let doc = roxmltree::Document::parse(xml).unwrap();
-        assert!(matches!(
-            parse_break(doc.root_element()),
-            Err(p @ ProblemAt { .. }) if matches!(p.problem(), Problem::InvalidAttribute{attr, ..} if attr=="DMXBreak")
-        ));
-    }
-
-    #[cfg(test)]
-    mod parse_reference_offsets {
-        // TODO nesting testing modules, I don't know... Just make a new module if things need separation?
-        use crate::types::dmx_break::Break;
-
-        use super::*;
-
-        #[test]
-        fn basic_test() {
-            // TODO overlap with smoke test below?
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="1"/>
-        <Break DMXBreak="2" DMXOffset="2"/>
-        <Break DMXBreak="1" DMXOffset="4"/>
-    </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 0);
-            assert_eq!(
-                offsets.overwrite,
-                Some(Offset {
-                    dmx_break: 1.try_into().unwrap(),
-                    offset: 4
-                })
-            );
-            assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1.try_into().unwrap()], 1);
-            assert_eq!(offsets.normal[&2.try_into().unwrap()], 2);
-        }
-
-        #[test]
-        fn non_overlapping_break_overwrite() {
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="6"/>
-        <Break DMXBreak="2" DMXOffset="5"/>
-        <Break DMXBreak="3" DMXOffset="4"/>
-    </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 0);
-            assert_eq!(
-                offsets.overwrite,
-                Some(Offset {
-                    dmx_break: 3.try_into().unwrap(),
-                    offset: 4
-                })
-            );
-            assert_eq!(offsets.normal.len(), 3);
-            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
-            assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
-        }
-
-        #[test]
-        fn must_not_skip_nodes_around_bad_one() {
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="6"/>
-        <Break MissingDMXBreak="2" DMXOffset="5"/>
-        <Break DMXBreak="3" DMXOffset="4"/>
-    </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 1);
-            assert_eq!(
-                offsets.overwrite,
-                Some(Offset {
-                    dmx_break: 3.try_into().unwrap(),
-                    offset: 4
-                })
-            );
-            assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-            assert_eq!(offsets.normal[&3.try_into().unwrap()], 4);
-        }
-
-        #[test]
-        fn handles_overwrite_with_missing_argument() {
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="6"/>
-        <Break DMXBreak="2" DMXOffset="5"/>
-        <Break MissingDMXBreak="3" DMXOffset="4"/>
-    </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 0);
-            assert_eq!(
-                offsets.overwrite,
-                Some(Offset {
-                    dmx_break: 1.try_into().unwrap(),
-                    offset: 4
-                })
-            );
-            assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
-        }
-
-        #[test]
-        fn handles_overwrite_with_invalid_argument() {
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="6"/>
-        <Break DMXBreak="2" DMXOffset="5"/>
-        <Break DMXBreak="0" DMXOffset="4"/> <!-- breaks must be bigger than 0 -->
-    </GeometryReference>"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 1);
-            assert_eq!(offsets.overwrite, None);
-            assert_eq!(offsets.normal.len(), 2);
-            assert_eq!(offsets.normal[&1.try_into().unwrap()], 6);
-            assert_eq!(offsets.normal[&2.try_into().unwrap()], 5);
-        }
-
-        #[test]
-        fn duplicate_break() {
-            let xml = r#"
-    <GeometryReference>
-        <Break DMXBreak="1" DMXOffset="1"/>
-        <Break DMXBreak="2" DMXOffset="2"/>
-        <Break DMXBreak="2" DMXOffset="3"/>  <!-- This is a duplicate break -->
-        <Break DMXBreak="1" DMXOffset="4"/>  <!-- This is not a duplicate break, since it occurs in the last element, which is overwrite -->
-    </GeometryReference>"#;
-            let (mut problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 1);
-            assert!(matches!(
-                problems.pop().unwrap().problem(),
-                Problem::DuplicateDmxBreak {
-                    duplicate_break,
-                    ..
-                }
-            if duplicate_break == &Break::try_from(2).unwrap()));
-            assert_eq!(offsets.normal[&2.try_into().unwrap()], 2); // higher element takes precedence
-        }
-
-        #[test]
-        fn empty_reference_offsets() {
-            let xml = r#"<GeometryReference />"#;
-            let (problems, offsets) = run_parse_reference_offsets(xml);
-            assert_eq!(problems.len(), 0);
-            assert_eq!(offsets, Offsets::default());
-        }
-
-        fn run_parse_reference_offsets(xml: &str) -> (Problems, Offsets) {
-            let doc = roxmltree::Document::parse(xml).unwrap();
-            let n = doc.root_element();
-            let mut problems: Problems = vec![];
-            let offsets = parse_reference_offsets(
-                n,
-                &"arbitrary name for testing".try_into().unwrap(),
-                &mut problems,
-            );
-            (problems, offsets)
-        }
-    }
 
     fn name_from(name: &str) -> Name {
         Name::try_from(name).unwrap()
