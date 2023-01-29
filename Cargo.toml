@@ -22,4 +22,5 @@ example_files = { path = "tests/example_files"}
 pretty_assertions = "1.3.0"
 
 [workspace]
-default-members = [".", "tests/example_files"]
+members = ["benches/comparison_against_gdtf_parser"]
+default-members = [".", "tests/example_files", "benches/comparison_against_gdtf_parser"]

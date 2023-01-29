@@ -143,6 +143,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "comparison_against_gdtf_parser"
+version = "0.1.0"
+dependencies = [
+ "example_files",
+ "gdtf-parser",
+ "opengdtf",
+]
+
+[[package]]
 name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -282,6 +291,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dmx-struct"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd850f284b57fc210941e4d2c0bbdbeaeda4ed8f5579d245ab22a745dd11a3ba"
+
+[[package]]
 name = "example_files"
 version = "0.1.0"
 dependencies = [
@@ -292,7 +307,7 @@ dependencies = [
  "toml",
  "walkdir",
  "xxhash-rust",
- "zip",
+ "zip 0.6.3",
 ]
 
 [[package]]
@@ -309,6 +324,19 @@ checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "gdtf-parser"
+version = "0.1.0"
+source = "git+https://github.com/michaelhugi/gdtf_parser.git?rev=b4b4e60#b4b4e60a2da1d8e3dad3a19f6363694ffd8110ed"
+dependencies = [
+ "dmx-struct",
+ "lazy_static",
+ "quick-xml",
+ "regex",
+ "unicode-segmentation",
+ "zip 0.5.13",
 ]
 
 [[package]]
@@ -424,6 +452,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
 name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -517,7 +551,7 @@ dependencies = [
  "thiserror",
  "uuid",
  "xxhash-rust",
- "zip",
+ "zip 0.6.3",
 ]
 
 [[package]]
@@ -611,6 +645,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ef7d57beacfaf2d8aee5937dab7b7f28de3cb8b1828479bb5de2a7106f2bae2"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "quick-xml"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8533f14c8382aaad0d592c812ac3b826162128b65662331e1127b45c3d18536b"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
@@ -894,6 +937,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84a22b9f218b40614adcb3f4ff08b703773ad44fa9423e4e0d346d5db86e4ebc"
 
 [[package]]
+name = "unicode-segmentation"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fdbf052a0783de01e944a6ce7a8cb939e295b1e7be835a1112c3b9a7f047a5a"
+
+[[package]]
 name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1039,6 +1088,20 @@ name = "yansi"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
+
+[[package]]
+name = "zip"
+version = "0.5.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93ab48844d61251bb3835145c521d88aa4031d7139e8485990f60ca911fa0815"
+dependencies = [
+ "byteorder",
+ "bzip2",
+ "crc32fast",
+ "flate2",
+ "thiserror",
+ "time 0.1.45",
+]
 
 [[package]]
 name = "zip"

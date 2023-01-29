@@ -14,7 +14,7 @@ pub struct Gdtf {
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
 
-    pub name: String,
+    pub name: String, // TODO should be Name type
     pub short_name: String,
     pub long_name: String,
     pub manufacturer: String,

@@ -1,0 +1,9 @@
+[package]
+name = "comparison_against_gdtf_parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gdtf-parser = {git = "https://github.com/michaelhugi/gdtf_parser.git",  rev = "b4b4e60"}
+opengdtf ={ path = "../.." }
+example_files = { path = "../../tests/example_files"}
