@@ -121,12 +121,7 @@ impl<'a> GeometriesParser<'a> {
             top_level_graph_ind,
         )?;
 
-        let (geometry, continue_parsing) =
-            self.parse_named_element(n, name, top_level_graph_ind)?;
-        Some((
-            self.add_to_geometries(geometry, parent_graph_ind, n)?,
-            continue_parsing,
-        ))
+        self.add_named_geometry(n, name, top_level_graph_ind, parent_graph_ind)
     }
 
     /// Get geometry name or, if name is already present, add to duplicates and
@@ -154,37 +149,41 @@ impl<'a> GeometriesParser<'a> {
         }
     }
 
-    /// Parse the geometry element with the given name. If the result is None or
-    /// ContinueParsing::No, the caller should not parse the child elements.
-    fn parse_named_element(
-        // TODO is name "element" right?
+    fn add_named_geometry(
         &mut self,
         n: Node,
         name: Name,
         top_level_graph_ind: Option<NodeIndex>,
-    ) -> Option<(Geometry, ContinueParsing)> {
-        match n.tag_name().name() {
-            "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
-            | "Beam" | "MediaServerLayer" | "MediaServerCamera" | "MediaServerMaster"
-            | "Display" | "Laser" | "WiringObject" | "Inventory" | "Structure" | "Support"
-            | "Magnet" => Some((
-                Geometry {
-                    name,
-                    t: Type::General,
-                },
-                ContinueParsing::Children,
-            )),
-            "GeometryReference" => Some((
-                self.named_geometry_reference(n, name, top_level_graph_ind)?,
-                ContinueParsing::No,
-            )),
-            tag => {
-                Problem::UnexpectedXmlNode(tag.into())
-                    .at(&n)
-                    .handled_by("ignoring node", self.problems);
-                None
+        parent_graph_ind: Option<NodeIndex>,
+    ) -> Option<(NodeIndex, ContinueParsing)> {
+        let (geometry, continue_parsing) = {
+            match n.tag_name().name() {
+                "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
+                | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
+                | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
+                | "Structure" | "Support" | "Magnet" => Some((
+                    Geometry {
+                        name,
+                        t: Type::General,
+                    },
+                    ContinueParsing::Children,
+                )),
+                "GeometryReference" => Some((
+                    self.named_geometry_reference(n, name, top_level_graph_ind)?,
+                    ContinueParsing::No,
+                )),
+                tag => {
+                    Problem::UnexpectedXmlNode(tag.into())
+                        .at(&n)
+                        .handled_by("ignoring node", self.problems);
+                    None
+                }
             }
-        }
+        }?;
+        Some((
+            self.add_to_geometries(geometry, parent_graph_ind, n)?,
+            continue_parsing,
+        ))
     }
 
     fn add_to_geometries(
@@ -351,17 +350,18 @@ impl<'a> GeometriesParser<'a> {
             .at(&dup.n)
             .handled_by(format!("renamed to {}", suggested_name), self.problems);
 
-        if let Some((geometry, continue_parsing)) =
-            self.parse_named_element(dup.n, suggested_name.clone(), top_level_graph_ind)
-        {
-            if let Some(graph_ind) = self.add_to_geometries(geometry, dup.parent_graph_ind, dup.n) {
-                if self.geometries.is_top_level(graph_ind) {
-                    renamed_top_level_geometries.insert(graph_ind);
-                }
+        if let Some((graph_ind, continue_parsing)) = self.add_named_geometry(
+            dup.n,
+            suggested_name.clone(),
+            top_level_graph_ind,
+            dup.parent_graph_ind,
+        ) {
+            if self.geometries.is_top_level(graph_ind) {
+                renamed_top_level_geometries.insert(graph_ind);
+            }
 
-                if let ContinueParsing::Children = continue_parsing {
-                    self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
-                }
+            if let ContinueParsing::Children = continue_parsing {
+                self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
             }
         }
     }
