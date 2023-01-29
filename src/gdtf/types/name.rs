@@ -86,6 +86,17 @@ impl PartialEq<&str> for Name {
     }
 }
 
+pub(crate) trait IntoValidName {
+    fn into_valid(self) -> Name;
+}
+
+impl IntoValidName for &str {
+    /// Creates a Name from self, with invalid chars replaced by '□'
+    fn into_valid(self) -> Name {
+        self.try_into().unwrap_or_else(|e: NameError| e.fixed)
+    }
+}
+
 impl Name {
     /// Construct the default name based on the XML tag name and the 0-based XML
     /// node index in its parent.
@@ -97,6 +108,14 @@ impl Name {
         xml_node_index_in_parent: usize,
     ) -> Result<Name, NameError> {
         format!("{} {}", tag.into(), xml_node_index_in_parent + 1).try_into()
+    }
+
+    /// Construct the default name based on the XML tag name and the 0-based XML
+    /// node index in its parent.
+    ///
+    /// Invalid characters are replaced with '□'. For explicit error handling, see [`Name::default`].
+    pub fn valid_default<T: Into<String>>(tag: T, xml_node_index_in_parent: usize) -> Name {
+        format!("{} {}", tag.into(), xml_node_index_in_parent + 1).into_valid()
     }
 
     pub fn as_str(&self) -> &str {
@@ -129,7 +148,7 @@ mod tests {
                 invalid_chars,
             }) if fixed == "a□b" && invalid_chars == "."
         ));
-
+        assert_eq!("a~b".into_valid(), "a□b");
         assert!(matches!(
             Name::try_from("a]b"),
             Err(NameError {

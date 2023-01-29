@@ -81,8 +81,8 @@ impl GetXmlAttribute for Node<'_, '_> {
         self.required_attribute("Name")
             .map(|name| parse_name_or_fix(self, name, problems))
             .unwrap_or_else(|p| {
-                let default_name = Name::default(self.tag_name().name(), node_index_in_xml_parent)
-                    .unwrap_or_else(|e| e.fixed);
+                let default_name =
+                    Name::valid_default(self.tag_name().name(), node_index_in_xml_parent);
                 p.handled_by(format!("using default name '{default_name}'"), problems);
                 default_name
             })

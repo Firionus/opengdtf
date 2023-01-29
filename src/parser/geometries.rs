@@ -13,7 +13,7 @@ use crate::{
     geometry::{Geometry, Offset, Offsets, Type},
     types::{
         dmx_break::Break,
-        name::{Name, NameError},
+        name::{IntoValidName, Name},
     },
     Problem, ProblemAt, Problems,
 };
@@ -23,6 +23,8 @@ pub(crate) struct GeometriesParser<'a> {
     problems: &'a mut Problems,
     /// Queue to hold geometries with duplicate names for later deduplication
     duplicates: VecDeque<Duplicate<'a>>,
+    rename_lookup: GeometryLookup,
+    renamed_top_level_geometries: HashSet<NodeIndex>,
 }
 
 impl<'a> GeometriesParser<'a> {
@@ -31,6 +33,8 @@ impl<'a> GeometriesParser<'a> {
             geometries,
             problems,
             duplicates: Default::default(),
+            rename_lookup: Default::default(),
+            renamed_top_level_geometries: Default::default(),
         }
     }
 
@@ -38,7 +42,7 @@ impl<'a> GeometriesParser<'a> {
     ///
     /// Returns a GeometryLookup that later should be used to look up geometries
     /// by name, considering changed names for deduplication.
-    pub(crate) fn parse_from(&mut self, fixture_type: &'a Node<'a, 'a>) -> GeometryLookup {
+    pub(crate) fn parse_from(mut self, fixture_type: &'a Node<'a, 'a>) -> GeometryLookup {
         let geometries = match fixture_type.find_required_child("Geometries") {
             Ok(geometries) => geometries,
             Err(p) => {
@@ -55,7 +59,8 @@ impl<'a> GeometriesParser<'a> {
         }
 
         // handle duplicates after all others, to ensure deduplicated names don't conflict with defined names
-        self.parse_duplicates()
+        self.parse_duplicates();
+        self.rename_lookup
     }
 
     fn parse_top_level_geometries(
@@ -253,98 +258,84 @@ impl<'a> GeometriesParser<'a> {
         Ok(ref_ind)
     }
 
-    // TODO clean up methods below
-    fn parse_duplicates(&mut self) -> GeometryLookup {
-        let mut rename_lookup = GeometryLookup::default();
-        let mut renamed_top_level_geometries = HashSet::<NodeIndex>::new();
-
+    fn parse_duplicates(&mut self) {
         while let Some(dup) = self.duplicates.pop_front() {
-            let mut suggested_name: Name = dup.name.clone();
-
-            if let Some(duplicate_parent) = dup.parent_graph_ind {
-                let original_top_level = self
-                    .geometries
-                    .top_level_geometry_index(dup.duplicate_graph_ind);
-                let duplicate_top_level =
-                    self.geometries.top_level_geometry_index(duplicate_parent);
-
-                if !renamed_top_level_geometries.contains(&duplicate_top_level)
-                    && original_top_level != duplicate_top_level
-                {
-                    self.apply_semantic_renaming(
-                        &mut suggested_name,
-                        &dup.name,
-                        duplicate_top_level,
-                    );
-                    if !self.geometries.names().contains_key(&suggested_name) {
-                        self.handle_renamed_geometry(
-                            &dup,
-                            &suggested_name,
-                            &mut renamed_top_level_geometries,
-                            dup.top_level_graph_ind,
-                        );
-                        rename_lookup.insert(
-                            (
-                                // TODO index may panic, replace with geometries.graph().node_weight(ind)
-                                self.geometries.graph()[duplicate_top_level].name.to_owned(),
-                                dup.name.clone(),
-                            ),
-                            suggested_name.clone(),
-                        );
-                        continue;
-                    }
-                }
+            let name_to_increment = match self.try_renaming_with_top_level_name(&dup) {
+                Ok(()) => continue,
+                Err(name_to_increment) => name_to_increment,
             };
 
-            // increment index until unique name is found
-            let mut dedup_ind: u16 = 1;
-            let mut incremented_name;
-            loop {
-                // TODO, does this actually count up, or just appends `(duplicate i)` EVERY SINGLE TIME?
-                incremented_name = format!("{} (duplicate {})", suggested_name, dedup_ind)
-                    .try_into()
-                    .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid;
-                if !self.geometries.names().contains_key(&incremented_name) {
-                    self.handle_renamed_geometry(
-                        &dup,
-                        &incremented_name,
-                        &mut renamed_top_level_geometries,
-                        dup.top_level_graph_ind,
-                    );
-                    break;
-                }
-                dedup_ind = match dedup_ind.checked_add(1) {
-                    Some(v) => v,
-                    None => {
-                        Problem::DuplicateGeometryName(dup.name)
-                            .at(&dup.n)
-                            .handled_by("deduplication failed, ignoring node", self.problems);
-                        break;
-                    }
-                };
-            }
+            self.try_renaming_by_incrementing_counter(dup, name_to_increment);
         }
-        rename_lookup
     }
 
-    fn apply_semantic_renaming(
+    fn try_renaming_with_top_level_name(&mut self, dup: &Duplicate<'a>) -> Result<(), Name> {
+        if let Some(duplicate_top_level) = dup.top_level_graph_ind {
+            let original_top_level = self
+                .geometries
+                .top_level_geometry_index(dup.duplicate_graph_ind);
+
+            if !self
+                .renamed_top_level_geometries
+                .contains(&duplicate_top_level)
+                && original_top_level != duplicate_top_level
+            {
+                let suggested_name = {
+                    let duplicate_name = &dup.name;
+                    let duplicate_top_level_name =
+                        &self.geometries.graph()[duplicate_top_level].name;
+                    format!("{duplicate_name} (in {duplicate_top_level_name})").into_valid()
+                };
+                if !self.geometries.names().contains_key(&suggested_name) {
+                    self.handle_renamed_geometry(dup, &suggested_name, dup.top_level_graph_ind);
+                    if let Some(top_level) =
+                        self.geometries.graph().node_weight(duplicate_top_level)
+                    {
+                        self.rename_lookup.insert(
+                            (top_level.name.to_owned(), dup.name.clone()),
+                            suggested_name.clone(),
+                        );
+                    } else {
+                        Problem::Unexpected(
+                            "invalid geometry index in renaming with top level name".into(),
+                        )
+                        .at(&dup.n)
+                        .handled_by(
+                            "not putting geometry into lookup, so it might not be found later",
+                            self.problems,
+                        )
+                    }
+                    return Ok(());
+                }
+                return Err(suggested_name);
+            }
+        };
+        Err(dup.name.clone())
+    }
+
+    fn try_renaming_by_incrementing_counter(
         &mut self,
-        suggested_name: &mut Name,
-        duplicate_name: &Name,
-        duplicate_top_level: NodeIndex,
+        dup: Duplicate<'a>,
+        name_to_increment: Name,
     ) {
-        let duplicate_top_level_name = &self.geometries.graph()[duplicate_top_level].name;
-        *suggested_name = format!("{} (in {})", duplicate_name, duplicate_top_level_name)
-            .try_into()
-            .unwrap_or_else(|e: NameError| e.fixed); // safe, because added chars are valid
+        for dedup_ind in 1..10_000 {
+            let incremented_name =
+                format!("{name_to_increment} (duplicate {dedup_ind})").into_valid();
+            if !self.geometries.names().contains_key(&incremented_name) {
+                self.handle_renamed_geometry(&dup, &incremented_name, dup.top_level_graph_ind);
+                return;
+            }
+        }
+        Problem::DuplicateGeometryName(dup.name.clone())
+            .at(&dup.n)
+            .handled_by("deduplication failed, ignoring node", self.problems);
     }
 
     fn handle_renamed_geometry(
         &mut self,
         dup: &Duplicate<'a>,
         suggested_name: &Name,
-        renamed_top_level_geometries: &mut HashSet<NodeIndex>,
-        top_level_graph_ind: Option<NodeIndex>,
+        top_level_graph_ind: Option<NodeIndex>, // TODO isn't this in dup?
     ) {
         Problem::DuplicateGeometryName(dup.name.clone())
             .at(&dup.n)
@@ -357,7 +348,7 @@ impl<'a> GeometriesParser<'a> {
             dup.parent_graph_ind,
         ) {
             if self.geometries.is_top_level(graph_ind) {
-                renamed_top_level_geometries.insert(graph_ind);
+                self.renamed_top_level_geometries.insert(graph_ind);
             }
 
             if let ContinueParsing::Children = continue_parsing {
