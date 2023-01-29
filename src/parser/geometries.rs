@@ -51,7 +51,7 @@ impl<'a> GeometriesParser<'a> {
         let top_level_geometries = self.parse_top_level_geometries(geometries);
 
         for (graph_ind, n) in top_level_geometries.iter() {
-            self.add_children(*n, *graph_ind);
+            self.add_children(*n, *graph_ind, *graph_ind);
         }
 
         // handle duplicates after all others, to ensure deduplicated names don't conflict with defined names
@@ -65,7 +65,7 @@ impl<'a> GeometriesParser<'a> {
         let top_level_geometries = geometries.children().filter(|n| n.is_element());
         let mut parsed: Vec<(NodeIndex, Node)> = Default::default();
         for (i, n) in top_level_geometries.enumerate() {
-            if let Some((graph_ind, continue_parsing)) = self.parse_element(i, n, None) {
+            if let Some((graph_ind, continue_parsing)) = self.parse_element(i, n, None, None) {
                 if let Geometry {
                     name,
                     t: Type::Reference { .. },
@@ -85,14 +85,19 @@ impl<'a> GeometriesParser<'a> {
     }
 
     /// Recursively adds all children geometries of a parent to geometries
-    fn add_children(&mut self, parent_xml: Node<'a, 'a>, parent_tree: NodeIndex) {
+    fn add_children(
+        &mut self,
+        parent_xml: Node<'a, 'a>,
+        parent_graph_ind: NodeIndex,
+        top_level_graph_ind: NodeIndex,
+    ) {
         let children = parent_xml.children().filter(|n| n.is_element());
 
         for (i, n) in children.enumerate() {
             if let Some((graph_ind, ContinueParsing::Children)) =
-                self.parse_element(i, n, Some(parent_tree))
+                self.parse_element(i, n, Some(parent_graph_ind), Some(top_level_graph_ind))
             {
-                self.add_children(n, graph_ind)
+                self.add_children(n, graph_ind, top_level_graph_ind)
             }
         }
     }
@@ -107,10 +112,17 @@ impl<'a> GeometriesParser<'a> {
         node_index_in_xml_parent: usize,
         n: Node<'a, 'a>,
         parent_graph_ind: Option<NodeIndex>,
+        top_level_graph_ind: Option<NodeIndex>,
     ) -> Option<(NodeIndex, ContinueParsing)> {
-        let name = self.name(n, node_index_in_xml_parent, parent_graph_ind)?;
+        let name = self.name(
+            n,
+            node_index_in_xml_parent,
+            parent_graph_ind,
+            top_level_graph_ind,
+        )?;
 
-        let (geometry, continue_parsing) = self.parse_named_element(n, name)?;
+        let (geometry, continue_parsing) =
+            self.parse_named_element(n, name, top_level_graph_ind)?;
         Some((
             self.add_to_geometries(geometry, parent_graph_ind, n)?,
             continue_parsing,
@@ -124,6 +136,7 @@ impl<'a> GeometriesParser<'a> {
         n: Node<'a, 'a>,
         node_index_in_xml_parent: usize,
         parent_graph_ind: Option<NodeIndex>,
+        top_level_graph_ind: Option<NodeIndex>,
     ) -> Option<Name> {
         let name = n.name(node_index_in_xml_parent, self.problems);
         match self.geometries.names().get(&name) {
@@ -132,6 +145,7 @@ impl<'a> GeometriesParser<'a> {
                 self.duplicates.push_back(Duplicate {
                     n,
                     parent_graph_ind,
+                    top_level_graph_ind,
                     name,
                     duplicate_graph_ind: *duplicate_graph_ind,
                 });
@@ -147,6 +161,7 @@ impl<'a> GeometriesParser<'a> {
         &mut self,
         n: Node,
         name: Name,
+        top_level_graph_ind: Option<NodeIndex>,
     ) -> Option<(Geometry, ContinueParsing)> {
         match n.tag_name().name() {
             "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo" | "FilterShaper"
@@ -159,9 +174,10 @@ impl<'a> GeometriesParser<'a> {
                 },
                 ContinueParsing::Children,
             )),
-            "GeometryReference" => {
-                Some((self.named_geometry_reference(n, name)?, ContinueParsing::No))
-            }
+            "GeometryReference" => Some((
+                self.named_geometry_reference(n, name, top_level_graph_ind)?,
+                ContinueParsing::No,
+            )),
             tag => {
                 Problem::UnexpectedXmlNode(tag.into())
                     .at(&n)
@@ -189,9 +205,14 @@ impl<'a> GeometriesParser<'a> {
         .ok()
     }
 
-    fn named_geometry_reference(&mut self, n: Node, name: Name) -> Option<Geometry> {
+    fn named_geometry_reference(
+        &mut self,
+        n: Node,
+        name: Name,
+        top_level_graph_ind: Option<NodeIndex>,
+    ) -> Option<Geometry> {
         let reference = self
-            .get_index_of_referenced_geometry(n, &name)
+            .get_index_of_referenced_geometry(n, &name, top_level_graph_ind)
             .ok_or_handled_by("not parsing node", self.problems)?;
         let offsets = parse_reference_offsets(n, &name, self.problems);
 
@@ -207,21 +228,30 @@ impl<'a> GeometriesParser<'a> {
         &mut self,
         n: Node,
         name: &Name,
+        top_level_graph_ind: Option<NodeIndex>,
     ) -> Result<NodeIndex, ProblemAt> {
         let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
         let ref_ind = self
             .geometries
             .get_index(&ref_string)
             .ok_or_else(|| Problem::UnknownGeometry(ref_string.clone()).at(&n))?;
-        if self.geometries.is_top_level(ref_ind) {
-            Ok(ref_ind)
-        } else {
-            Err(Problem::NonTopLevelGeometryReferenced {
+        if !self.geometries.is_top_level(ref_ind) {
+            return Err(Problem::NonTopLevelGeometryReferenced {
                 target: ref_string,
                 geometry_reference: name.to_owned(),
             }
-            .at(&n))
+            .at(&n));
         }
+        if let Some(top_level_graph_ind) = top_level_graph_ind {
+            if ref_ind == top_level_graph_ind {
+                return Err(Problem::CircularGeometryReference {
+                    target: ref_string,
+                    geometry_reference: name.to_owned(),
+                }
+                .at(&n));
+            }
+        };
+        Ok(ref_ind)
     }
 
     // TODO clean up methods below
@@ -252,6 +282,7 @@ impl<'a> GeometriesParser<'a> {
                             &dup,
                             &suggested_name,
                             &mut renamed_top_level_geometries,
+                            dup.top_level_graph_ind,
                         );
                         rename_lookup.insert(
                             (
@@ -279,6 +310,7 @@ impl<'a> GeometriesParser<'a> {
                         &dup,
                         &incremented_name,
                         &mut renamed_top_level_geometries,
+                        dup.top_level_graph_ind,
                     );
                     break;
                 }
@@ -313,13 +345,14 @@ impl<'a> GeometriesParser<'a> {
         dup: &Duplicate<'a>,
         suggested_name: &Name,
         renamed_top_level_geometries: &mut HashSet<NodeIndex>,
+        top_level_graph_ind: Option<NodeIndex>,
     ) {
         Problem::DuplicateGeometryName(dup.name.clone())
             .at(&dup.n)
             .handled_by(format!("renamed to {}", suggested_name), self.problems);
 
         if let Some((geometry, continue_parsing)) =
-            self.parse_named_element(dup.n, suggested_name.clone())
+            self.parse_named_element(dup.n, suggested_name.clone(), top_level_graph_ind)
         {
             if let Some(graph_ind) = self.add_to_geometries(geometry, dup.parent_graph_ind, dup.n) {
                 if self.geometries.is_top_level(graph_ind) {
@@ -327,7 +360,7 @@ impl<'a> GeometriesParser<'a> {
                 }
 
                 if let ContinueParsing::Children = continue_parsing {
-                    self.add_children(dup.n, graph_ind);
+                    self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
                 }
             }
         }
@@ -345,6 +378,7 @@ struct Duplicate<'a> {
     n: Node<'a, 'a>,
     /// None if duplicate is top-level
     parent_graph_ind: Option<NodeIndex>,
+    top_level_graph_ind: Option<NodeIndex>,
     duplicate_graph_ind: NodeIndex,
 }
 
@@ -670,12 +704,16 @@ mod tests {
         ));
     }
     #[test]
-    fn top_level_geometry_reference() {
+    fn top_level_geometry_reference_and_circular_reference() {
         let ft_str = r#"
     <FixtureType>
         <Geometries>
-            <Geometry Name="AbstractElement" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}"/>
-            <GeometryReference Geometry="AbstractElement" Name="Top Level Reference" Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+            <Geometry Name="AbstractElement" 
+                Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
+                <GeometryReference Geometry="AbstractElement" Name="Circular Reference" />
+            </Geometry>
+            <GeometryReference Geometry="AbstractElement" Name="Top Level Reference" 
+                Position="{1.000000,0.000000,0.000000,0.000000}{0.000000,1.000000,0.000000,0.000000}{0.000000,0.000000,1.000000,0.000000}{0,0,0,1}">
                 <Break DMXBreak="1" DMXOffset="5"/>
                 <Break DMXBreak="2" DMXOffset="6"/>
                 <Break DMXBreak="1" DMXOffset="3"/>
@@ -686,10 +724,17 @@ mod tests {
 
         let (geometries, rename_lookup, problems) = parse_geometries(ft_str);
 
-        assert_eq!(problems.len(), 1);
+        assert_eq!(problems.len(), 2);
+
         assert!(matches!(
             problems[0].problem(),
-            Problem::UnexpectedTopLevelGeometryReference(..)
+            Problem::UnexpectedTopLevelGeometryReference(name)
+            if name.as_str() == "Top Level Reference"
+        ));
+        assert!(matches!(
+            problems[1].problem(),
+            Problem::CircularGeometryReference { target, geometry_reference }
+            if target.as_str() == "AbstractElement" && geometry_reference == "Circular Reference"
         ));
         assert!(rename_lookup.is_empty());
         assert_eq!(geometries.graph().node_count(), 2);

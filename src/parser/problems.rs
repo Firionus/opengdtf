@@ -64,6 +64,13 @@ pub enum Problem {
         geometry_reference: Name,
     },
     #[error(
+        "geometry reference '{geometry_reference}' references its own top-level geometry '{target}'"
+    )]
+    CircularGeometryReference {
+        target: Name,
+        geometry_reference: Name,
+    },
+    #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
     )]

@@ -24,6 +24,8 @@ pub enum Type {
 // each `Offsets` in a `GeometryReference` contains precisely the breaks
 // required by channels operating on the referenced geometry. No more or less
 // breaks are allowed to be present (see GDTF 1.2 page 39).
+// This might require a new data structure to hold the offsets for all
+// geometry references for a certain abstract top level geometry.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
     pub normal: HashMap<Break, i32>,
@@ -33,7 +35,8 @@ pub struct Offsets {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Offset {
     pub dmx_break: Break,
-    /// should support "Universe.Address" format according to standard, but that is not implemented at the moment
+    /// should support "Universe.Address" format according to standard, but that
+    /// is not implemented at the moment
     pub offset: i32,
 }
 
