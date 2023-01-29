@@ -359,8 +359,9 @@ enum ContinueParsing {
     No,
 }
 
-// TODO refactor stuff below to other files?
+// TODO refactor all GeometryReference stuff to own module (can still be in impl GeometriesParser block), currently it's just randomly strawn throughout
 
+// TODO move all deduplication into its own module
 struct Duplicate<'a> {
     /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
     name: Name,
@@ -371,7 +372,8 @@ struct Duplicate<'a> {
     duplicate_graph_ind: NodeIndex,
 }
 
-/// (top level name, duplicate geometry name) => renamed name
+// TODO move up
+/// maps (top level name, duplicate geometry name) => renamed name
 #[derive(Default, derive_more::DebugCustom, derive_more::IntoIterator)]
 pub(crate) struct GeometryLookup(HashMap<(Name, Name), Name>);
 
@@ -443,17 +445,13 @@ fn parse_break(n: Node) -> Result<Offset, ProblemAt> {
     })
 }
 
-// allow unwrap/expect eplicitly, because clippy.toml config doesn't work properly yet
-// fixed in https://github.com/rust-lang/rust-clippy/pull/9686
-// TODO remove once Clippy 0.1.67 is available
-#[allow(clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests {
     use super::*;
 
     use std::ops::Not;
 
-    // TODO clean up these tests
+    // TODO clean up these tests (move to other modules, check for duplication)
 
     #[test]
     fn test_parse_break_node() {

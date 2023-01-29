@@ -22,8 +22,7 @@ fn fixtures_from_expected_toml_are_in_examples() {
         let filename = entry.file_name().to_str().unwrap().to_string();
         match hashes_in_examples.get(&key) {
             Some(collision_filename) => panic!(
-                "hash collision between '{}' and '{}'; GDTF files likely have the same content and one of them should be removed",
-                collision_filename, filename
+                "hash collision between '{collision_filename}' and '{filename}'; GDTF files likely have the same content and one of them should be removed"
             ),
             None => hashes_in_examples.insert(key, filename.clone()),
         };

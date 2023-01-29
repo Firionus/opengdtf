@@ -12,7 +12,7 @@ impl<T: Display> AssignOrHandle<T> for Result<T, ProblemAt> {
     fn assign_or_handle(self, to: &mut T, problems: &mut Problems) {
         match self {
             Ok(v) => *to = v,
-            Err(p) => p.handled_by(format!("using default {}", to), problems),
+            Err(p) => p.handled_by(format!("using default {to}"), problems),
         }
     }
 }
