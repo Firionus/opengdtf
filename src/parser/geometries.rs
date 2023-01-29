@@ -270,47 +270,36 @@ impl<'a> GeometriesParser<'a> {
     }
 
     fn try_renaming_with_top_level_name(&mut self, dup: &Duplicate<'a>) -> Result<(), Name> {
-        if let Some(duplicate_top_level) = dup.top_level_graph_ind {
-            let original_top_level = self
-                .geometries
-                .top_level_geometry_index(dup.duplicate_graph_ind);
+        let top_level_name = dup
+            .top_level_graph_ind
+            .filter(|top_level| !self.renamed_top_level_geometries.contains(top_level))
+            .filter(|duplicate_top_level| {
+                let original_top_level = self
+                    .geometries
+                    .top_level_geometry_index(dup.duplicate_graph_ind);
+                original_top_level != *duplicate_top_level
+            })
+            .and_then(|duplicate_top_level| {
+                Some(
+                    self.geometries
+                        .graph()
+                        .node_weight(duplicate_top_level)?
+                        .name
+                        .clone(),
+                )
+            })
+            .ok_or_else(|| dup.name.clone())?;
 
-            if !self
-                .renamed_top_level_geometries
-                .contains(&duplicate_top_level)
-                && original_top_level != duplicate_top_level
-            {
-                let suggested_name = {
-                    let duplicate_name = &dup.name;
-                    let duplicate_top_level_name =
-                        &self.geometries.graph()[duplicate_top_level].name;
-                    format!("{duplicate_name} (in {duplicate_top_level_name})").into_valid()
-                };
-                if !self.geometries.names().contains_key(&suggested_name) {
-                    self.handle_renamed_geometry(dup, &suggested_name, dup.top_level_graph_ind);
-                    if let Some(top_level) =
-                        self.geometries.graph().node_weight(duplicate_top_level)
-                    {
-                        self.rename_lookup.insert(
-                            (top_level.name.to_owned(), dup.name.clone()),
-                            suggested_name.clone(),
-                        );
-                    } else {
-                        Problem::Unexpected(
-                            "invalid geometry index in renaming with top level name".into(),
-                        )
-                        .at(&dup.n)
-                        .handled_by(
-                            "not putting geometry into lookup, so it might not be found later",
-                            self.problems,
-                        )
-                    }
-                    return Ok(());
-                }
-                return Err(suggested_name);
-            }
-        };
-        Err(dup.name.clone())
+        let suggested_name = format!("{} (in {top_level_name})", &dup.name).into_valid();
+
+        if self.geometries.names().contains_key(&suggested_name) {
+            return Err(suggested_name);
+        }
+
+        self.handle_renamed_geometry(dup, &suggested_name, dup.top_level_graph_ind);
+        self.rename_lookup
+            .insert((top_level_name, dup.name.clone()), suggested_name.clone());
+        Ok(())
     }
 
     fn try_renaming_by_incrementing_counter(
@@ -337,9 +326,7 @@ impl<'a> GeometriesParser<'a> {
         suggested_name: &Name,
         top_level_graph_ind: Option<NodeIndex>, // TODO isn't this in dup?
     ) {
-        Problem::DuplicateGeometryName(dup.name.clone())
-            .at(&dup.n)
-            .handled_by(format!("renamed to {}", suggested_name), self.problems);
+        let problem = Problem::DuplicateGeometryName(dup.name.clone()).at(&dup.n);
 
         if let Some((graph_ind, continue_parsing)) = self.add_named_geometry(
             dup.n,
@@ -351,9 +338,18 @@ impl<'a> GeometriesParser<'a> {
                 self.renamed_top_level_geometries.insert(graph_ind);
             }
 
+            problem.handled_by(format!("renamed to {suggested_name}"), self.problems);
+
             if let ContinueParsing::Children = continue_parsing {
                 self.add_children(dup.n, graph_ind, top_level_graph_ind.unwrap_or(graph_ind));
             }
+        } else {
+            problem.handled_by(
+                format!(
+                    "renamed to {suggested_name} but still ignoring node due to some other error"
+                ),
+                self.problems,
+            )
         }
     }
 }
@@ -362,6 +358,8 @@ enum ContinueParsing {
     Children,
     No,
 }
+
+// TODO refactor stuff below to other files?
 
 struct Duplicate<'a> {
     /// already parsed 'Name' attribute on xml_node, can't parse again due to side effects on get_name
@@ -454,6 +452,8 @@ mod tests {
     use super::*;
 
     use std::ops::Not;
+
+    // TODO clean up these tests
 
     #[test]
     fn test_parse_break_node() {
