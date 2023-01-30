@@ -17,7 +17,7 @@ use thiserror::Error;
 /// - U+003F (?)
 /// - U+005B..=U+005E ([\]^)
 /// - U+007B..=U+007F ({|}~<control>)
-#[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash, Display, DebugCustom)]
+#[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash, Display, DebugCustom, Default)]
 pub struct Name(String);
 
 impl TryFrom<&str> for Name {

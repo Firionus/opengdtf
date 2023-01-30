@@ -26,7 +26,7 @@ fn main() {
     }
     let stop = Instant::now();
     let opengdtf_time = stop.duration_since(start);
-    println!("gdtf-parser successfully parsed {results} fixtures");
+    println!("opengdtf successfully parsed {results} fixtures");
 
     println!("gdtf-parser took {} s", gdtf_parser_time.as_secs_f32());
     println!("opengdtf took {} s", opengdtf_time.as_secs_f32());

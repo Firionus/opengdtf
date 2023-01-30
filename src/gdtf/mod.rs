@@ -1,6 +1,10 @@
 use uuid::Uuid;
 
-use self::{dmx_modes::DmxMode, geometries::Geometries, types::data_version::DataVersion};
+use self::{
+    dmx_modes::DmxMode,
+    geometries::Geometries,
+    types::{data_version::DataVersion, name::Name},
+};
 
 pub mod dmx_modes;
 pub mod geometries;
@@ -14,7 +18,7 @@ pub struct Gdtf {
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
 
-    pub name: String, // TODO should be Name type
+    pub name: Name,
     pub short_name: String,
     pub long_name: String,
     pub manufacturer: String,

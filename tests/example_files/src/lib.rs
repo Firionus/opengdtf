@@ -57,7 +57,7 @@ impl From<Result<ParsedGdtf, Error>> for OutputEnum {
         match value {
             Ok(parsed) => OutputEnum::Ok(ParsedInfo {
                 manufacturer: parsed.gdtf.manufacturer,
-                name: parsed.gdtf.name,
+                name: parsed.gdtf.name.to_string(),
                 fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
                 problems: {
                     let mut problem_strings: Vec<String> = parsed
