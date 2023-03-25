@@ -3,7 +3,10 @@
 
 use roxmltree::{Node, TextPos};
 
-use crate::types::{dmx_break::Break, name::Name};
+use crate::{
+    geometries::GeometriesError,
+    types::{dmx_break::Break, name::Name},
+};
 
 pub type Problems = Vec<HandledProblem>;
 
@@ -56,20 +59,8 @@ pub enum Problem {
     UnexpectedTopLevelGeometryReference(Name),
     #[error("unknown Geometry '{0}' referenced")]
     UnknownGeometry(Name),
-    #[error(
-        "non-top-level Geometry '{target}' referenced in GeometryReference '{geometry_reference}'"
-    )]
-    NonTopLevelGeometryReferenced {
-        target: Name,
-        geometry_reference: Name,
-    },
-    #[error(
-        "geometry reference '{geometry_reference}' references its own top-level geometry '{target}'"
-    )]
-    CircularGeometryReference {
-        target: Name,
-        geometry_reference: Name,
-    },
+    #[error("invalid GeometryReference: {0}")]
+    InvalidGeometryReference(GeometriesError),
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"

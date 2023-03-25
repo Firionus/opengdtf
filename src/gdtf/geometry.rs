@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::types::{dmx_break::Break, name::Name};
-use petgraph::graph::NodeIndex;
 
 /// A geometry node in the geometry graph
 #[derive(Debug, Clone)]
@@ -14,10 +13,7 @@ pub struct Geometry {
 #[derive(Debug, Clone)]
 pub enum Type {
     General,
-    Reference {
-        reference: NodeIndex,
-        offsets: Offsets,
-    },
+    Reference { offsets: Offsets }, // referenced top level geometry kept in `templates` graph
 }
 
 // TODO When Channel parsing is implemented, there needs to be a validation that

@@ -2,11 +2,12 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use getset::Getters;
+use petgraph::prelude::DiGraphMap;
 use petgraph::visit::Walker;
 use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
-use crate::geometry::Geometry;
+use crate::geometry::{Geometry, Type};
 use crate::types::name::Name;
 
 #[derive(Debug, Default, Getters)]
@@ -21,6 +22,9 @@ pub struct Geometries {
     /// for this crate. The tree structure is ensured by the modifying methods
     /// and the fact that the field is not mutably accesible from the outside.
     graph: GeometryGraph,
+
+    /// Graph with template relationships, i.e. TopLevelGeometry -> GeometryReference.
+    templates: DiGraphMap<NodeIndex, ()>,
 }
 
 type GeometryGraph = Graph<Geometry, (), Directed>;
@@ -72,6 +76,13 @@ impl Geometries {
         } else {
             Ok(graph_index)
         }
+    }
+
+    /// Gets a geometry by index or returns an Error
+    pub fn get_by_index(&self, graph_index: NodeIndex) -> Result<&Geometry, GeometriesError> {
+        self.graph
+            .node_weight(graph_index)
+            .ok_or(GeometriesError::MissingIndex(graph_index))
     }
 
     /// Returns the graph index of the parent of the geometry with the given
@@ -135,6 +146,43 @@ impl Geometries {
     pub fn top_level_geometry_index(&self, graph_index: NodeIndex) -> NodeIndex {
         self.ancestors(graph_index).last().unwrap_or(graph_index)
     }
+
+    pub fn add_template_relationship(
+        &mut self,
+        referenced: NodeIndex,
+        reference: NodeIndex,
+    ) -> Result<(), GeometriesError> {
+        let reference_geometry = self.get_by_index(reference)?;
+        if !matches!(reference_geometry.t, Type::Reference { .. }) {
+            return Err(GeometriesError::ReferenceForNonReferenceGeometry(reference));
+        }
+
+        let referenced_geometry = self.get_by_index(referenced)?;
+        if matches!(referenced_geometry.t, Type::Reference { .. }) {
+            return Err(GeometriesError::ReferenceReferenced(referenced));
+        }
+
+        if !self.is_top_level(referenced) {
+            return Err(GeometriesError::NonTopLevelGeometryReferenced {
+                referenced: referenced_geometry.name.clone(),
+                reference: reference_geometry.name.clone(),
+            });
+        }
+
+        let top_level_graph_ind = self.top_level_geometry_index(reference);
+        if referenced == top_level_graph_ind {
+            return Err(GeometriesError::CircularGeometryReference {
+                reference: reference_geometry.name.clone(),
+                referenced: referenced_geometry.name.clone(),
+            });
+        };
+
+        self.templates.add_node(reference);
+        self.templates.add_node(referenced);
+        self.templates.add_edge(referenced, reference, ());
+
+        Ok(())
+    }
 }
 
 pub struct GeometryAncestors {
@@ -156,6 +204,16 @@ pub enum GeometriesError {
     NameAlreadyTaken(NodeIndex),
     #[error("missing geometry graph index {0:?}")]
     MissingIndex(NodeIndex),
+    #[error("non-top-level Geometry '{referenced}' referenced by '{reference}'")]
+    NonTopLevelGeometryReferenced { referenced: Name, reference: Name },
+    #[error(
+        "geometry reference '{reference}' references its own top-level geometry '{referenced}'"
+    )]
+    CircularGeometryReference { referenced: Name, reference: Name },
+    #[error("tried to assign a reference to geometry that is not a GeometryReference")]
+    ReferenceForNonReferenceGeometry(NodeIndex),
+    #[error("tried to reference a GeometryReference, such chains are superfluous")]
+    ReferenceReferenced(NodeIndex),
 }
 
 #[cfg(test)]

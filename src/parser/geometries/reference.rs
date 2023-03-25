@@ -11,53 +11,78 @@ use roxmltree::Node;
 
 use std::collections::hash_map::Entry::Vacant;
 
+#[derive(Debug)]
+pub(super) struct DeferredReference<'a> {
+    referencing_node: Node<'a, 'a>,
+    name: Name,
+    referenced: Name,
+}
+
 impl<'a> GeometriesParser<'a> {
     pub(super) fn named_geometry_reference(
         &mut self,
-        n: Node,
+        n: Node<'a, 'a>,
         name: Name,
-        top_level_graph_ind: Option<NodeIndex>,
     ) -> Option<Geometry> {
-        let reference = self
-            .get_index_of_referenced_geometry(n, &name, top_level_graph_ind)
-            .ok_or_handled_by("not parsing node", self.problems)?;
         let offsets = parse_reference_offsets(n, &name, self.problems);
 
         let geometry = Geometry {
-            name,
-            t: Type::Reference { offsets, reference },
+            name: name.clone(),
+            t: Type::Reference { offsets },
         };
 
+        let ref_string = n
+            .parse_required_attribute::<Name>("Geometry")
+            .ok_or_handled_by("not parsing node", self.problems)?;
+        self.references.push_back(DeferredReference {
+            referencing_node: n,
+            name,
+            referenced: ref_string,
+        });
+
         Some(geometry)
+    }
+
+    pub(super) fn parse_references(&mut self) {
+        while let Some(d) = self.references.pop_front() {
+            let referenced =
+                match self.get_index_of_referenced_geometry(d.referencing_node, d.referenced) {
+                    Ok(v) => v,
+                    Err(p) => {
+                        p.handled_by("not adding reference", self.problems);
+                        continue;
+                    }
+                };
+            let reference = match self.geometries.get_index(&d.name) {
+                Some(v) => v,
+                None => {
+                    Problem::Unexpected("geometry reference node never added".to_string())
+                        .at(&d.referencing_node)
+                        .handled_by("not adding reference", self.problems);
+                    continue;
+                }
+            };
+            if let Err(err) = self
+                .geometries
+                .add_template_relationship(referenced, reference)
+            {
+                Problem::InvalidGeometryReference(err)
+                    .at(&d.referencing_node)
+                    .handled_by("not adding reference", self.problems);
+                continue;
+            };
+        }
     }
 
     fn get_index_of_referenced_geometry(
         &mut self,
         n: Node,
-        name: &Name,
-        top_level_graph_ind: Option<NodeIndex>,
+        ref_string: Name,
     ) -> Result<NodeIndex, ProblemAt> {
-        let ref_string = n.parse_required_attribute::<Name>("Geometry")?;
         let ref_ind = self
             .geometries
             .get_index(&ref_string)
             .ok_or_else(|| Problem::UnknownGeometry(ref_string.clone()).at(&n))?;
-        if !self.geometries.is_top_level(ref_ind) {
-            return Err(Problem::NonTopLevelGeometryReferenced {
-                target: ref_string,
-                geometry_reference: name.to_owned(),
-            }
-            .at(&n));
-        }
-        if let Some(top_level_graph_ind) = top_level_graph_ind {
-            if ref_ind == top_level_graph_ind {
-                return Err(Problem::CircularGeometryReference {
-                    target: ref_string,
-                    geometry_reference: name.to_owned(),
-                }
-                .at(&n));
-            }
-        };
         Ok(ref_ind)
     }
 }

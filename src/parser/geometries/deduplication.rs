@@ -85,12 +85,9 @@ impl<'a> GeometriesParser<'a> {
     fn handle_renamed_geometry(&mut self, dup: &Duplicate<'a>, suggested_name: &Name) {
         let problem = Problem::DuplicateGeometryName(dup.name.clone()).at(&dup.n);
 
-        if let Some((graph_ind, continue_parsing)) = self.add_named_geometry(
-            dup.n,
-            suggested_name.clone(),
-            dup.top_level_graph_ind,
-            dup.parent_graph_ind,
-        ) {
+        if let Some((graph_ind, continue_parsing)) =
+            self.add_named_geometry(dup.n, suggested_name.clone(), dup.parent_graph_ind)
+        {
             if self.geometries.is_top_level(graph_ind) {
                 self.renamed_top_level_geometries.insert(graph_ind);
             }

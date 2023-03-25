@@ -50,6 +50,7 @@ pub struct ParsedInfo {
     pub fixture_type_id: String,
     pub problems: Vec<String>,
     pub geometries: Vec<String>,
+    // TODO include template relationships, when channel list is implemented and templates are used more
 }
 
 impl From<Result<ParsedGdtf, Error>> for OutputEnum {
