@@ -75,6 +75,8 @@ impl GetXmlAttribute for Node<'_, '_> {
 
     /// Get attribute "Name" and parse to GDTF type Name.
     ///
+    /// node_index_in_xml_parent is a 0-based index.
+    ///
     /// If missing, provide a default and push a problem. If the Name is
     /// invalid, replace the disallowed chars and push a problem.
     fn name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> Name {
@@ -89,7 +91,7 @@ impl GetXmlAttribute for Node<'_, '_> {
     }
 }
 
-fn parse_attribute_content<T: FromStr>(
+pub(crate) fn parse_attribute_content<T: FromStr>(
     node: &Node,
     content: &str,
     attr: &str,

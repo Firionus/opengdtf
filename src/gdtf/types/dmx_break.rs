@@ -1,6 +1,8 @@
 use std::num::ParseIntError;
 use std::str::FromStr;
 
+// TODO we could remove all of this and replace with u16 if we just used 0-based breaks instead of 1-based
+
 /// DMX Break, which is an unsigned integer bigger than 0
 #[derive(derive_more::Display, derive_more::DebugCustom, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Break(u16);

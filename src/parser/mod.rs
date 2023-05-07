@@ -3,6 +3,7 @@
 // variant in `ProblemType` with many fields
 mod errors;
 mod geometries;
+mod modes;
 mod parse_xml;
 mod problems;
 mod types;
@@ -21,6 +22,7 @@ pub use self::{
 
 use self::{
     geometries::GeometriesParser,
+    modes::DmxModesParser,
     parse_xml::{get_xml_attribute::GetXmlAttribute, AssignOrHandle, GetXmlNode},
     types::yes_no::YesNoEnum,
 };
@@ -101,6 +103,13 @@ impl ParsedGdtf {
 
         GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
             .parse_from(&fixture_type);
+
+        DmxModesParser::new(
+            &mut self.gdtf.geometries,
+            &mut self.gdtf.dmx_modes,
+            &mut self.problems,
+        )
+        .parse_from(&fixture_type);
     }
 
     /// Parse RefFT attribute

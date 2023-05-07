@@ -61,6 +61,8 @@ pub enum Problem {
     UnknownGeometry(Name),
     #[error("invalid GeometryReference: {0}")]
     InvalidGeometryReference(GeometriesError),
+    #[error("geometry '{geometry}' of DMX mode '{mode}' is not top level")]
+    NonTopLevelDmxModeGeometry { geometry: Name, mode: Name },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
