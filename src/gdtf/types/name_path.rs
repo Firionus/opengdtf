@@ -11,7 +11,7 @@ impl FromStr for NamePath {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut out = NamePath(vec![]);
-        for n in s.split(".") {
+        for n in s.split('.') {
             match Name::try_from(n) {
                 Ok(name) => out.0.push(name),
                 Err(e) => return Err(e),

@@ -134,6 +134,7 @@ impl<'a> DmxModesParser<'a> {
                                 .at(&channel)
                             })
                             // TODO the pattern of "parse_required_attribute" and handling errors by using the default should be factored out
+                            // it should bringt great benefits to productivity
                             .and_then(|n| n.parse_required_attribute("Attribute"))
                             .ok_or_handled_by("using default", self.problems)
                             .unwrap_or_default();
@@ -150,7 +151,34 @@ impl<'a> DmxModesParser<'a> {
                         }
                         .ok_or_handled_by("using default", self.problems)
                         .unwrap_or_default();
-                        let offsets = vec![];
+
+                        let offset_string = channel
+                            .required_attribute("Offset")
+                            .ok_or_handled_by("using none", self.problems)
+                            .unwrap_or("None");
+                        let offsets: Vec<u16> = match offset_string {
+                            "None" => vec![],
+                            // TODO should this pattern be factored out?
+                            s => s
+                                .split(',')
+                                .filter_map(|si| {
+                                    si.parse()
+                                        .map_err(|e| {
+                                            Problem::InvalidAttribute {
+                                                attr: "Offset".to_owned(),
+                                                tag: "DMXChannel".to_owned(),
+                                                content: offset_string.to_owned(),
+                                                source: Box::new(e),
+                                                expected_type: "u16".to_owned(),
+                                            }
+                                            .at(&channel)
+                                            .handled_by("omitting value", self.problems)
+                                        })
+                                        .ok()
+                                })
+                                .collect(),
+                        };
+
                         let channel_functions = vec![];
                         channels.push(Channel {
                             name,
