@@ -63,6 +63,21 @@ pub enum Problem {
     InvalidGeometryReference(GeometriesError),
     #[error("geometry '{geometry}' of DMX mode '{mode}' is not top level")]
     NonTopLevelDmxModeGeometry { geometry: Name, mode: Name },
+    #[error("got {0} bytes for channel but only up to 4 are supported")]
+    UnsupportedByteCount(usize),
+    #[error("channel functions with mode master {mode_master} from {mode_from} to {mode_to} don't have an \
+    unambiguous DMXTo value because not every DMXFrom value occurs the same amount of times")]
+    AmbiguousDmxFrom {
+        mode_master: String,
+        mode_from: u32,
+        mode_to: u32,
+    },
+    #[error("ModeFrom or ModeTo missing on channel function '{0}' with ModeMaster")]
+    MissingModeFromOrTo(String),
+    #[error("channel with name {0} not found in mode {1}")]
+    UnknownChannel(Name, Name),
+    #[error("channel function with name {name} not found in mode {mode}")]
+    UnknownChannelFunction { name: Name, mode: Name },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"

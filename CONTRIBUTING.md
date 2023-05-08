@@ -47,3 +47,17 @@ individually. This doesn't scale well to many developers, but for the moment it'
 
 The expected output for the tests is saved in `tests/example_files/expected.toml`. Matching the example files to the
 expected output is achieved with a hash of the extracted filenames and file contents in the GDTF archive. 
+
+## Error Handling Notes
+
+Basically, whenever you do something, it can go wrong. Because I want this
+library to be really resistant to errors, this can be quite cumbersome to handle. 
+
+What I learned is this: Whenever you might have to give up on the remaining code
+on error, you want to be in a function that returns `Result<.., ProblemAt>`.
+Then, when something bad might happen, there are two ways to handle it:
+- You can fix the problem right away. Create a problem, push it, and do the fix. (like `.ok_or_handled_by("stuff", p).unwrap_or(default)`)
+- You can't fix the problem. Create a ProblemAt and return to the caller. (like `.ok_or_else(|| Problem::New.at(&n))?`)
+
+Further, you should always check the `parse_xml` traits to see whether a utility
+function already does what you need.

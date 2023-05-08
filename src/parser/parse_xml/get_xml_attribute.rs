@@ -4,12 +4,29 @@ use std::str::FromStr;
 
 use roxmltree::Node;
 
-use crate::{types::name::Name, Problem, ProblemAt, Problems};
+use crate::{parser::problems::HandleProblem, types::name::Name, Problem, ProblemAt, Problems};
 
 pub(crate) trait GetXmlAttribute {
     fn required_attribute(&self, attr: &str) -> Result<&str, ProblemAt>;
 
     fn parse_required_attribute<T: FromStr>(&self, attr: &str) -> Result<T, ProblemAt>
+    where
+        <T as FromStr>::Err: std::error::Error + 'static;
+
+    fn parse_required_attribute_or<T: FromStr>(
+        &self,
+        attr: &str,
+        default: T,
+        problems: &mut Problems,
+    ) -> T
+    where
+        <T as FromStr>::Err: std::error::Error + 'static;
+
+    fn parse_required_attribute_or_default<T: FromStr + Default>(
+        &self,
+        attr: &str,
+        problems: &mut Problems,
+    ) -> T
     where
         <T as FromStr>::Err: std::error::Error + 'static;
 
@@ -47,6 +64,33 @@ impl GetXmlAttribute for Node<'_, '_> {
     {
         let content = self.required_attribute(attr)?;
         parse_attribute_content(self, content, attr)
+    }
+
+    fn parse_required_attribute_or<T: FromStr>(
+        &self,
+        attr: &str,
+        opt: T,
+        problems: &mut Problems,
+    ) -> T
+    where
+        <T as FromStr>::Err: std::error::Error + 'static,
+    {
+        self.parse_required_attribute(attr)
+            .ok_or_handled_by("using default", problems)
+            .unwrap_or(opt)
+    }
+
+    fn parse_required_attribute_or_default<T: FromStr + Default>(
+        &self,
+        attr: &str,
+        problems: &mut Problems,
+    ) -> T
+    where
+        <T as FromStr>::Err: std::error::Error + 'static,
+    {
+        self.parse_required_attribute(attr)
+            .ok_or_handled_by("using default", problems)
+            .unwrap_or_default()
     }
 
     /// Parse an optional XML attribute to the type `T`. If it is missing,

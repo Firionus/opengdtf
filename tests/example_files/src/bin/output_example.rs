@@ -5,7 +5,10 @@ use opengdtf::parse;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    // let args = vec!["".to_owned(), "ARRI/ARRI@Orbiter@DMX_v5.0.gdtf".to_owned()];
+    // let args = vec![
+    //     "".to_owned(),
+    //     "Robe_Lighting@Robin_Tetra2@2022-12-05__Geometry_names_revision.gdtf".to_owned(),
+    // ];
     let path = EXAMPLES_DIR.to_owned().join(&args[1]);
     println!("parsing {:?}", &path);
     let file = File::open(path).unwrap();
