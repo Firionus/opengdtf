@@ -27,6 +27,7 @@ pub struct Channel {
     pub offsets: Vec<u16>,
     /// first one must always be the Raw DMX Channel Function
     pub channel_functions: Vec<NodeIndex>,
+    pub default: u32,
 }
 
 #[derive(Debug)]
@@ -58,6 +59,7 @@ pub struct ChannelFunction {
     pub dmx_to: u32,
     pub phys_from: f64,
     pub phys_to: f64,
+    pub default: u32,
 }
 
 #[derive(Debug)]

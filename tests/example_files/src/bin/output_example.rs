@@ -1,6 +1,6 @@
 use std::{env, fs::File, io::Write};
 
-use example_files::{examples_update_output_iter, EXAMPLES_DIR, OUTPUTS_DIR};
+use example_files::{EXAMPLES_DIR, OUTPUTS_DIR};
 use opengdtf::parse;
 
 fn main() {

@@ -1,24 +1,13 @@
-use std::{collections::HashMap, num::ParseIntError};
-
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
 use thiserror::Error;
 
 use crate::{
-    dmx_modes::{
-        Channel, ChannelBreak, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster, Subfixture,
-    },
+    dmx_modes::{Channel, ChannelBreak, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster},
     geometries::Geometries,
-    geometry::{self, Offset},
-    types::{
-        dmx_break::{self, Break},
-        name::{IntoValidName, Name},
-        name_path::NamePath,
-    },
+    types::name::{IntoValidName, Name},
     Problem, ProblemAt, Problems,
 };
-
-use itertools::Itertools;
 
 use super::{
     parse_xml::{get_xml_attribute::parse_attribute_content, GetXmlAttribute, GetXmlNode},
@@ -45,7 +34,7 @@ impl<'a> DmxModesParser<'a> {
         }
     }
 
-    pub(crate) fn parse_from(mut self, fixture_type: &'a Node<'a, 'a>) {
+    pub(crate) fn parse_from(self, fixture_type: &'a Node<'a, 'a>) {
         let modes = match fixture_type.find_required_child("DMXModes") {
             Ok(v) => v,
             Err(p) => {
@@ -103,7 +92,7 @@ impl<'a> DmxModesParser<'a> {
 
             match mode.find_required_child("DMXChannels") {
                 Ok(dmx_channels) => {
-                    for (j, channel) in dmx_channels
+                    for (_j, channel) in dmx_channels
                         .children()
                         .filter(|n| n.is_element() && n.tag_name().name() == "DMXChannel")
                         .enumerate()
@@ -196,7 +185,7 @@ impl<'a> DmxModesParser<'a> {
                         let max_dmx_value = bytes_max_value(channel_bytes);
 
                         // TODO look up geometry in geometry rename lookup instead of geometries!
-                        // TODO test whether it is a template geometry, if yes instantiate channel multiple times
+                        // TODO test whether it is a template geometry, if yes instantiate channel multiple times in subfixtures
                         let geometry_index = self
                             .geometries
                             .get_index(&channel_geometry)
@@ -217,6 +206,7 @@ impl<'a> DmxModesParser<'a> {
                             dmx_to: max_dmx_value,
                             phys_from: 0.,
                             phys_to: 1.,
+                            default: 0,
                         };
                         channel_function_ids.push(channel_functions.add_node(raw_channel_function));
 
@@ -303,6 +293,7 @@ impl<'a> DmxModesParser<'a> {
                                     dmx_to,
                                     phys_from,
                                     phys_to,
+                                    default,
                                 });
 
                                 channel_function_ids.push(chfIndex);
@@ -333,6 +324,9 @@ impl<'a> DmxModesParser<'a> {
                             offsets,
                             channel_functions: channel_function_ids,
                             bytes: channel_bytes,
+                            default: 0,
+                            // TODO later fill default by traversing channel_function graph after cycle breaking, starting at root nodes f
+                            // and then taking default from first active channel function in each channel that isn't the raw dmx channel function
                         });
                     }
 
