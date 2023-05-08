@@ -49,11 +49,7 @@ impl<'a> DmxModesParser<'a> {
             .enumerate()
         {
             let mode_name = mode.name(i, self.problems);
-            let description = mode
-                .required_attribute("Description")
-                .ok_or_handled_by("using empty string", self.problems)
-                .unwrap_or("")
-                .to_owned();
+            let description = mode.attribute("Description").unwrap_or("").to_owned();
 
             let geometry = mode
                 .parse_required_attribute::<Name>("Geometry")
@@ -141,7 +137,7 @@ impl<'a> DmxModesParser<'a> {
                             .ok_or_handled_by("using none", self.problems)
                             .unwrap_or("None");
                         let mut offsets: Vec<u16> = match offset_string {
-                            "None" => vec![],
+                            "None" | "" => vec![],
                             s => s
                                 .split(',')
                                 .filter_map(|si| {

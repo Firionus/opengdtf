@@ -92,7 +92,7 @@ impl<'a> GeometriesParser<'a> {
                 self.renamed_top_level_geometries.insert(graph_ind);
             }
 
-            problem.handled_by(format!("renamed to {suggested_name}"), self.problems);
+            problem.handled_by(format!("renamed to '{suggested_name}'"), self.problems);
 
             if let ContinueParsing::Children = continue_parsing {
                 self.add_children(
@@ -104,7 +104,7 @@ impl<'a> GeometriesParser<'a> {
         } else {
             problem.handled_by(
                 format!(
-                    "renamed to {suggested_name} but still ignoring node due to some other error"
+                    "renamed to '{suggested_name}' but still ignoring node due to some other error"
                 ),
                 self.problems,
             )
