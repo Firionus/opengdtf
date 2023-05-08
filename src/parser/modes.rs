@@ -210,28 +210,27 @@ impl<'a> DmxModesParser<'a> {
                         };
                         channel_function_ids.push(channel_functions.add_node(raw_channel_function));
 
-                        for (k, logCh) in channel
+                        for (_k, logical_channel) in channel
                             .children()
                             .filter(|n| n.has_tag_name("LogicalChannel"))
                             .enumerate()
                         {
                             // TODO read Snap, Master, MibFade, DMXChangeTimeLimit
-                            for (l, chf) in logCh
+                            for (l, chf) in logical_channel
                                 .children()
                                 .filter(|n| n.has_tag_name("ChannelFunction"))
                                 .enumerate()
                             {
-                                let chfAttribute =
-                                    chf.attribute("Attribute").unwrap_or("NoFeature");
+                                let chf_attr = chf.attribute("Attribute").unwrap_or("NoFeature");
                                 let original_attribute =
                                     chf.attribute("OriginalAttribute").unwrap_or("");
-                                let chfName: Name = chf
+                                let chf_name: Name = chf
                                     .parse_attribute("Name")
                                     .and_then(|r| {
                                         r.ok_or_handled_by("using default", self.problems)
                                     })
                                     .unwrap_or_else(|| {
-                                        format!("{chfAttribute} {}", l + 1).into_valid()
+                                        format!("{chf_attr} {}", l + 1).into_valid()
                                     });
 
                                 let dmx_from = chf
@@ -284,10 +283,10 @@ impl<'a> DmxModesParser<'a> {
                                     .flatten()
                                     .unwrap_or(1.);
 
-                                let chfIndex = channel_functions.add_node(ChannelFunction {
-                                    name: chfName.to_owned(),
+                                let chf_index = channel_functions.add_node(ChannelFunction {
+                                    name: chf_name.to_owned(),
                                     geometry: geometry_index,
-                                    attr: chfAttribute.to_owned(),
+                                    attr: chf_attr.to_owned(),
                                     original_attr: original_attribute.to_owned(),
                                     dmx_from,
                                     dmx_to,
@@ -296,7 +295,7 @@ impl<'a> DmxModesParser<'a> {
                                     default,
                                 });
 
-                                channel_function_ids.push(chfIndex);
+                                channel_function_ids.push(chf_index);
 
                                 if let Some(mode_master) = chf.attribute("ModeMaster") {
                                     if let (Some(mode_from), Some(mode_to)) =
@@ -307,10 +306,10 @@ impl<'a> DmxModesParser<'a> {
                                             mode_master,
                                             mode_from,
                                             mode_to,
-                                            chfIndex,
+                                            chf_index,
                                         ));
                                     } else {
-                                        Problem::MissingModeFromOrTo(chfName.as_str().to_owned())
+                                        Problem::MissingModeFromOrTo(chf_name.as_str().to_owned())
                                             .at(&chf)
                                             .handled_by("ignoring ModeMaster", self.problems)
                                     }
@@ -383,7 +382,7 @@ fn handle_mode_master(
     mode_from: &str,
     mode_to: &str,
     chf_index: NodeIndex,
-    channels: &Vec<Channel>,
+    channels: &[Channel],
     mode_name: &Name,
     channel_functions: &mut ChannelFunctions,
     problems: &mut Problems,
