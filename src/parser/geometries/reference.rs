@@ -1,7 +1,8 @@
 use crate::{
+    dmx_break::Break,
     geometry::{Geometry, Offset, Offsets, Type},
+    name::Name,
     parser::{parse_xml::GetXmlAttribute, problems::HandleProblem},
-    types::{dmx_break::Break, name::Name},
     Problem, ProblemAt, Problems,
 };
 

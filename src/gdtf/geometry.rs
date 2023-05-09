@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::{dmx_break::Break, name::Name};
+use crate::{dmx_break::Break, name::Name};
 
 /// A geometry node in the geometry graph
 #[derive(Debug, Clone)]

@@ -8,7 +8,7 @@ use petgraph::Direction::Incoming;
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
 use crate::geometry::{Geometry, Type};
-use crate::types::name::Name;
+use crate::name::Name;
 
 #[derive(Debug, Default, Getters)]
 #[getset(get = "pub")]

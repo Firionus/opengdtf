@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use roxmltree::Node;
 
-use crate::{parser::problems::HandleProblem, types::name::Name, Problem, ProblemAt, Problems};
+use crate::{name::Name, parser::problems::HandleProblem, Problem, ProblemAt, Problems};
 
 pub(crate) trait GetXmlAttribute {
     fn required_attribute(&self, attr: &str) -> Result<&str, ProblemAt>;

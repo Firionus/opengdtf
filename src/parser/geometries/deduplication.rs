@@ -1,7 +1,7 @@
 use roxmltree::Node;
 
 use crate::{
-    types::name::{IntoValidName, Name},
+    name::{IntoValidName, Name},
     Problem,
 };
 use petgraph::graph::NodeIndex;

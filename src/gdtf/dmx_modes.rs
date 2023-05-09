@@ -1,6 +1,6 @@
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
-use crate::types::{dmx_break::Break, name::Name};
+use crate::{dmx_break::Break, name::Name};
 
 #[derive(Debug)]
 pub struct DmxMode {

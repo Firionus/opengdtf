@@ -10,7 +10,7 @@ use super::parse_xml::{GetXmlAttribute, GetXmlNode};
 use crate::{
     geometries::Geometries,
     geometry::{Geometry, Type},
-    types::name::Name,
+    name::Name,
     Problem, Problems,
 };
 
@@ -229,7 +229,7 @@ impl GeometryLookup {
 mod tests {
     use petgraph::Direction::Incoming;
 
-    use crate::{geometry::Offset, types::name::IntoValidName};
+    use crate::{geometry::Offset, name::IntoValidName};
 
     use super::*;
 

@@ -5,7 +5,7 @@ use roxmltree::{Node, TextPos};
 
 use crate::{
     geometries::GeometriesError,
-    types::{dmx_break::Break, name::Name},
+    {dmx_break::Break, name::Name},
 };
 
 pub type Problems = Vec<HandledProblem>;
@@ -131,6 +131,8 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
         }
     }
 }
+
+// TODO add Result<_, Problem>.err_at(&Node) -> Result<_, ProblemAt>
 
 pub(crate) trait HandleOption<T, S: Into<Box<dyn std::error::Error>>> {
     fn ok_or_unexpected(self, why: S) -> Result<T, Problem>;

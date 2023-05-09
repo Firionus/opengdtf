@@ -1,15 +1,13 @@
 use uuid::Uuid;
 
-use self::{
-    dmx_modes::DmxMode,
-    geometries::Geometries,
-    types::{data_version::DataVersion, name::Name},
-};
+use self::{data_version::DataVersion, dmx_modes::DmxMode, geometries::Geometries, name::Name};
 
+pub mod data_version;
+pub mod dmx_break;
 pub mod dmx_modes;
 pub mod geometries;
 pub mod geometry;
-pub mod types;
+pub mod name;
 
 #[derive(Debug)]
 pub struct Gdtf {

@@ -1,12 +1,13 @@
 #![allow(clippy::result_large_err)]
 // TODO fix warning later, it is only a memory usage problem, due to an enum
 // variant in `ProblemType` with many fields
+mod dmx_value;
 mod errors;
 mod geometries;
 mod modes;
 mod parse_xml;
 mod problems;
-mod types;
+mod yes_no;
 
 use std::io::{Read, Seek};
 
@@ -24,7 +25,7 @@ use self::{
     geometries::GeometriesParser,
     modes::DmxModesParser,
     parse_xml::{get_xml_attribute::GetXmlAttribute, AssignOrHandle, GetXmlNode},
-    types::yes_no::YesNoEnum,
+    yes_no::YesNoEnum,
 };
 
 #[derive(Debug, Default)]

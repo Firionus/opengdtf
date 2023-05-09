@@ -7,14 +7,14 @@ use thiserror::Error;
 use crate::{
     dmx_modes::{Channel, ChannelBreak, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster},
     geometries::Geometries,
-    types::name::{IntoValidName, Name},
+    name::{IntoValidName, Name},
     Problem, ProblemAt, Problems,
 };
 
 use super::{
+    dmx_value::{bytes_max_value, parse_dmx},
     parse_xml::{get_xml_attribute::parse_attribute_content, GetXmlAttribute, GetXmlNode},
     problems::{HandleOption, HandleProblem},
-    types::parse_dmx::{bytes_max_value, parse_dmx},
 };
 
 pub(crate) struct DmxModesParser<'a> {
@@ -478,7 +478,7 @@ fn handle_mode_master(
         .at(&chf));
     }
 
-    // TODO add_edge might panic. We'll need even more graphs down the line. Suggestion:
+    // TODO add_edge might panic. We'll need even more graph operations down the line. Suggestion:
     // create a newtype around petgraph::Graph, use delegation for methods that don't panic, implement add_edge, node_weight, ... with checks to guard against panics
     channel_functions.add_edge(
         master_index,
