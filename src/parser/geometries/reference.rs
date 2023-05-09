@@ -56,7 +56,7 @@ impl<'a> GeometriesParser<'a> {
             let reference = match self.geometries.get_index(&d.name) {
                 Some(v) => v,
                 None => {
-                    Problem::Unexpected("geometry reference node never added".to_string())
+                    Problem::Unexpected("geometry reference node never added".into())
                         .at(&d.referencing_node)
                         .handled_by("not adding reference", self.problems);
                     continue;

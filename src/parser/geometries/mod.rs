@@ -190,7 +190,7 @@ impl<'a> GeometriesParser<'a> {
             None => self.geometries.add_top_level(geometry),
         }
         .map_err(|err| {
-            Problem::Unexpected(err.to_string())
+            Problem::Unexpected(err.into())
                 .at(&n)
                 .handled_by("ignoring node", self.problems)
         })

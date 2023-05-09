@@ -85,7 +85,7 @@ pub enum Problem {
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
     )]
-    Unexpected(String),
+    Unexpected(Box<dyn std::error::Error>),
 }
 
 impl Problem {
@@ -132,12 +132,12 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
     }
 }
 
-pub(crate) trait HandleOption<T, S: Into<String>> {
+pub(crate) trait HandleOption<T, S: Into<Box<dyn std::error::Error>>> {
     fn ok_or_unexpected(self, why: S) -> Result<T, Problem>;
     fn ok_or_unexpected_at(self, why: S, at: &Node) -> Result<T, ProblemAt>;
 }
 
-impl<T, S: Into<String>> HandleOption<T, S> for Option<T> {
+impl<T, S: Into<Box<dyn std::error::Error>>> HandleOption<T, S> for Option<T> {
     fn ok_or_unexpected(self, description: S) -> Result<T, Problem> {
         self.ok_or_else(|| Problem::Unexpected(description.into()))
     }
