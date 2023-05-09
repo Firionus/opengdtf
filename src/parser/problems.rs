@@ -65,15 +65,18 @@ pub enum Problem {
     NonTopLevelDmxModeGeometry { geometry: Name, mode: Name },
     #[error("got {0} bytes for channel but only up to 4 are supported")]
     UnsupportedByteCount(usize),
-    #[error("channel functions with mode master {mode_master} from {mode_from} to {mode_to} don't have an \
-    unambiguous DMXTo value because not every DMXFrom value occurs the same amount of times")]
-    AmbiguousDmxFrom {
-        mode_master: String,
+    #[error("ModeFrom or ModeTo missing on channel function '{0}' with ModeMaster")]
+    MissingModeFromOrTo(String),
+    #[error(
+        "channel function {name} in mode {dmx_mode} is unreachable because the ModeFrom/ModeTo range \
+        {mode_from} to {mode_to} does not overlap with the DMX range of the ModeMaster"
+    )]
+    UnreachableChannelFunction {
+        name: Name,
+        dmx_mode: Name,
         mode_from: u32,
         mode_to: u32,
     },
-    #[error("ModeFrom or ModeTo missing on channel function '{0}' with ModeMaster")]
-    MissingModeFromOrTo(String),
     #[error("channel with name {0} not found in mode {1}")]
     UnknownChannel(Name, Name),
     #[error("channel function with name {name} not found in mode {mode}")]
@@ -126,6 +129,21 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
                 None
             }
         }
+    }
+}
+
+pub(crate) trait HandleOption<T, S: Into<String>> {
+    fn ok_or_unexpected(self, why: S) -> Result<T, Problem>;
+    fn ok_or_unexpected_at(self, why: S, at: &Node) -> Result<T, ProblemAt>;
+}
+
+impl<T, S: Into<String>> HandleOption<T, S> for Option<T> {
+    fn ok_or_unexpected(self, description: S) -> Result<T, Problem> {
+        self.ok_or_else(|| Problem::Unexpected(description.into()))
+    }
+
+    fn ok_or_unexpected_at(self, description: S, at: &Node) -> Result<T, ProblemAt> {
+        self.ok_or_else(|| Problem::Unexpected(description.into()).at(at))
     }
 }
 

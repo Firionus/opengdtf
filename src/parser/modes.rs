@@ -1,3 +1,5 @@
+use std::cmp::{max, min};
+
 use petgraph::graph::NodeIndex;
 use roxmltree::Node;
 use thiserror::Error;
@@ -11,7 +13,7 @@ use crate::{
 
 use super::{
     parse_xml::{get_xml_attribute::parse_attribute_content, GetXmlAttribute, GetXmlNode},
-    problems::HandleProblem,
+    problems::{HandleOption, HandleProblem},
     types::parse_dmx::{bytes_max_value, parse_dmx},
 };
 
@@ -197,7 +199,7 @@ impl<'a> DmxModesParser<'a> {
                             name: name.to_owned(),
                             geometry: geometry_index,
                             attr: "NoFeature".into(),
-                            original_attr: "Raw DMX Value".into(),
+                            original_attr: "RawDMX".into(),
                             dmx_from: 0,
                             dmx_to: max_dmx_value,
                             phys_from: 0.,
@@ -212,11 +214,13 @@ impl<'a> DmxModesParser<'a> {
                             .enumerate()
                         {
                             // TODO read Snap, Master, MibFade, DMXChangeTimeLimit
-                            for (l, chf) in logical_channel
+                            let mut chf_iter = logical_channel
                                 .children()
                                 .filter(|n| n.has_tag_name("ChannelFunction"))
                                 .enumerate()
-                            {
+                                .peekable();
+
+                            while let Some((l, chf)) = chf_iter.next() {
                                 let chf_attr = chf.attribute("Attribute").unwrap_or("NoFeature");
                                 let original_attribute =
                                     chf.attribute("OriginalAttribute").unwrap_or("");
@@ -246,7 +250,26 @@ impl<'a> DmxModesParser<'a> {
                                             .ok_or_handled_by("using default 0", self.problems)
                                     })
                                     .unwrap_or(0);
-                                let dmx_to = dmx_from; // TODO needs to be changed later when all channel functions are parsed
+                                // The convention to use the next ChannelFunction in XML order for DMXTo is not official
+                                // see https://github.com/mvrdevelopment/spec/issues/103#issuecomment-985361192
+                                let dmx_to = chf_iter.peek().and_then(|(_, next_chf)| {
+                                    let s = next_chf.attribute("DMXFrom").unwrap_or("0/1");
+                                    parse_dmx(s, channel_bytes)
+                                        .map_err(|e| {
+                                            Problem::InvalidAttribute {
+                                                attr: "DMXFrom".to_owned(),
+                                                tag: "ChannelFunction".to_owned(),
+                                                content: s.to_owned(),
+                                                source: Box::new(e),
+                                                expected_type: "DMXValue".to_owned(),
+                                            }
+                                            .at(&chf)
+                                        })
+                                        .ok_or_handled_by("using maximum channel value for DMXTo of previous channel function", self.problems)
+                                })
+                                .filter(|next_dmx_from| dmx_from < *next_dmx_from)
+                                .map(|next_dmx_from| next_dmx_from - 1)
+                                .unwrap_or(max_dmx_value);
 
                                 let default = chf
                                     .attribute("Default")
@@ -320,8 +343,7 @@ impl<'a> DmxModesParser<'a> {
                             channel_functions: channel_function_ids,
                             bytes: channel_bytes,
                             default: 0,
-                            // TODO later fill default by traversing channel_function graph after cycle breaking, starting at root nodes f
-                            // and then taking default from first active channel function in each channel that isn't the raw dmx channel function
+                            // TODO replace with default value of InitialFunction
                         });
                     }
 
@@ -340,22 +362,6 @@ impl<'a> DmxModesParser<'a> {
                             e.handled_by("ignoring mode master", self.problems);
                         }
                     }
-
-                    // TODO update dmx_to in each channel function
-                    // TODO first group channelfunctions of a channel by ModeMaster, ModeFrom and ModeTo
-                    // validate that each DMXFrom value occurs the same amount of time
-                    // this ensures we can uniquely identify DmxTo in this ModeMasterGroup
-                    // Examples:
-                    // allowed: 1 x from 0, 1 x from 128 (1 full dmx range)
-                    // allowed: 2 x from 0 and 2 x from 128. (2 full dmx ranges)
-                    // not allowed: 2 x from 0, 1 x from 128, 1 x from 200 (2 full dmx ranges, but 128/200 can't be
-                    // assigned to one or the other full range -> error)
-                    // let dmxfrom_groups = channel_function_ids.iter().into_group_map_by(|i| {
-                    //     channel_functions.node_weight(**i).unwrap().dmx_from
-                    // });
-                    // if !dmxfrom_groups.values().map(|c| c.len()).all_equal() {
-                    //     Problem::AmbiguousDmxFrom {}
-                    // }
                 }
                 Err(p) => p.handled_by("leaving DMX mode empty", self.problems),
             };
@@ -390,7 +396,7 @@ fn handle_mode_master(
         .find(|ch| ch.name == master_channel_name)
         .ok_or_else(|| Problem::UnknownChannel(master_channel_name, mode_name.clone()).at(&chf))?;
 
-    let master_index: NodeIndex = if master_path.next().is_some() {
+    let (master, master_index): (&ChannelFunction, NodeIndex) = if master_path.next().is_some() {
         // reference to channel function
         let dependency_chf_name = master_path.next().ok_or_else(|| {
             Problem::InvalidAttribute {
@@ -402,16 +408,17 @@ fn handle_mode_master(
             }
             .at(&chf)
         })?;
-        let mut dependency_chf_index = None;
+        let mut master_chf = Default::default();
         for ni in dependency_channel.channel_functions.iter() {
             let chf_candidate = channel_functions.node_weight(*ni).ok_or_else(|| {
                 Problem::Unexpected("Invalid Channel Function Index".into()).at(&chf)
             })?;
             if chf_candidate.name == dependency_chf_name {
-                dependency_chf_index = Some(ni)
+                master_chf = Some((chf_candidate, *ni));
+                break;
             }
         }
-        *dependency_chf_index.ok_or_else(|| {
+        master_chf.ok_or_else(|| {
             Problem::UnknownChannelFunction {
                 name: dependency_chf_name.into_valid(),
                 mode: mode_name.clone(),
@@ -420,9 +427,10 @@ fn handle_mode_master(
         })?
     } else {
         // reference to channel, so in our interpretation to the raw dmx channel function
-        *dependency_channel
+        dependency_channel
             .channel_functions
             .get(0)
+            .and_then(|i| channel_functions.node_weight(*i).map(|chf| (chf, *i)))
             .ok_or_else(|| Problem::Unexpected("no raw dmx channel function".into()).at(&chf))?
     };
 
@@ -452,12 +460,32 @@ fn handle_mode_master(
         })
         .ok_or_handled_by("using default 0", problems)
         .unwrap_or(0);
+
+    let clipped_mode_from = max(mode_from, master.dmx_from);
+    let clipped_mode_to = min(mode_to, master.dmx_to);
+
+    if clipped_mode_to < clipped_mode_from {
+        let chf_name = channel_functions
+            .node_weight(chf_index)
+            .map(|chf| chf.name.to_owned())
+            .ok_or_unexpected_at("invalid chf index for mode master handler", &chf)?;
+        return Err(Problem::UnreachableChannelFunction {
+            name: chf_name,
+            dmx_mode: mode_name.to_owned(),
+            mode_from,
+            mode_to,
+        }
+        .at(&chf));
+    }
+
+    // TODO add_edge might panic. We'll need even more graphs down the line. Suggestion:
+    // create a newtype around petgraph::Graph, use delegation for methods that don't panic, implement add_edge, node_weight, ... with checks to guard against panics
     channel_functions.add_edge(
         master_index,
         chf_index,
         ModeMaster {
-            from: mode_from,
-            to: mode_to,
+            from: clipped_mode_from,
+            to: clipped_mode_to,
         },
     );
     Ok(())
