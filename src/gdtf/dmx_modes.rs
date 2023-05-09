@@ -1,6 +1,6 @@
-use petgraph::{graph::NodeIndex, Directed, Graph};
+use petgraph::{graph::NodeIndex, Directed};
 
-use crate::{dmx_break::Break, name::Name};
+use crate::{checked_graph::CheckedGraph, dmx_break::Break, name::Name};
 
 #[derive(Debug)]
 pub struct DmxMode {
@@ -15,7 +15,7 @@ pub struct DmxMode {
 }
 
 /// ModeMaster Edges go from dependency to dependent channel function
-pub type ChannelFunctions = Graph<ChannelFunction, ModeMaster, Directed>;
+pub type ChannelFunctions = CheckedGraph<ChannelFunction, ModeMaster, Directed>;
 
 #[derive(Debug)]
 pub struct Channel {

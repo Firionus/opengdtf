@@ -132,7 +132,7 @@ impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
     }
 }
 
-// TODO add Result<_, Problem>.err_at(&Node) -> Result<_, ProblemAt>
+// TODO maybe add Result<_, Problem>.err_at(&Node) -> Result<_, ProblemAt>
 
 pub(crate) trait HandleOption<T, S: Into<Box<dyn std::error::Error>>> {
     fn ok_or_unexpected(self, why: S) -> Result<T, Problem>;
@@ -146,6 +146,16 @@ impl<T, S: Into<Box<dyn std::error::Error>>> HandleOption<T, S> for Option<T> {
 
     fn ok_or_unexpected_at(self, description: S, at: &Node) -> Result<T, ProblemAt> {
         self.ok_or_else(|| Problem::Unexpected(description.into()).at(at))
+    }
+}
+
+pub(crate) trait TransformUnexpected<T, E: Into<Box<dyn std::error::Error>>> {
+    fn unexpected_err_at(self, at: &Node) -> Result<T, ProblemAt>;
+}
+
+impl<T, E: Into<Box<dyn std::error::Error>>> TransformUnexpected<T, E> for Result<T, E> {
+    fn unexpected_err_at(self, at: &Node) -> Result<T, ProblemAt> {
+        self.map_err(|e| Problem::Unexpected(e.into()).at(at))
     }
 }
 

@@ -2,6 +2,7 @@ use uuid::Uuid;
 
 use self::{data_version::DataVersion, dmx_modes::DmxMode, geometries::Geometries, name::Name};
 
+pub mod checked_graph;
 pub mod data_version;
 pub mod dmx_break;
 pub mod dmx_modes;

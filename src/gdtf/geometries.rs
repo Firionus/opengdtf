@@ -23,10 +23,12 @@ pub struct Geometries {
     /// and the fact that the field is not mutably accesible from the outside.
     graph: GeometryGraph,
 
+    // TODO maybe move to CheckedGraph later
     /// Graph with template relationships, i.e. TopLevelGeometry -> GeometryReference.
     templates: DiGraphMap<NodeIndex, ()>,
 }
 
+// TODO maybe move to Checked Graph later
 type GeometryGraph = Graph<Geometry, (), Directed>;
 
 impl Geometries {
