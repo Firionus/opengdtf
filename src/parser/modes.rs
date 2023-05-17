@@ -6,11 +6,12 @@ use roxmltree::Node;
 use thiserror::Error;
 
 use crate::{
+    dmx_break::Break,
     dmx_modes::{
-        chfs, Channel, ChannelBreak, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster,
-        Subfixture,
+        chfs, Channel, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster, Subfixture,
     },
     geometries::Geometries,
+    geometry::{Geometry, Type},
     name::{IntoValidName, Name},
     Problem, ProblemAt, Problems,
 };
@@ -232,10 +233,142 @@ impl<'a> DmxModesParser<'a> {
         };
         let max_dmx_value = bytes_max_value(channel_bytes);
 
-        // TODO check here whether we are a template channel, then dispatch down to a method with geometry as argument
+        if self.geometries.is_template(geometry_index) {
+            for ref_ind in self.geometries.template_references(geometry_index) {
+                let reference = self
+                    .geometries
+                    .get_by_index(ref_ind)
+                    .unexpected_err_at(&channel)?;
+                let reference_offsets = if let Geometry {
+                    name: _,
+                    t: Type::Reference { offsets },
+                } = reference
+                {
+                    offsets
+                } else {
+                    Problem::Unexpected(
+                        "template pointed to geometry that was not a reference".into(),
+                    )
+                    .at(&channel)
+                    .handled_by("skipping", self.problems);
+                    continue;
+                };
 
-        let name = format!("{channel_geometry}_{first_logic_attribute}").into_valid();
+                let (actual_dmx_break, offsets_offset) = match dmx_break {
+                    ChannelBreak::Overwrite => match &reference_offsets.overwrite {
+                        Some(o) => (o.dmx_break, o.offset),
+                        None => {
+                            Problem::MissingBreakInReference {
+                                br: "Overwrite".into(),
+                                ch: format!("{channel_geometry}_{first_logic_attribute}")
+                                    .into_valid(),
+                                mode: mode_name.to_owned(),
+                            }
+                            .at(&channel)
+                            .handled_by("skipping", self.problems);
+                            continue;
+                        }
+                    },
+                    ChannelBreak::Break(b) => (
+                        b,
+                        match reference_offsets.normal.get(&b) {
+                            Some(o) => *o,
+                            None => {
+                                Problem::MissingBreakInReference {
+                                    br: format!("{b}"),
+                                    ch: format!(
+                                        "{channel_geometry}_{}",
+                                        first_logic_attribute.to_owned()
+                                    )
+                                    .into_valid(),
+                                    mode: mode_name.to_owned(),
+                                }
+                                .at(&channel)
+                                .handled_by("skipping", self.problems);
+                                continue;
+                            }
+                        },
+                    ),
+                };
+                let dmx_channel = self.abstract_dmx_channel(
+                    ref_ind,
+                    max_dmx_value,
+                    channel_functions,
+                    channel,
+                    channel_bytes,
+                    mode_master_queue,
+                    mode_name,
+                    offsets
+                        .iter()
+                        .map(|o| o + (offsets_offset as u16) - 1)
+                        .collect(),
+                    actual_dmx_break,
+                    first_logic_attribute.to_owned(),
+                )?;
+                let sf: &mut Subfixture =
+                    if let Some(sf) = subfixtures.iter_mut().find(|sf| sf.geometry == ref_ind) {
+                        sf
+                    } else {
+                        subfixtures.push(Subfixture {
+                            name: reference.name.to_owned(),
+                            channels: vec![],
+                            geometry: ref_ind,
+                        });
+                        subfixtures
+                            .iter_mut()
+                            .last()
+                            .ok_or_unexpected_at("just pushed", &channel)?
+                    };
 
+                sf.channels.push(dmx_channel);
+            }
+        } else {
+            let actual_dmx_break = match dmx_break {
+                ChannelBreak::Break(b) => b,
+                ChannelBreak::Overwrite => Err(Problem::InvalidBreakOverwrite {
+                    ch: format!("{channel_geometry}_{first_logic_attribute}").into_valid(),
+                    mode: mode_name.to_owned(),
+                }
+                .at(&channel))?,
+            };
+
+            let channel = self.abstract_dmx_channel(
+                geometry_index,
+                max_dmx_value,
+                channel_functions,
+                channel,
+                channel_bytes,
+                mode_master_queue,
+                mode_name,
+                offsets,
+                actual_dmx_break,
+                first_logic_attribute,
+            )?;
+            channels.push(channel);
+        }
+
+        Ok(())
+    }
+
+    fn abstract_dmx_channel<'b>(
+        &mut self,
+        geometry_index: NodeIndex,
+        max_dmx_value: u32,
+        channel_functions: &mut crate::checked_graph::CheckedGraph<ChannelFunction, ModeMaster>,
+        channel: Node<'b, 'b>,
+        channel_bytes: u8,
+        mode_master_queue: &mut Vec<(Node<'b, 'b>, &'b str, &'b str, &'b str, NodeIndex)>,
+        mode_name: &Name,
+        offsets: Vec<u16>,
+        dmx_break: Break,
+        first_logic_attribute: Name,
+    ) -> Result<Channel, ProblemAt> {
+        let geometry = self
+            .geometries
+            .get_by_index(geometry_index)
+            .unexpected_err_at(&channel)?;
+
+        let name = format!("{}_{first_logic_attribute}", geometry.name).into_valid();
         let mut channel_function_ids: Vec<NodeIndex> = Default::default();
         let raw_channel_function = ChannelFunction {
             name: name.to_owned(),
@@ -380,8 +513,8 @@ impl<'a> DmxModesParser<'a> {
         let initial_function = channel.attribute("InitialFunction").and_then(|s| {
             let mut it = s.split('.');
             it.next_tuple()
-                .filter(|(ch, lch, chf)| (&name == ch))
-                .and_then(|(ch, lch, chf)| {
+                .filter(|(ch, _lch, _chf)| (&name == ch))
+                .and_then(|(_ch, _lch, chf)| {
                     for v in chfs(&channel_function_ids, &*channel_functions) {
                         match v {
                             Ok(v) => {
@@ -427,51 +560,15 @@ impl<'a> DmxModesParser<'a> {
             .node_weight(initial_function)
             .ok_or_unexpected_at("invalid initial channel function index", &channel)?
             .default;
-
-        if self.geometries.is_template(geometry_index) {
-            // TODO at this point, channel functions have been wrongly pushed already, need to check this earlier or defer adding channelfunctions
-            for ref_ind in self.geometries.template_references(geometry_index) {
-                let reference = self
-                    .geometries
-                    .get_by_index(ref_ind)
-                    .unexpected_err_at(&channel)?;
-                let sf: &mut Subfixture =
-                    if let Some(sf) = subfixtures.iter_mut().find(|sf| sf.geometry == ref_ind) {
-                        sf
-                    } else {
-                        subfixtures.push(Subfixture {
-                            name: reference.name.to_owned(),
-                            channels: vec![],
-                            geometry: ref_ind,
-                        });
-                        subfixtures
-                            .iter_mut()
-                            .last()
-                            .ok_or_unexpected_at("just pushed", &channel)?
-                    };
-                sf.channels.push(Channel {
-                    name: name.to_owned(), // TODO change to "{subfixture_geometry}_{attribute}"
-                    dmx_break: dmx_break.to_owned(),
-                    offsets: offsets.to_owned(), // TODO apply offsets from reference geometry
-                    channel_functions: channel_function_ids.to_owned(), // TODO have to clone the channel functions (with individual names?)
-                    bytes: channel_bytes,
-                    initial_function, // make sure to use the right one from the cloned ones
-                    default,
-                })
-            }
-        } else {
-            channels.push(Channel {
-                name,
-                dmx_break,
-                offsets,
-                channel_functions: channel_function_ids,
-                bytes: channel_bytes,
-                initial_function,
-                default,
-            });
-        }
-
-        Ok(())
+        Ok(Channel {
+            name,
+            dmx_break,
+            offsets,
+            channel_functions: channel_function_ids,
+            bytes: channel_bytes,
+            initial_function,
+            default,
+        })
     }
 }
 
@@ -596,6 +693,18 @@ pub struct ModeMasterParseError();
 #[derive(Debug, Error)]
 #[error("DXM address offsets must be between 1 and 512")]
 pub struct OffsetError();
+
+#[derive(Debug, Clone)]
+pub enum ChannelBreak {
+    Overwrite,
+    Break(Break),
+}
+
+impl Default for ChannelBreak {
+    fn default() -> Self {
+        ChannelBreak::Break(Break::default())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -825,5 +934,10 @@ mod tests {
 
         assert_eq!(mode.channels.len(), 0);
         assert_eq!(mode.subfixtures.len(), 2);
+        assert_eq!(mode.channel_functions.node_count(), 4);
+
+        // TODO test the rest (names, etc.)
+
+        // TODO test that mode master and templating is correctly working together. See Kotlin impl for details.
     }
 }

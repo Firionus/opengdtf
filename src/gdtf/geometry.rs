@@ -25,7 +25,7 @@ pub enum Type {
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
     pub normal: HashMap<Break, i32>, // TODO currently 1-based. 0-based would be easier internally...
-    pub overwrite: Option<Offset>,
+    pub overwrite: Option<Offset>, // TODO make this mandatory, if it's not there it means there are no offsets at all and we might as well give up the whole GeometryReference...
 }
 
 #[derive(Debug, PartialEq, Clone)]

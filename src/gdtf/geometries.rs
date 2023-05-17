@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use getset::Getters;
 use petgraph::prelude::DiGraphMap;
-use petgraph::visit::{IntoNeighborsDirected, Walker};
+use petgraph::visit::Walker;
 use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 

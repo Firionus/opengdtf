@@ -87,6 +87,10 @@ pub enum Problem {
         channel: Name,
         mode: Name,
     },
+    #[error("GeometryReference is missing the break {br} for channel {ch} in mode {mode}")]
+    MissingBreakInReference { br: String, ch: Name, mode: Name },
+    #[error("break of channel {ch} in mode {mode} was Overwrite but did not reference template geometry")]
+    InvalidBreakOverwrite { ch: Name, mode: Name },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"

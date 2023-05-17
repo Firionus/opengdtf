@@ -20,7 +20,7 @@ pub type ChannelFunctions = CheckedGraph<ChannelFunction, ModeMaster, Directed>;
 #[derive(Debug)]
 pub struct Channel {
     pub name: Name,
-    pub dmx_break: ChannelBreak,
+    pub dmx_break: Break,
     /// only between 1 to 4 bytes are supported
     pub bytes: u8,
     /// 0-based (1-based in GDTF). MSB to LSB. Empty offsets might imply a virtual channel.
@@ -48,18 +48,6 @@ pub struct Subfixture {
     pub name: Name,
     pub channels: Vec<Channel>,
     pub geometry: NodeIndex,
-}
-
-#[derive(Debug, Clone)]
-pub enum ChannelBreak {
-    Overwrite,
-    Break(Break),
-}
-
-impl Default for ChannelBreak {
-    fn default() -> Self {
-        ChannelBreak::Break(Break::default())
-    }
 }
 
 #[derive(Debug)]
