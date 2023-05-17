@@ -158,6 +158,8 @@ impl<'a> DmxModesParser<'a> {
             .handled_by("converting to valid", self.problems);
             valid
         });
+        // GDTF 1.2 says this field should be a "Node" (we call it NamePath)
+        // But Attributes aren't nested, so there should only ever be one Name here, with no dot
         let first_logic_attribute: Name = channel
             .find_required_child("LogicalChannel")
             .and_then(|n| n.parse_required_attribute("Attribute"))
@@ -217,6 +219,8 @@ impl<'a> DmxModesParser<'a> {
             offsets.len() as u8
         };
         let max_dmx_value = bytes_max_value(channel_bytes);
+        // TODO look up geometry in geometry rename lookup instead of geometries!
+        // TODO test whether it is a template geometry, if yes instantiate channel multiple times in subfixtures
         let geometry_index = self
             .geometries
             .get_index(&channel_geometry)
@@ -556,19 +560,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn basic_mode() {
+    fn mode_master() {
         let input = r#"
 <FixtureType>
     <DMXModes>
         <DMXMode Description="not a Name." Geometry="Body" Name="Mode 1">
             <DMXChannels>
-                <DMXChannel DMXBreak="1" Geometry="Beam" Highlight="255/1" InitialFunction="Beam_Dimmer.Dimmer.Dimmer" Offset="1">
+                <DMXChannel DMXBreak="1" Geometry="Beam" Highlight="127/1" InitialFunction="Beam_Dimmer.Dimmer.Strobe" Offset="1">
                     <LogicalChannel Attribute="Dimmer" DMXChangeTimeLimit="0.000000" Master="Grand" MibFade="0.000000" Snap="No">
-                        <ChannelFunction Attribute="Dimmer" CustomName="" DMXFrom="0/1" Default="123/1" Max="1.000000" Min="0.000000" Name="Dimmer" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
+                        <ChannelFunction Attribute="Dimmer" CustomName="" DMXFrom="0/1" Default="0/1" Max="1.000000" Min="0.000000" Name="Dimmer" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
                             <ChannelSet DMXFrom="0/1" Name="closed" WheelSlotIndex="0"/>
                             <ChannelSet DMXFrom="1/1" Name="" WheelSlotIndex="0"/>
-                            <ChannelSet DMXFrom="255/1" Name="open" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="127/1" Name="open" WheelSlotIndex="0"/>
                         </ChannelFunction>
+                        <ChannelFunction Attribute="StrobeModeShutter" CustomName="" DMXFrom="128/1" Default="51200/2" Max="1.000000" Min="1.000000" Name="Strobe" OriginalAttribute="" PhysicalFrom="1.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
+                        </ChannelFunction>
+                    </LogicalChannel>
+                </DMXChannel>
+                <DMXChannel DMXBreak="1" Geometry="Beam" Highlight="0/1" InitialFunction="Beam_StrobeFrequency.StrobeFrequency.StrobeFrequency" Offset="2,3">
+                    <LogicalChannel Attribute="StrobeFrequency" DMXChangeTimeLimit="0.000000" Master="Grand" MibFade="0.000000" Snap="No">
+                        <ChannelFunction Attribute="StrobeFrequency" CustomName="" DMXFrom="0/1" Default="0/1" Max="1.000000" Min="0.000000" 
+                                Name="StrobeFrequency" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000"
+                                ModeMaster="Beam_Dimmer" ModeFrom="128/1" ModeTo="65535/2">
+                            <ChannelSet DMXFrom="0/1" Name="slowest" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="1/1" Name="" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="127/1" Name="fastest" WheelSlotIndex="0"/>
+                        </ChannelFunction>
+                        <ChannelFunction Attribute="NoFeature" CustomName="" DMXFrom="0/1" Default="0/2" Max="0.000000" Min="0.000000" 
+                                Name="NoFeature Name" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="0.000000" RealAcceleration="0.000000" RealFade="0.000000" 
+                                ModeMaster="Beam_Dimmer.Dimmer.Dimmer" ModeFrom="0/1" ModeTo="127/1"
+                        />
                     </LogicalChannel>
                 </DMXChannel>
             </DMXChannels>
@@ -585,18 +606,20 @@ mod tests {
                 t: Type::General,
             })
             .unwrap();
-        let beam_index = geometries.add(
-            Geometry {
-                name: "Beam".into_valid(),
-                t: Type::General,
-            },
-            body_index,
-        );
+        let beam_index = geometries
+            .add(
+                Geometry {
+                    name: "Beam".into_valid(),
+                    t: Type::General,
+                },
+                body_index,
+            )
+            .unwrap();
         let mut modes = Vec::<DmxMode>::new();
         //let rename_lookup
         DmxModesParser::new(&mut geometries, &mut modes, &mut problems).parse_from(&ft);
 
-        dbg!(problems);
+        assert_eq!(problems.len(), 0);
 
         let mut modes = modes.iter();
         let mode = modes.next().expect("at least one mode present");
@@ -612,11 +635,69 @@ mod tests {
         assert_eq!(mode.subfixtures.len(), 0);
 
         let mut channels = mode.channels.iter();
-        let dimmer = channels.next().expect("at least one channel");
+        let dimmer = channels.next().expect("first channel");
         assert_eq!(dimmer.name, "Beam_Dimmer");
         assert_eq!(dimmer.offsets.first().expect("one offset"), &0);
         assert_eq!(dimmer.bytes, 1);
         assert_eq!(dimmer.bytes as usize, dimmer.offsets.len());
-        assert_eq!(dimmer.default, 123);
+        assert_eq!(dimmer.default, 200); // 200/1 = 51200/2
+        assert_eq!(dimmer.channel_functions.len(), 3); // 1 raw + 2 normal
+
+        let dimmer_chf = mode
+            .channel_functions
+            .node_weight(*dimmer.channel_functions.get(1).unwrap())
+            .unwrap();
+        assert_eq!(dimmer_chf.name, "Dimmer");
+        assert_eq!(dimmer_chf.dmx_from, 0);
+        assert_eq!(dimmer_chf.dmx_to, 127);
+        assert_eq!(dimmer_chf.geometry, beam_index);
+        let strobe_chf = mode
+            .channel_functions
+            .node_weight(*dimmer.channel_functions.get(2).unwrap())
+            .unwrap();
+        assert_eq!(strobe_chf.name, "Strobe");
+        assert_eq!(strobe_chf.dmx_from, 128);
+        assert_eq!(strobe_chf.dmx_to, 255);
+        assert_eq!(strobe_chf.geometry, beam_index);
+
+        let freq = channels.next().expect("second channel");
+        let freq_chf = mode
+            .channel_functions
+            .node_weight(*freq.channel_functions.get(1).unwrap())
+            .unwrap();
+        assert_eq!(freq_chf.name, "StrobeFrequency");
+        assert_eq!(freq_chf.dmx_from, 0);
+        assert_eq!(freq_chf.dmx_to, 65535);
+        let nof_chf = mode
+            .channel_functions
+            .node_weight(*freq.channel_functions.get(2).unwrap())
+            .unwrap();
+        assert_eq!(nof_chf.name, "NoFeature Name");
+        assert_eq!(nof_chf.dmx_from, 0);
+        assert_eq!(nof_chf.dmx_to, 65535);
+
+        let raw_dimmer_ind = *dimmer.channel_functions.get(0).unwrap();
+        let strobe_freq_ind = *freq.channel_functions.get(1).unwrap();
+        let edge_ind = mode
+            .channel_functions
+            .find_edge(raw_dimmer_ind, strobe_freq_ind)
+            .unwrap();
+        let edge = mode.channel_functions.edge_weight(edge_ind).unwrap();
+        assert_eq!(edge.from, 128);
+        assert_eq!(edge.to, 255);
+
+        let dimmer_ind = *dimmer.channel_functions.get(1).unwrap();
+        let nof_ind = *freq.channel_functions.get(2).unwrap();
+        let edge_ind = mode
+            .channel_functions
+            .find_edge(dimmer_ind, nof_ind)
+            .unwrap();
+        let edge = mode.channel_functions.edge_weight(edge_ind).unwrap();
+        assert_eq!(edge.from, 0);
+        assert_eq!(edge.to, 127);
+
+        assert!(matches!(channels.next(), None), "no more channels");
     }
+
+    // TODO test subfixtures
 }

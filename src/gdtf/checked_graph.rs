@@ -2,8 +2,11 @@ use std::fmt::Debug;
 
 use delegate::delegate;
 use petgraph::{
-    graph::DefaultIx, graph::EdgeIndex, graph::IndexType, graph::NodeIndex, Directed, EdgeType,
-    Graph,
+    graph::IndexType,
+    graph::NodeIndex,
+    graph::{DefaultIx, Neighbors},
+    graph::{EdgeIndex, Edges},
+    Directed, Direction, EdgeType, Graph,
 };
 
 /// A newtype around petgraph's Graph that tries to not panic with invalid arguments
@@ -76,6 +79,10 @@ where
     delegate! {
         to self.0 {
             pub fn node_weight(&self, a: NodeIndex<Ix>) -> Option<&N>;
+            pub fn edge_weight(&self, e: EdgeIndex<Ix>) -> Option<&E>;
+            pub fn neighbors_directed(&self, a: NodeIndex<Ix>, dir: Direction) -> Neighbors<E, Ix>;
+            pub fn edges_directed(&self, a: NodeIndex<Ix>, dir: Direction) -> Edges<E, Ty, Ix>;
+            pub fn find_edge(&self, a: NodeIndex<Ix>, b: NodeIndex<Ix>) -> Option<EdgeIndex<Ix>>;
         }
     }
 }
