@@ -8,6 +8,7 @@ use thiserror::Error;
 use crate::{
     dmx_modes::{
         chfs, Channel, ChannelBreak, ChannelFunction, ChannelFunctions, DmxMode, ModeMaster,
+        Subfixture,
     },
     geometries::Geometries,
     name::{IntoValidName, Name},
@@ -100,6 +101,7 @@ impl<'a> DmxModesParser<'a> {
                         &mut mode_master_queue,
                         &mode_name,
                         &mut channels,
+                        &mut subfixtures,
                     )?;
                 }
 
@@ -140,6 +142,7 @@ impl<'a> DmxModesParser<'a> {
         mode_master_queue: &mut Vec<(Node<'b, 'b>, &'b str, &'b str, &'b str, NodeIndex)>,
         mode_name: &Name,
         channels: &mut Vec<Channel>,
+        subfixtures: &mut Vec<Subfixture>,
     ) -> Result<(), ProblemAt> {
         let geometry_string = channel
             .required_attribute("Geometry")
@@ -158,6 +161,15 @@ impl<'a> DmxModesParser<'a> {
             .handled_by("converting to valid", self.problems);
             valid
         });
+
+        // TODO look up geometry in geometry rename lookup instead of geometries!
+        let geometry_index = self
+            .geometries
+            .get_index(&channel_geometry)
+            .ok_or_else(|| Problem::UnknownGeometry(channel_geometry.to_owned()).at(&channel))
+            .ok_or_handled_by("using mode geometry", self.problems)
+            .unwrap_or(mode_geometry);
+
         // GDTF 1.2 says this field should be a "Node" (we call it NamePath)
         // But Attributes aren't nested, so there should only ever be one Name here, with no dot
         let first_logic_attribute: Name = channel
@@ -165,7 +177,7 @@ impl<'a> DmxModesParser<'a> {
             .and_then(|n| n.parse_required_attribute("Attribute"))
             .ok_or_handled_by("using empty", self.problems)
             .unwrap_or_default();
-        let name = format!("{channel_geometry}_{first_logic_attribute}").into_valid();
+
         let dmx_break = channel.attribute("DMXBreak").unwrap_or("1");
         let dmx_break = if dmx_break == "Overwrite" {
             Ok(ChannelBreak::Overwrite)
@@ -219,14 +231,11 @@ impl<'a> DmxModesParser<'a> {
             offsets.len() as u8
         };
         let max_dmx_value = bytes_max_value(channel_bytes);
-        // TODO look up geometry in geometry rename lookup instead of geometries!
-        // TODO test whether it is a template geometry, if yes instantiate channel multiple times in subfixtures
-        let geometry_index = self
-            .geometries
-            .get_index(&channel_geometry)
-            .ok_or_else(|| Problem::UnknownGeometry(channel_geometry.to_owned()).at(&channel))
-            .ok_or_handled_by("using mode geometry", self.problems)
-            .unwrap_or(mode_geometry);
+
+        // TODO check here whether we are a template channel, then dispatch down to a method with geometry as argument
+
+        let name = format!("{channel_geometry}_{first_logic_attribute}").into_valid();
+
         let mut channel_function_ids: Vec<NodeIndex> = Default::default();
         let raw_channel_function = ChannelFunction {
             name: name.to_owned(),
@@ -418,15 +427,50 @@ impl<'a> DmxModesParser<'a> {
             .node_weight(initial_function)
             .ok_or_unexpected_at("invalid initial channel function index", &channel)?
             .default;
-        channels.push(Channel {
-            name,
-            dmx_break,
-            offsets,
-            channel_functions: channel_function_ids,
-            bytes: channel_bytes,
-            initial_function,
-            default,
-        });
+
+        if self.geometries.is_template(geometry_index) {
+            // TODO at this point, channel functions have been wrongly pushed already, need to check this earlier or defer adding channelfunctions
+            for ref_ind in self.geometries.template_references(geometry_index) {
+                let reference = self
+                    .geometries
+                    .get_by_index(ref_ind)
+                    .unexpected_err_at(&channel)?;
+                let sf: &mut Subfixture =
+                    if let Some(sf) = subfixtures.iter_mut().find(|sf| sf.geometry == ref_ind) {
+                        sf
+                    } else {
+                        subfixtures.push(Subfixture {
+                            name: reference.name.to_owned(),
+                            channels: vec![],
+                            geometry: ref_ind,
+                        });
+                        subfixtures
+                            .iter_mut()
+                            .last()
+                            .ok_or_unexpected_at("just pushed", &channel)?
+                    };
+                sf.channels.push(Channel {
+                    name: name.to_owned(), // TODO change to "{subfixture_geometry}_{attribute}"
+                    dmx_break: dmx_break.to_owned(),
+                    offsets: offsets.to_owned(), // TODO apply offsets from reference geometry
+                    channel_functions: channel_function_ids.to_owned(), // TODO have to clone the channel functions (with individual names?)
+                    bytes: channel_bytes,
+                    initial_function, // make sure to use the right one from the cloned ones
+                    default,
+                })
+            }
+        } else {
+            channels.push(Channel {
+                name,
+                dmx_break,
+                offsets,
+                channel_functions: channel_function_ids,
+                bytes: channel_bytes,
+                initial_function,
+                default,
+            });
+        }
+
         Ok(())
     }
 }
@@ -555,7 +599,12 @@ pub struct OffsetError();
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry::{Geometry, Type};
+    use std::collections::HashMap;
+
+    use crate::{
+        dmx_break::Break,
+        geometry::{Geometry, Offsets, Type},
+    };
 
     use super::*;
 
@@ -616,7 +665,6 @@ mod tests {
             )
             .unwrap();
         let mut modes = Vec::<DmxMode>::new();
-        //let rename_lookup
         DmxModesParser::new(&mut geometries, &mut modes, &mut problems).parse_from(&ft);
 
         assert_eq!(problems.len(), 0);
@@ -699,5 +747,83 @@ mod tests {
         assert!(matches!(channels.next(), None), "no more channels");
     }
 
-    // TODO test subfixtures
+    #[test]
+    fn subfixtures() {
+        let input = r#"
+<FixtureType>
+    <DMXModes>
+        <DMXMode Description="not a Name." Geometry="Body" Name="Mode 1">
+            <DMXChannels>
+                <DMXChannel DMXBreak="1" Geometry="AbstractGeometry" Highlight="255/1" InitialFunction="AbstractGeometry_Dimmer.Dimmer.Dimmer" Offset="1">
+                    <LogicalChannel Attribute="Dimmer" DMXChangeTimeLimit="0.000000" Master="Grand" MibFade="0.000000" Snap="No">
+                        <ChannelFunction Attribute="Dimmer" CustomName="" DMXFrom="0/1" Default="0/1" Max="1.000000" Min="0.000000" Name="Dimmer" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
+                            <ChannelSet DMXFrom="0/1" Name="closed" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="1/1" Name="" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="255/1" Name="open" WheelSlotIndex="0"/>
+                        </ChannelFunction>
+                    </LogicalChannel>
+                </DMXChannel>
+            </DMXChannels>
+        </DMXMode>
+    </DMXModes>
+</FixtureType>"#;
+        let doc = roxmltree::Document::parse(input).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Problems = vec![];
+        let mut geometries = Geometries::default();
+        let body_index = geometries
+            .add_top_level(Geometry {
+                name: "Body".into_valid(),
+                t: Type::General,
+            })
+            .unwrap();
+        let abstract_index = geometries
+            .add_top_level(Geometry {
+                name: "AbstractGeometry".into_valid(),
+                t: Type::General,
+            })
+            .unwrap();
+        let ref1_index = geometries
+            .add(
+                Geometry {
+                    name: "Pixel1".into_valid(),
+                    t: Type::Reference {
+                        offsets: Offsets {
+                            normal: HashMap::from([(Break::try_from(1).unwrap(), 1)]),
+                            overwrite: None,
+                        },
+                    },
+                },
+                body_index,
+            )
+            .unwrap();
+        let ref2_index = geometries
+            .add(
+                Geometry {
+                    name: "Pixel2".into_valid(),
+                    t: Type::Reference {
+                        offsets: Offsets {
+                            normal: HashMap::from([(Break::try_from(1).unwrap(), 2)]),
+                            overwrite: None,
+                        },
+                    },
+                },
+                body_index,
+            )
+            .unwrap();
+        geometries
+            .add_template_relationship(abstract_index, ref1_index)
+            .unwrap();
+        geometries
+            .add_template_relationship(abstract_index, ref2_index)
+            .unwrap();
+
+        let mut modes = Vec::<DmxMode>::new();
+        DmxModesParser::new(&mut geometries, &mut modes, &mut problems).parse_from(&ft);
+
+        let mode = modes.first().expect("at least one mode present");
+
+        assert_eq!(mode.channels.len(), 0);
+        assert_eq!(mode.subfixtures.len(), 2);
+    }
 }

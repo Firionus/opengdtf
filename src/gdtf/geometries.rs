@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 use getset::Getters;
 use petgraph::prelude::DiGraphMap;
-use petgraph::visit::Walker;
-use petgraph::Direction::Incoming;
+use petgraph::visit::{IntoNeighborsDirected, Walker};
+use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::{graph::NodeIndex, Directed, Graph};
 
 use crate::geometry::{Geometry, Type};
@@ -184,6 +184,19 @@ impl Geometries {
         self.templates.add_edge(referenced, reference, ());
 
         Ok(())
+    }
+
+    pub fn is_template(&self, a: NodeIndex) -> bool {
+        self.templates.contains_node(a)
+            && self
+                .templates
+                .neighbors_directed(a, Outgoing)
+                .next()
+                .is_some()
+    }
+
+    pub fn template_references(&self, a: NodeIndex) -> impl Iterator<Item = NodeIndex> + '_ {
+        self.templates.neighbors_directed(a, Outgoing)
     }
 }
 

@@ -24,7 +24,7 @@ pub enum Type {
 // geometry references for a certain abstract top level geometry.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Offsets {
-    pub normal: HashMap<Break, i32>,
+    pub normal: HashMap<Break, i32>, // TODO currently 1-based. 0-based would be easier internally...
     pub overwrite: Option<Offset>,
 }
 
@@ -33,7 +33,7 @@ pub struct Offset {
     pub dmx_break: Break,
     /// should support "Universe.Address" format according to standard, but that
     /// is not implemented at the moment
-    pub offset: i32,
+    pub offset: i32, // TODO currently 1-based, but 0-based would probably be easier
 }
 
 #[cfg(test)]

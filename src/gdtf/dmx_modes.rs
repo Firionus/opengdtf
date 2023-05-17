@@ -45,12 +45,12 @@ pub fn chfs<'a>(
 
 #[derive(Debug)]
 pub struct Subfixture {
-    name: String,
-    channels: Vec<Channel>,
-    geometry: NodeIndex,
+    pub name: Name,
+    pub channels: Vec<Channel>,
+    pub geometry: NodeIndex,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ChannelBreak {
     Overwrite,
     Break(Break),
