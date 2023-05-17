@@ -1,6 +1,6 @@
 use petgraph::{graph::NodeIndex, Directed};
 
-use crate::{checked_graph::CheckedGraph, dmx_break::Break, name::Name};
+use crate::{checked_graph::CheckedGraph, dmx_break::Break, name::Name, Problem};
 
 #[derive(Debug)]
 pub struct DmxMode {
@@ -27,7 +27,20 @@ pub struct Channel {
     pub offsets: Vec<u16>,
     /// first one must always be the Raw DMX Channel Function
     pub channel_functions: Vec<NodeIndex>,
+    pub initial_function: NodeIndex,
     pub default: u32,
+}
+
+pub fn chfs<'a>(
+    channel_function_inds: &'a [NodeIndex],
+    channel_functions: &'a ChannelFunctions,
+) -> impl Iterator<Item = Result<(NodeIndex, &'a ChannelFunction), Problem>> + 'a {
+    channel_function_inds.iter().map(|chf_ind| {
+        let chf_ref = channel_functions
+            .node_weight(*chf_ind)
+            .ok_or_else(|| Problem::Unexpected("Invalid Channel Function Index".into()))?;
+        Ok((*chf_ind, chf_ref))
+    })
 }
 
 #[derive(Debug)]

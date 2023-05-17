@@ -81,6 +81,12 @@ pub enum Problem {
     UnknownChannel(Name, Name),
     #[error("channel function with name {name} not found in mode {mode}")]
     UnknownChannelFunction { name: Name, mode: Name },
+    #[error("invalid initial function attribute '{s}' on {channel} in {mode}")]
+    InvalidInitialFunction {
+        s: String,
+        channel: Name,
+        mode: Name,
+    },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
