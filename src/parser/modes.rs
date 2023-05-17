@@ -28,6 +28,12 @@ pub(crate) struct DmxModesParser<'a> {
     problems: &'a mut Problems,
 }
 
+// TODO First and foremost: Clean up this complete mess of code!
+// - Everything should be scoped to a function that returns Result
+// - Functions shouldn't have 10 args, instead use additional builders for mode/channel and impl on them
+// - review naming: Abstract vs template, chf vs channel_function (I'm in favor of chf), etc.
+// - split into maybe 2-3 files?
+
 impl<'a> DmxModesParser<'a> {
     pub(crate) fn new(
         geometries: &'a mut Geometries,
@@ -585,6 +591,9 @@ fn handle_mode_master(
 ) -> Result<(), ProblemAt> {
     let mut master_path = mode_master.split('.');
     let master_channel_name: Name = master_path.next().unwrap_or("Default Channel").into_valid();
+    // TODO this doesn't work if the dependency channel is a template
+    // for that case, keep a list of template channels with references to instantiated channels?
+    // TODO how does this interact with renamed geometries? Wouldn't the channel then also have a different name?
     let dependency_channel: &Channel = channels
         .iter()
         .find(|ch| ch.name == master_channel_name)
@@ -938,6 +947,9 @@ mod tests {
 
         // TODO test the rest (names, etc.)
 
-        // TODO test that mode master and templating is correctly working together. See Kotlin impl for details.
+        // TODO what happens if the modeMaster-referenced Channel or ChannelFunction is a template? Then it can only work out if they are in the same subfixture and they reference in the instantiated form with 1:1 mapping
+
+        // TODO what happens if a Channel references a Geometry that is a child of a template top-level geometry, do we pick
+        // that up and also treat it as a template channel?
     }
 }
