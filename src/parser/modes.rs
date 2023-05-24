@@ -140,6 +140,7 @@ impl<'a> DmxModesParser<'a> {
         mode_master_queue: &mut Vec<DeferredModeMaster<'b>>,
         template_channels: &mut TemplateChannels,
     ) -> Result<(), ProblemAt> {
+        // TODO look up geometry in geometry rename lookup instead of geometries!
         let geometry_index = channel
             .parse_required_attribute("Geometry")
             .and_then(|geometry| {
@@ -216,7 +217,7 @@ impl<'a> DmxModesParser<'a> {
             .filter(|n| n.has_tag_name("LogicalChannel"))
             .enumerate()
         {
-            // TODO read Snap, Master, MibFade, DMXChangeTimeLimit
+            // TODO parse Snap, Master, MibFade, DMXChangeTimeLimit
             let mut chf_iter = logical_channel
                 .children()
                 .filter(|n| n.has_tag_name("ChannelFunction"))
@@ -986,9 +987,13 @@ mod tests {
 
         // TODO test the rest (names, etc.)
 
-        // TODO what happens if the modeMaster-referenced Channel or ChannelFunction is a template? Then it can only work out if they are in the same subfixture and they reference in the instantiated form with 1:1 mapping
+        // TODO what happens if the modeMaster-referenced Channel or ChannelFunction is a template?
+        // Then it can only work out if they are in the same subfixture and they reference in the instantiated form with 1:1 mapping
 
         // TODO what happens if a Channel references a Geometry that is a child of a template top-level geometry, do we pick
-        // that up and also treat it as a template channel?
+        // that up and also treat it as a template channel? -> We should probably instantiate GeometryReference nodes as
+        // the Geometry (including its subtree) they reference
+
+        // TODO test geometry renaming and lookup with DMXChannels
     }
 }

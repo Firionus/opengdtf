@@ -105,6 +105,9 @@ impl ParsedGdtf {
         GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
             .parse_from(&fixture_type);
 
+        // TODO parse Attributes (needed for nice display of values in DMXChannel)
+        // TODO then test Attribute linking in DMXChannel's
+
         DmxModesParser::new(
             &mut self.gdtf.geometries,
             &mut self.gdtf.dmx_modes,
