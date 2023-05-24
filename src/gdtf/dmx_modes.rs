@@ -1,4 +1,8 @@
+use std::str::FromStr;
+
+use derive_more::IntoIterator;
 use petgraph::{graph::NodeIndex, Directed};
+use thiserror::Error;
 
 use crate::{checked_graph::CheckedGraph, dmx_break::Break, name::Name, Problem};
 
@@ -24,7 +28,7 @@ pub struct Channel {
     /// only between 1 to 4 bytes are supported
     pub bytes: u8,
     /// 0-based (1-based in GDTF). MSB to LSB. Empty offsets might imply a virtual channel.
-    pub offsets: Vec<u16>,
+    pub offsets: ChannelOffsets,
     /// first one must always be the Raw DMX Channel Function
     pub channel_functions: Vec<NodeIndex>,
     pub initial_function: NodeIndex,
@@ -41,6 +45,46 @@ pub fn chfs<'a>(
             .ok_or_else(|| Problem::Unexpected("Invalid Channel Function Index".into()))?;
         Ok((*chf_ind, chf_ref))
     })
+}
+
+#[derive(Default, Debug, IntoIterator, derive_more::Deref, derive_more::DerefMut)]
+pub struct ChannelOffsets(Vec<u16>);
+
+#[derive(Debug, Error)]
+pub enum OffsetError {
+    #[error("Invalid Offset Format")]
+    Invalid,
+    #[error("DXM address offsets must be between 1 and 512")]
+    OutsideRange,
+}
+
+impl FromStr for ChannelOffsets {
+    type Err = OffsetError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut out = Self::default();
+
+        if s == "None" {
+            return Ok(out);
+        };
+
+        for s in s.split(',') {
+            let u: u16 = s.parse().map_err(|_| OffsetError::Invalid)?;
+            if (1..=512).contains(&u) {
+                out.0.push(u - 1);
+            } else {
+                return Err(OffsetError::OutsideRange);
+            }
+        }
+
+        Ok(out)
+    }
+}
+
+impl FromIterator<u16> for ChannelOffsets {
+    fn from_iter<I: IntoIterator<Item = u16>>(iter: I) -> Self {
+        Self(Vec::from_iter(iter))
+    }
 }
 
 #[derive(Debug)]
