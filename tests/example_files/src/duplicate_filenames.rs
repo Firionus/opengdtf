@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ExpectedEntry;
+use crate::Expected;
 
 #[allow(dead_code)] // fields accessed with Debug, which is ignored during dead code analysis
 #[derive(Debug)]
@@ -10,9 +10,7 @@ struct DuplicateFilename {
 }
 
 /// Panics with diagnostic message if there are duplicate filenames in `expected`
-pub fn check_for_duplicate_filenames(
-    expected: HashMap<String, ExpectedEntry, xxhash_rust::xxh3::Xxh3Builder>,
-) {
+pub fn check_for_duplicate_filenames(expected: Expected) {
     let mut filename_counts = HashMap::<&String, u32>::new();
     for original_filename in expected.values().map(|v| &v.filename) {
         if let Some(prev_count) = filename_counts.get_mut(original_filename) {

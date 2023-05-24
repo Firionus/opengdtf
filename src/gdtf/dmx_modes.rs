@@ -31,7 +31,6 @@ pub struct Channel {
     pub offsets: ChannelOffsets,
     /// first one must always be the Raw DMX Channel Function
     pub channel_functions: Vec<NodeIndex>,
-    pub initial_function: NodeIndex,
     pub default: u32,
 }
 
@@ -47,6 +46,7 @@ pub fn chfs<'a>(
     })
 }
 
+// TODO below should probably be factored into its own file
 #[derive(Default, Debug, IntoIterator, derive_more::Deref, derive_more::DerefMut)]
 pub struct ChannelOffsets(Vec<u16>);
 
@@ -64,9 +64,10 @@ impl FromStr for ChannelOffsets {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut out = Self::default();
 
-        if s == "None" {
+        if let "None" | "" = s {
+            // empty string is not allowed in GDTF 1.2, but some builder files use it
             return Ok(out);
-        };
+        }
 
         for s in s.split(',') {
             let u: u16 = s.parse().map_err(|_| OffsetError::Invalid)?;
@@ -94,7 +95,7 @@ pub struct Subfixture {
     pub geometry: NodeIndex,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ChannelFunction {
     pub name: Name,
     pub geometry: NodeIndex,

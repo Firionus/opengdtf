@@ -1,4 +1,7 @@
-use std::cmp::{max, min};
+use std::{
+    cmp::{max, min},
+    collections::HashMap,
+};
 
 use itertools::Itertools;
 use petgraph::graph::NodeIndex;
@@ -7,7 +10,7 @@ use thiserror::Error;
 
 use crate::{
     dmx_break::Break,
-    dmx_modes::{chfs, Channel, ChannelFunction, ChannelOffsets, DmxMode, ModeMaster, Subfixture},
+    dmx_modes::{Channel, ChannelFunction, ChannelOffsets, DmxMode, ModeMaster, Subfixture},
     geometries::Geometries,
     geometry::{Geometry, Type},
     name::{IntoValidName, Name},
@@ -60,12 +63,12 @@ impl<'a> DmxModesParser<'a> {
             .filter(|n| n.is_element() && n.tag_name().name() == "DMXMode")
             .enumerate()
         {
-            self.handle_dmx_mode(mode, i)
+            self.parse_dmx_mode(mode, i)
                 .ok_or_handled_by("ignoring DMX Mode", self.problems);
         }
     }
 
-    fn handle_dmx_mode(&mut self, mode_node: Node, i: usize) -> Result<(), ProblemAt> {
+    fn parse_dmx_mode(&mut self, mode_node: Node, i: usize) -> Result<(), ProblemAt> {
         let mode_name = mode_node.name(i, self.problems);
         let description = mode_node.attribute("Description").unwrap_or("").to_owned();
 
@@ -103,23 +106,26 @@ impl<'a> DmxModesParser<'a> {
     }
 
     fn parse_dmx_channels<'b>(&mut self, dmx_channels: Node<'b, 'b>, mode: &mut DmxMode) {
-        let mut mode_master_queue = Vec::<(Node, &str, &str, &str, NodeIndex)>::new();
+        let mut mode_master_queue = Vec::<DeferredModeMaster>::new();
+        let mut template_channels: TemplateChannels = Default::default();
 
         for channel in dmx_channels
             .children()
             .filter(|n| n.is_element() && n.tag_name().name() == "DMXChannel")
         {
-            self.parse_dmx_channel(channel, mode, &mut mode_master_queue)
-                .ok_or_handled_by("ignoring channel", self.problems);
+            self.parse_dmx_channel(
+                channel,
+                mode,
+                &mut mode_master_queue,
+                &mut template_channels,
+            )
+            .ok_or_handled_by("ignoring channel", self.problems);
         }
 
-        for (chf, mode_master, mode_from, mode_to, chf_index) in mode_master_queue {
+        for deferred_mode_master in mode_master_queue {
             handle_mode_master(
-                chf,
-                mode_master,
-                mode_from,
-                mode_to,
-                chf_index,
+                deferred_mode_master,
+                &template_channels,
                 mode,
                 self.problems,
             )
@@ -131,9 +137,10 @@ impl<'a> DmxModesParser<'a> {
         &mut self,
         channel: Node<'b, 'b>,
         mode: &mut DmxMode,
-        mode_master_queue: &mut Vec<(Node<'b, 'b>, &'b str, &'b str, &'b str, NodeIndex)>,
+        mode_master_queue: &mut Vec<DeferredModeMaster<'b>>,
+        template_channels: &mut TemplateChannels,
     ) -> Result<(), ProblemAt> {
-        let geometry = channel
+        let geometry_index = channel
             .parse_required_attribute("Geometry")
             .and_then(|geometry| {
                 self.geometries
@@ -142,10 +149,10 @@ impl<'a> DmxModesParser<'a> {
             })
             .ok_or_handled_by("using mode geometry", self.problems)
             .unwrap_or(mode.geometry);
-        let geometry_name = self
+
+        let geometry = self
             .geometries
-            .get_by_index(geometry)
-            .map(|g| &g.name)
+            .get_by_index(geometry_index)
             .unexpected_err_at(&channel)?;
 
         // GDTF 1.2 says this field should be a "Node" (we call it NamePath)
@@ -155,6 +162,8 @@ impl<'a> DmxModesParser<'a> {
             .and_then(|n| n.parse_required_attribute("Attribute"))
             .ok_or_handled_by("using empty", self.problems)
             .unwrap_or_default();
+
+        let name = format!("{}_{first_logic_attribute}", geometry.name).into_valid();
 
         let dmx_break = channel
             .attribute("DMXBreak")
@@ -167,15 +176,138 @@ impl<'a> DmxModesParser<'a> {
             })
             .unwrap_or_default();
 
-        let offsets: ChannelOffsets = channel
+        let mut offsets: ChannelOffsets = channel
             .parse_attribute("Offset")
             .transpose()
             .ok_or_handled_by("using None", self.problems)
             .flatten()
             .unwrap_or_default();
 
-        if self.geometries.is_template(geometry) {
-            for ref_ind in self.geometries.template_references(geometry) {
+        let channel_bytes = if offsets.is_empty() {
+            4 // use maximum resolution for virtual channel
+        } else if offsets.len() > 4 {
+            Problem::UnsupportedByteCount(offsets.len())
+                .at(&channel)
+                .handled_by("using only 4 most significant bytes", self.problems);
+            offsets.truncate(4);
+            4
+        } else {
+            offsets.len() as u8
+        };
+        let max_dmx_value = bytes_max_value(channel_bytes);
+
+        let mut channel_functions = Vec::<(ChannelFunction, Node)>::default();
+        // let mut channel_function_ids: Vec<NodeIndex> = Default::default();
+        let raw_channel_function = ChannelFunction {
+            name: name.to_owned(),
+            geometry: geometry_index,
+            attr: "NoFeature".into(),
+            original_attr: "RawDMX".into(),
+            dmx_from: 0,
+            dmx_to: max_dmx_value,
+            phys_from: 0.,
+            phys_to: 1.,
+            default: 0,
+        };
+        channel_functions.push((raw_channel_function, channel));
+
+        for (_k, logical_channel) in channel
+            .children()
+            .filter(|n| n.has_tag_name("LogicalChannel"))
+            .enumerate()
+        {
+            // TODO read Snap, Master, MibFade, DMXChangeTimeLimit
+            let mut chf_iter = logical_channel
+                .children()
+                .filter(|n| n.has_tag_name("ChannelFunction"))
+                .enumerate()
+                .peekable();
+
+            while let Some((l, chf)) = chf_iter.next() {
+                let channel_function = self.parse_channel_function(
+                    chf,
+                    l,
+                    channel_bytes,
+                    chf_iter.peek().map(|v| v.1),
+                    max_dmx_value,
+                    geometry_index,
+                )?;
+                channel_functions.push((channel_function, chf));
+            }
+        }
+
+        let default = match channel
+            .attribute("InitialFunction")
+            .and_then(|s| {
+                s.split('.')
+                    .next_tuple()
+                    .filter(|(ch, _lch, _chf)| (&name == ch))
+                    .map(|(_ch, _lch, chf)| chf)
+                    .ok_or_else(|| {
+                        Problem::InvalidInitialFunction {
+                            s: s.to_owned(),
+                            channel: name.to_owned(),
+                            mode: mode.name.to_owned(),
+                        }
+                        .at(&channel)
+                    })
+                    .ok_or_handled_by("using default", self.problems)
+            })
+            .and_then(|chf_name| {
+                channel_functions
+                    .iter()
+                    .find(|(chf, _)| chf.name == chf_name)
+            })
+            .map(|(chf, _)| chf.default)
+        {
+            Some(d) => d,
+            None => {
+                let mut it = channel_functions.iter();
+                let raw = it.next();
+                match it.next() {
+                    Some(first) => first.0.default,
+                    None => {
+                        raw.ok_or_unexpected_at("no raw channel function", &channel)?
+                            .0
+                            .default
+                    }
+                }
+            }
+        };
+
+        if !self.geometries.is_template(geometry_index) {
+            let actual_dmx_break = match dmx_break {
+                ChannelBreak::Break(b) => b,
+                ChannelBreak::Overwrite => Err(Problem::InvalidBreakOverwrite {
+                    ch: name.to_owned(),
+                    mode: mode.name.to_owned(),
+                }
+                .at(&channel))
+                .ok_or_handled_by("using break 1", self.problems)
+                .unwrap_or_default(),
+            };
+
+            let channel_function_ids = self.add_channel_functions(
+                channel_functions,
+                None,
+                &name,
+                mode,
+                mode_master_queue,
+            )?;
+
+            let channel = Channel {
+                name,
+                dmx_break: actual_dmx_break,
+                offsets,
+                channel_functions: channel_function_ids,
+                bytes: channel_bytes,
+                default,
+            };
+            mode.channels.push(channel);
+        } else {
+            // template channel
+            let mut instances = HashMap::<Name, Name>::new(); // Subfixture Name -> Instantiated Channel Name
+            for ref_ind in self.geometries.template_references(geometry_index) {
                 let reference = self
                     .geometries
                     .get_by_index(ref_ind)
@@ -201,7 +333,7 @@ impl<'a> DmxModesParser<'a> {
                         None => {
                             Problem::MissingBreakInReference {
                                 br: "Overwrite".into(),
-                                ch: format!("{geometry_name}_{first_logic_attribute}").into_valid(),
+                                ch: name.to_owned(),
                                 mode: mode.name.to_owned(),
                             }
                             .at(&channel)
@@ -216,11 +348,7 @@ impl<'a> DmxModesParser<'a> {
                             None => {
                                 Problem::MissingBreakInReference {
                                     br: format!("{b}"),
-                                    ch: format!(
-                                        "{geometry_name}_{}",
-                                        first_logic_attribute.to_owned()
-                                    )
-                                    .into_valid(),
+                                    ch: name.to_owned(),
                                     mode: mode.name.to_owned(),
                                 }
                                 .at(&channel)
@@ -230,18 +358,34 @@ impl<'a> DmxModesParser<'a> {
                         },
                     ),
                 };
-                let dmx_channel = self.abstract_dmx_channel(
+                let channel_function_ids = self.add_channel_functions(
+                    channel_functions.iter().map(|(chf, n)| {
+                        (
+                            ChannelFunction {
+                                geometry: ref_ind, // TODO doesn't work with multi-level geometry reference,
+                                // then the corresponding lower level instantiated geometry would be needed, which doesn't exist
+                                ..chf.clone()
+                            },
+                            *n,
+                        )
+                    }),
+                    Some(reference.name.to_owned()),
+                    &name,
                     mode,
-                    ref_ind,
-                    channel,
                     mode_master_queue,
-                    offsets
+                )?;
+
+                let dmx_channel = Channel {
+                    name: format!("{}_{first_logic_attribute}", reference.name).into_valid(),
+                    dmx_break: actual_dmx_break,
+                    offsets: offsets
                         .iter()
                         .map(|o| o + (offsets_offset as u16) - 1)
                         .collect(),
-                    actual_dmx_break,
-                    first_logic_attribute.to_owned(),
-                )?;
+                    channel_functions: channel_function_ids,
+                    bytes: channel_bytes,
+                    default,
+                };
                 let sf: &mut Subfixture = if let Some(sf) = mode
                     .subfixtures
                     .iter_mut()
@@ -260,282 +404,221 @@ impl<'a> DmxModesParser<'a> {
                         .ok_or_unexpected_at("just pushed", &channel)?
                 };
 
+                if let Some(n) = instances.insert(sf.name.to_owned(), dmx_channel.name.to_owned()) {
+                    Err(
+                        Problem::Unexpected(format!("added subfixture {n} multiple times").into())
+                            .at(&channel),
+                    )?
+                };
                 sf.channels.push(dmx_channel);
             }
-        } else {
-            let actual_dmx_break = match dmx_break {
-                ChannelBreak::Break(b) => b,
-                ChannelBreak::Overwrite => Err(Problem::InvalidBreakOverwrite {
-                    ch: format!("{geometry_name}_{first_logic_attribute}").into_valid(),
-                    mode: mode.name.to_owned(),
-                }
-                .at(&channel))?,
+            if let Some(n) = template_channels.insert(name, instances) {
+                Err(Problem::Unexpected(
+                    format!("template channel name {n:?} encountered multiple times").into(),
+                )
+                .at(&channel))?
             };
-
-            let channel = self.abstract_dmx_channel(
-                mode,
-                geometry,
-                channel,
-                mode_master_queue,
-                offsets,
-                actual_dmx_break,
-                first_logic_attribute,
-            )?;
-            mode.channels.push(channel);
         }
 
         Ok(())
     }
 
-    fn abstract_dmx_channel<'b>(
+    fn add_channel_functions<'b>(
         &mut self,
+        chfs: impl IntoIterator<Item = (ChannelFunction, Node<'b, 'b>)>,
+        subfixture: Option<Name>,
+        channel_name: &Name,
         mode: &mut DmxMode,
-        geometry_index: NodeIndex,
-        channel: Node<'b, 'b>,
-        mode_master_queue: &mut Vec<(Node<'b, 'b>, &'b str, &'b str, &'b str, NodeIndex)>,
-        mut offsets: ChannelOffsets,
-        dmx_break: Break,
-        first_logic_attribute: Name,
-    ) -> Result<Channel, ProblemAt> {
-        let channel_bytes = if offsets.is_empty() {
-            4 // use maximum resolution for virtual channel
-        } else if offsets.len() > 4 {
-            Problem::UnsupportedByteCount(offsets.len())
-                .at(&channel)
-                .handled_by("using only 4 most significant bytes", self.problems);
-            offsets.truncate(4);
-            4
-        } else {
-            offsets.len() as u8
-        };
-        let max_dmx_value = bytes_max_value(channel_bytes);
-
-        let geometry = self
-            .geometries
-            .get_by_index(geometry_index)
-            .unexpected_err_at(&channel)?;
-
-        let name = format!("{}_{first_logic_attribute}", geometry.name).into_valid();
-        let mut channel_function_ids: Vec<NodeIndex> = Default::default();
-        let raw_channel_function = ChannelFunction {
-            name: name.to_owned(),
-            geometry: geometry_index,
-            attr: "NoFeature".into(),
-            original_attr: "RawDMX".into(),
-            dmx_from: 0,
-            dmx_to: max_dmx_value,
-            phys_from: 0.,
-            phys_to: 1.,
-            default: 0,
-        };
-        let raw_idx = mode
-            .channel_functions
-            .add_node(raw_channel_function)
-            .unexpected_err_at(&channel)?;
-        channel_function_ids.push(raw_idx);
-        for (_k, logical_channel) in channel
-            .children()
-            .filter(|n| n.has_tag_name("LogicalChannel"))
-            .enumerate()
-        {
-            // TODO read Snap, Master, MibFade, DMXChangeTimeLimit
-            let mut chf_iter = logical_channel
-                .children()
-                .filter(|n| n.has_tag_name("ChannelFunction"))
-                .enumerate()
-                .peekable();
-
-            while let Some((l, chf)) = chf_iter.next() {
-                let chf_attr = chf.attribute("Attribute").unwrap_or("NoFeature");
-                let original_attribute = chf.attribute("OriginalAttribute").unwrap_or("");
-                let chf_name: Name = chf
-                    .parse_attribute("Name")
-                    .and_then(|r| r.ok_or_handled_by("using default", self.problems))
-                    .unwrap_or_else(|| format!("{chf_attr} {}", l + 1).into_valid());
-
-                let dmx_from = chf
-                    .attribute("DMXFrom")
-                    .and_then(|s| {
-                        parse_dmx(s, channel_bytes)
-                            .map_err(|e| {
-                                Problem::InvalidAttribute {
-                                    attr: "DMXFrom".to_owned(),
-                                    tag: "ChannelFunction".to_owned(),
-                                    content: s.to_owned(),
-                                    source: Box::new(e),
-                                    expected_type: "DMXValue".to_owned(),
-                                }
-                                .at(&chf)
-                            })
-                            .ok_or_handled_by("using default 0", self.problems)
-                    })
-                    .unwrap_or(0);
-                // The convention to use the next ChannelFunction in XML order for DMXTo is not official
-                // but probably correct for GDTF Builder files.
-                // see https://github.com/mvrdevelopment/spec/issues/103#issuecomment-985361192
-                let dmx_to = chf_iter.peek().and_then(|(_, next_chf)| {
-                    let s = next_chf.attribute("DMXFrom").unwrap_or("0/1");
-                    parse_dmx(s, channel_bytes)
-                        .map_err(|e| {
-                            Problem::InvalidAttribute {
-                                attr: "DMXFrom".to_owned(),
-                                tag: "ChannelFunction".to_owned(),
-                                content: s.to_owned(),
-                                source: Box::new(e),
-                                expected_type: "DMXValue".to_owned(),
-                            }
-                            .at(&chf)
-                        })
-                        .ok_or_handled_by("using maximum channel value for DMXTo of previous channel function", self.problems)
-                })
-                .filter(|next_dmx_from| dmx_from < *next_dmx_from)
-                .map(|next_dmx_from| next_dmx_from - 1)
-                .unwrap_or(max_dmx_value);
-
-                let default = chf
-                    .attribute("Default")
-                    .and_then(|s| {
-                        parse_dmx(s, channel_bytes)
-                            .map_err(|e| {
-                                Problem::InvalidAttribute {
-                                    attr: "Default".to_owned(),
-                                    tag: "ChannelFunction".to_owned(),
-                                    content: s.to_owned(),
-                                    source: Box::new(e),
-                                    expected_type: "DMXValue".to_owned(),
-                                }
-                                .at(&chf)
-                            })
-                            .ok_or_handled_by("using default 0", self.problems)
-                    })
-                    .unwrap_or(0);
-
-                let phys_from = chf
-                    .parse_attribute("PhysicalFrom")
-                    .transpose()
-                    .ok_or_handled_by("using default 0", self.problems)
-                    .flatten()
-                    .unwrap_or(0.);
-                let phys_to = chf
-                    .parse_attribute("PhysicalTo")
-                    .transpose()
-                    .ok_or_handled_by("using default 1", self.problems)
-                    .flatten()
-                    .unwrap_or(1.);
-
-                let chf_index = mode
-                    .channel_functions
-                    .add_node(ChannelFunction {
-                        name: chf_name.to_owned(),
-                        geometry: geometry_index,
-                        attr: chf_attr.to_owned(),
-                        original_attr: original_attribute.to_owned(),
-                        dmx_from,
-                        dmx_to,
-                        phys_from,
-                        phys_to,
-                        default,
-                    })
-                    .unexpected_err_at(&chf)?;
-
-                channel_function_ids.push(chf_index);
-
-                if let Some(mode_master) = chf.attribute("ModeMaster") {
-                    if let (Some(mode_from), Some(mode_to)) =
-                        (chf.attribute("ModeFrom"), chf.attribute("ModeTo"))
-                    {
-                        mode_master_queue.push((
-                            chf.to_owned(),
-                            mode_master,
-                            mode_from,
-                            mode_to,
-                            chf_index,
-                        ));
-                    } else {
-                        Problem::MissingModeFromOrTo(chf_name.as_str().to_owned())
-                            .at(&chf)
-                            .handled_by("ignoring ModeMaster", self.problems)
-                    }
-                }
+        mode_master_queue: &mut Vec<DeferredModeMaster<'b>>,
+    ) -> Result<Vec<NodeIndex>, ProblemAt> {
+        let mut channel_function_ids = Vec::<NodeIndex>::new();
+        for (i, (chf, chf_node)) in chfs.into_iter().enumerate() {
+            let chf_name = chf.name.to_owned();
+            let chf_index = mode
+                .channel_functions
+                .add_node(chf)
+                .unexpected_err_at(&chf_node)?;
+            channel_function_ids.push(chf_index);
+            if i == 0 {
+                // raw channel function has no ModeMaster
+                continue;
             }
+            if chf_node.attribute("ModeMaster").is_some() {
+                mode_master_queue.push(DeferredModeMaster {
+                    chf_node,
+                    ch_name: channel_name.to_owned(),
+                    chf_name,
+                    chf_ind: chf_index,
+                    subfixture: subfixture.to_owned(),
+                });
+            };
         }
-        let initial_function = channel.attribute("InitialFunction").and_then(|s| {
-            let mut it = s.split('.');
-            it.next_tuple()
-                .filter(|(ch, _lch, _chf)| (&name == ch))
-                .and_then(|(_ch, _lch, chf)| {
-                    for v in chfs(&channel_function_ids, &mode.channel_functions) {
-                        let (chf_ind, chf_ref) = v
-                            .map_err(|p| p.at(&channel))
-                            .ok_or_handled_by("using default", self.problems)?;
-                        if chf_ref.name == chf {
-                            return Some(chf_ind);
+        Ok(channel_function_ids)
+    }
+
+    fn parse_channel_function<'b>(
+        &mut self,
+        chf: Node<'b, 'b>,
+        index_in_parent: usize,
+        channel_bytes: u8,
+        next_chf: Option<Node>,
+        max_dmx_value: u32,
+        geometry_index: NodeIndex,
+    ) -> Result<ChannelFunction, ProblemAt> {
+        let chf_attr = chf.attribute("Attribute").unwrap_or("NoFeature");
+        let original_attribute = chf.attribute("OriginalAttribute").unwrap_or("");
+        let chf_name: Name = chf
+            .parse_attribute("Name")
+            .and_then(|r| r.ok_or_handled_by("using default", self.problems))
+            .unwrap_or_else(|| format!("{chf_attr} {}", index_in_parent + 1).into_valid());
+        let dmx_from = chf
+            .attribute("DMXFrom")
+            .and_then(|s| {
+                parse_dmx(s, channel_bytes)
+                    .map_err(|e| {
+                        Problem::InvalidAttribute {
+                            attr: "DMXFrom".to_owned(),
+                            tag: "ChannelFunction".to_owned(),
+                            content: s.to_owned(),
+                            source: Box::new(e),
+                            expected_type: "DMXValue".to_owned(),
                         }
-                    }
-                    None
-                })
-                .or_else(|| {
-                    Problem::InvalidInitialFunction {
-                        s: s.into(),
-                        channel: name.clone(),
-                        mode: mode.name.clone(),
-                    }
-                    .at(&channel)
-                    .handled_by(
-                        "using default (first channel function of first logical channel)",
+                        .at(&chf)
+                    })
+                    .ok_or_handled_by("using default 0", self.problems)
+            })
+            .unwrap_or(0);
+        // The convention to use the next ChannelFunction in XML order for DMXTo is not official
+        // but probably correct for GDTF Builder files.
+        // see https://github.com/mvrdevelopment/spec/issues/103#issuecomment-985361192
+        let dmx_to = next_chf
+            .and_then(|next_chf| {
+                let s = next_chf.attribute("DMXFrom").unwrap_or("0/1");
+                parse_dmx(s, channel_bytes)
+                    .map_err(|e| {
+                        Problem::InvalidAttribute {
+                            attr: "DMXFrom".to_owned(),
+                            tag: "ChannelFunction".to_owned(),
+                            content: s.to_owned(),
+                            source: Box::new(e),
+                            expected_type: "DMXValue".to_owned(),
+                        }
+                        .at(&chf)
+                    })
+                    .ok_or_handled_by(
+                        "using maximum channel value for DMXTo of previous channel function",
                         self.problems,
-                    );
-                    None
-                })
-        });
-        let initial_function = match initial_function {
-            Some(v) => v,
-            None => {
-                let mut it = channel_function_ids.iter();
-                let raw = it.next();
-                if let Some(default) = it.next() {
-                    *default
-                } else {
-                    *raw.ok_or_unexpected_at("no raw channel function", &channel)?
-                }
-            }
-        };
-        let default = mode
-            .channel_functions
-            .node_weight(initial_function)
-            .ok_or_unexpected_at("invalid initial channel function index", &channel)?
-            .default;
-        Ok(Channel {
-            name,
-            dmx_break,
-            offsets,
-            channel_functions: channel_function_ids,
-            bytes: channel_bytes,
-            initial_function,
+                    )
+            })
+            .filter(|next_dmx_from| dmx_from < *next_dmx_from)
+            .map(|next_dmx_from| next_dmx_from - 1)
+            .unwrap_or(max_dmx_value);
+        let default = chf
+            .attribute("Default")
+            .and_then(|s| {
+                parse_dmx(s, channel_bytes)
+                    .map_err(|e| {
+                        Problem::InvalidAttribute {
+                            attr: "Default".to_owned(),
+                            tag: "ChannelFunction".to_owned(),
+                            content: s.to_owned(),
+                            source: Box::new(e),
+                            expected_type: "DMXValue".to_owned(),
+                        }
+                        .at(&chf)
+                    })
+                    .ok_or_handled_by("using default 0", self.problems)
+            })
+            .unwrap_or(0);
+        let phys_from = chf
+            .parse_attribute("PhysicalFrom")
+            .transpose()
+            .ok_or_handled_by("using default 0", self.problems)
+            .flatten()
+            .unwrap_or(0.);
+        let phys_to = chf
+            .parse_attribute("PhysicalTo")
+            .transpose()
+            .ok_or_handled_by("using default 1", self.problems)
+            .flatten()
+            .unwrap_or(1.);
+
+        Ok(ChannelFunction {
+            name: chf_name,
+            geometry: geometry_index,
+            attr: chf_attr.to_owned(),
+            original_attr: original_attribute.to_owned(),
+            dmx_from,
+            dmx_to,
+            phys_from,
+            phys_to,
             default,
         })
     }
 }
 
 fn handle_mode_master(
-    chf: Node,
-    mode_master: &str,
-    mode_from: &str,
-    mode_to: &str,
-    chf_index: NodeIndex,
+    d: DeferredModeMaster,
+    template_channels: &TemplateChannels,
     mode: &mut DmxMode,
     problems: &mut Problems,
 ) -> Result<(), ProblemAt> {
+    let mode_master = d
+        .chf_node
+        .attribute("ModeMaster")
+        .ok_or_unexpected_at("mode master expected", &d.chf_node)?;
+
     let mut master_path = mode_master.split('.');
-    let master_channel_name: Name = master_path.next().unwrap_or("Default Channel").into_valid();
-    // TODO this doesn't work if the dependency channel is a template
-    // for that case, keep a list of template channels with references to instantiated channels?
-    // TODO how does this interact with renamed geometries? Wouldn't the channel then also have a different name?
-    let dependency_channel: &Channel = mode
-        .channels
-        .iter()
-        .find(|ch| ch.name == master_channel_name)
-        .ok_or_else(|| Problem::UnknownChannel(master_channel_name, mode.name.clone()).at(&chf))?;
+    let master_channel_name: Name = master_path
+        .next()
+        .ok_or_unexpected_at(
+            "string splits always have at least one element",
+            &d.chf_node,
+        )?
+        .into_valid();
+
+    let dependency_channel: &Channel = match template_channels.get(&master_channel_name) {
+        Some(hm) => {
+            // master is template
+            let subfixture = d.subfixture.ok_or_else(|| {
+                Problem::AmbiguousModeMaster {
+                    mode_master: master_channel_name.to_owned(),
+                    ch: d.ch_name.to_owned(),
+                    mode: mode.name.to_owned(),
+                }
+                .at(&d.chf_node)
+            })?;
+            let instantiated_master_name = hm.get(&subfixture).ok_or_else(|| {
+                Problem::AmbiguousModeMaster {
+                    mode_master: master_channel_name.to_owned(),
+                    ch: d.ch_name.to_owned(),
+                    mode: mode.name.to_owned(),
+                }
+                .at(&d.chf_node)
+            })?;
+            mode.subfixtures
+                .iter()
+                .find(|sf| sf.name == subfixture)
+                .and_then(|sf| {
+                    sf.channels
+                        .iter()
+                        .find(|ch| ch.name == *instantiated_master_name)
+                })
+                .ok_or_unexpected_at("subfixtures not present", &d.chf_node)?
+        }
+        None => {
+            // master is not a template
+            mode.channels
+                .iter()
+                .find(|ch| ch.name == master_channel_name)
+                .ok_or_else(|| {
+                    Problem::UnknownChannel(master_channel_name, mode.name.clone()).at(&d.chf_node)
+                })?
+        }
+    };
+    // TODO how does this interact with renamed geometries? Wouldn't the channel then also have a different name? -> Geometry Renaming was a mistake, let's face it...
+    // Geometry Lookup always works inside a specific top-level geometry, only inside that the names need to be unique
+    // requiring more is taking the spec at face value and not following the conventions, which is a mistake with GDTF if one wants to be productive
 
     let (master, master_index): (&ChannelFunction, NodeIndex) = if master_path.next().is_some() {
         // reference to channel function
@@ -547,13 +630,13 @@ fn handle_mode_master(
                 source: ModeMasterParseError {}.into(),
                 expected_type: "Node".into(),
             }
-            .at(&chf)
+            .at(&d.chf_node)
         })?;
         let mut master_chf = Default::default();
         // TODO replace with custom method on Channel
         for ni in dependency_channel.channel_functions.iter() {
             let chf_candidate = mode.channel_functions.node_weight(*ni).ok_or_else(|| {
-                Problem::Unexpected("Invalid Channel Function Index".into()).at(&chf)
+                Problem::Unexpected("Invalid Channel Function Index".into()).at(&d.chf_node)
             })?;
             if chf_candidate.name == dependency_chf_name {
                 master_chf = Some((chf_candidate, *ni));
@@ -565,7 +648,7 @@ fn handle_mode_master(
                 name: dependency_chf_name.into_valid(),
                 mode: mode.name.clone(),
             }
-            .at(&chf)
+            .at(&d.chf_node)
         })?
     } else {
         // reference to channel, so in our interpretation to the raw dmx channel function
@@ -573,7 +656,18 @@ fn handle_mode_master(
             .channel_functions
             .get(0)
             .and_then(|i| mode.channel_functions.node_weight(*i).map(|chf| (chf, *i)))
-            .ok_or_else(|| Problem::Unexpected("no raw dmx channel function".into()).at(&chf))?
+            .ok_or_else(|| {
+                Problem::Unexpected("no raw dmx channel function".into()).at(&d.chf_node)
+            })?
+    };
+
+    let (mode_from, mode_to) = if let (Some(mode_from), Some(mode_to)) = (
+        d.chf_node.attribute("ModeFrom"),
+        d.chf_node.attribute("ModeTo"),
+    ) {
+        (mode_from, mode_to)
+    } else {
+        Err(Problem::MissingModeFromOrTo(d.chf_name.to_string()).at(&d.chf_node))?
     };
 
     let mode_from = parse_dmx(mode_from, dependency_channel.bytes)
@@ -585,7 +679,7 @@ fn handle_mode_master(
                 source: Box::new(e),
                 expected_type: "DMXValue".into(),
             }
-            .at(&chf)
+            .at(&d.chf_node)
         })
         .ok_or_handled_by("using default 0", problems)
         .unwrap_or(0);
@@ -598,7 +692,7 @@ fn handle_mode_master(
                 source: Box::new(e),
                 expected_type: "DMXValue".into(),
             }
-            .at(&chf)
+            .at(&d.chf_node)
         })
         .ok_or_handled_by("using default 0", problems)
         .unwrap_or(0);
@@ -607,30 +701,25 @@ fn handle_mode_master(
     let clipped_mode_to = min(mode_to, master.dmx_to);
 
     if clipped_mode_to < clipped_mode_from {
-        let chf_name = mode
-            .channel_functions
-            .node_weight(chf_index)
-            .map(|chf| chf.name.to_owned())
-            .ok_or_unexpected_at("invalid chf index for mode master handler", &chf)?;
         return Err(Problem::UnreachableChannelFunction {
-            name: chf_name,
+            name: d.chf_name,
             dmx_mode: mode.name.to_owned(),
             mode_from,
             mode_to,
         }
-        .at(&chf));
+        .at(&d.chf_node));
     }
 
     mode.channel_functions
         .add_edge(
             master_index,
-            chf_index,
+            d.chf_ind,
             ModeMaster {
                 from: clipped_mode_from,
                 to: clipped_mode_to,
             },
         )
-        .unexpected_err_at(&chf)?;
+        .unexpected_err_at(&d.chf_node)?;
     Ok(())
 }
 
@@ -648,6 +737,18 @@ impl Default for ChannelBreak {
     fn default() -> Self {
         ChannelBreak::Break(Break::default())
     }
+}
+
+/// Remember the relationship between original name and instance names of template channels
+/// Structure: Original Channel Name -> Subfixture Name -> Instantiated Channel Name
+type TemplateChannels = HashMap<Name, HashMap<Name, Name>>;
+
+struct DeferredModeMaster<'a> {
+    chf_node: Node<'a, 'a>,
+    ch_name: Name,
+    chf_name: Name,
+    chf_ind: NodeIndex,
+    subfixture: Option<Name>,
 }
 
 #[cfg(test)]

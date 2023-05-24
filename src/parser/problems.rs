@@ -91,6 +91,13 @@ pub enum Problem {
     MissingBreakInReference { br: String, ch: Name, mode: Name },
     #[error("break of channel {ch} in mode {mode} was Overwrite but did not reference template geometry")]
     InvalidBreakOverwrite { ch: Name, mode: Name },
+    #[error("ModeMaster '{mode_master}' in channel '{ch}' of mode '{mode}' is ambiguous because the linked \
+    channels do not reference the same geometry template")]
+    AmbiguousModeMaster {
+        mode_master: Name,
+        ch: Name,
+        mode: Name,
+    },
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"

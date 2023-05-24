@@ -1,6 +1,6 @@
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::{
-    collections::HashMap,
     fs::{self, create_dir_all, remove_dir_all, File},
     path::{Path, PathBuf},
 };
@@ -20,7 +20,7 @@ pub static OUTPUTS_DIR: Lazy<PathBuf> = Lazy::new(|| EXAMPLE_FILES_DIR.join("out
 pub static EXPECTED_TOML_PATH: Lazy<PathBuf> =
     Lazy::new(|| EXAMPLE_FILES_DIR.join("expected.toml"));
 
-type Expected = HashMap<String, ExpectedEntry, xxhash_rust::xxh3::Xxh3Builder>;
+type Expected = BTreeMap<String, ExpectedEntry>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpectedEntry {
