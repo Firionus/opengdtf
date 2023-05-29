@@ -359,12 +359,21 @@ impl<'a> DmxModesParser<'a> {
                         },
                     ),
                 };
+                let channel_name =
+                    format!("{}_{first_logic_attribute}", reference.name).into_valid();
+
                 let channel_function_ids = self.add_channel_functions(
-                    channel_functions.iter().map(|(chf, n)| {
+                    channel_functions.iter().enumerate().map(|(i, (chf, n))| {
+                        let chf_name = if i == 0 {
+                            channel_name.clone()
+                        } else {
+                            chf.name.clone()
+                        };
                         (
                             ChannelFunction {
                                 geometry: ref_ind, // TODO doesn't work with multi-level geometry reference,
                                 // then the corresponding lower level instantiated geometry would be needed, which doesn't exist
+                                name: chf_name,
                                 ..chf.clone()
                             },
                             *n,
@@ -377,7 +386,7 @@ impl<'a> DmxModesParser<'a> {
                 )?;
 
                 let dmx_channel = Channel {
-                    name: format!("{}_{first_logic_attribute}", reference.name).into_valid(),
+                    name: channel_name,
                     dmx_break: actual_dmx_break,
                     offsets: offsets
                         .iter()
@@ -976,7 +985,6 @@ mod tests {
         let mut modes = Vec::<DmxMode>::new();
         DmxModesParser::new(&mut geometries, &mut modes, &mut problems).parse_from(&ft);
 
-        dbg!(&problems);
         assert!(problems.is_empty());
 
         let mode = modes.first().expect("at least one mode present");
@@ -985,7 +993,42 @@ mod tests {
         assert_eq!(mode.subfixtures.len(), 2);
         assert_eq!(mode.channel_functions.node_count(), 4);
 
-        // TODO test the rest (names, etc.)
+        assert_eq!(mode.subfixtures.get(0).unwrap().name, "Pixel1");
+        assert_eq!(mode.subfixtures.get(0).unwrap().channels.len(), 1);
+        assert_eq!(
+            mode.subfixtures
+                .get(0)
+                .unwrap()
+                .channels
+                .first()
+                .unwrap()
+                .name,
+            "Pixel1_Dimmer"
+        );
+        assert_eq!(mode.subfixtures.get(1).unwrap().name, "Pixel2");
+        assert_eq!(
+            mode.subfixtures
+                .get(1)
+                .unwrap()
+                .channels
+                .first()
+                .unwrap()
+                .name,
+            "Pixel2_Dimmer"
+        );
+
+        let chf_names: Vec<Name> = mode
+            .channel_functions
+            .node_weights()
+            .map(|chf| chf.name.clone())
+            .collect();
+
+        dbg!(&chf_names);
+        assert!(chf_names.contains(&"Pixel1_Dimmer".into_valid()));
+        assert!(chf_names.contains(&"Pixel2_Dimmer".into_valid()));
+        assert_eq!(chf_names.iter().filter(|s| s == &"Dimmer").count(), 2);
+
+        // TODO test that ChannelFunction name is unique in LogicalChannel (check before resolving modemaster)
 
         // TODO what happens if the modeMaster-referenced Channel or ChannelFunction is a template?
         // Then it can only work out if they are in the same subfixture and they reference in the instantiated form with 1:1 mapping
@@ -995,5 +1038,53 @@ mod tests {
         // the Geometry (including its subtree) they reference
 
         // TODO test geometry renaming and lookup with DMXChannels
+    }
+
+    #[test]
+    fn default_channel_function_name() {
+        let input = r#"
+<FixtureType>
+    <DMXModes>
+        <DMXMode Description="not a Name." Geometry="Body" Name="Mode 1">
+            <DMXChannels>
+                <DMXChannel DMXBreak="1" Geometry="Body" Highlight="127/1" InitialFunction="Body_Dimmer.Dimmer.Dimmer 1" Offset="1">
+                    <LogicalChannel Attribute="Dimmer" DMXChangeTimeLimit="0.000000" Master="Grand" MibFade="0.000000" Snap="No">
+                        <ChannelFunction Attribute="Dimmer" CustomName="" DMXFrom="0/1" Default="0/1" Max="1.000000" Min="0.000000" OriginalAttribute="" PhysicalFrom="0.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
+                            <ChannelSet DMXFrom="0/1" Name="closed" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="1/1" Name="" WheelSlotIndex="0"/>
+                            <ChannelSet DMXFrom="127/1" Name="open" WheelSlotIndex="0"/>
+                        </ChannelFunction>
+                        <ChannelFunction Attribute="StrobeModeShutter" CustomName="" DMXFrom="128/1" Default="51200/2" Max="1.000000" Min="1.000000" Name="Strobe" OriginalAttribute="" PhysicalFrom="1.000000" PhysicalTo="1.000000" RealAcceleration="0.000000" RealFade="0.000000">
+                        </ChannelFunction>
+                    </LogicalChannel>
+                </DMXChannel>
+            </DMXChannels>
+        </DMXMode>
+    </DMXModes>
+</FixtureType>"#;
+        let doc = roxmltree::Document::parse(input).unwrap();
+        let ft = doc.root_element();
+        let mut problems: Problems = vec![];
+        let mut geometries = Geometries::default();
+        let body_index = geometries
+            .add_top_level(Geometry {
+                name: "Body".into_valid(),
+                t: Type::General,
+            })
+            .unwrap();
+        let mut modes = Vec::<DmxMode>::new();
+        DmxModesParser::new(&mut geometries, &mut modes, &mut problems).parse_from(&ft);
+
+        assert_eq!(problems.len(), 0);
+
+        let chf_names: Vec<Name> = modes
+            .first()
+            .unwrap()
+            .channel_functions
+            .node_weights()
+            .map(|chf| chf.name.clone())
+            .collect();
+        assert!(chf_names.contains(&"Body_Dimmer".into_valid()));
+        assert!(chf_names.contains(&"Dimmer 1".into_valid()));
     }
 }

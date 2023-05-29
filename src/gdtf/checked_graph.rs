@@ -84,6 +84,7 @@ where
             pub fn edges_directed(&self, a: NodeIndex<Ix>, dir: Direction) -> Edges<E, Ty, Ix>;
             pub fn find_edge(&self, a: NodeIndex<Ix>, b: NodeIndex<Ix>) -> Option<EdgeIndex<Ix>>;
             pub fn node_count(&self) -> usize;
+            pub fn node_weights(&self) -> impl Iterator<Item=&N>;
         }
     }
 }
