@@ -1,21 +1,60 @@
 use std::str::FromStr;
 
 use derive_more::IntoIterator;
+use getset::Getters;
 use petgraph::{graph::NodeIndex, Directed};
-use thiserror::Error;
+use thiserror;
 
-use crate::{checked_graph::CheckedGraph, dmx_break::Break, name::Name, Problem};
+use crate::{
+    checked_graph::CheckedGraph, dmx_break::Break, geometries::GeometriesError, name::Name, Gdtf,
+    Problem,
+};
 
-#[derive(Debug)]
+#[derive(Debug, Getters)]
+#[getset(get = "pub")]
 pub struct DmxMode {
     pub name: Name,
     pub description: String,
-    pub geometry: NodeIndex, // must be top-level
+    geometry: NodeIndex,
 
+    // TODO pub?
     pub channels: Vec<Channel>, // main channels (not template/subfixture)
+    // TODO pub?
     pub subfixtures: Vec<Subfixture>, // template/subfixture channels kept here
-
+    // TODO pub?
     pub channel_functions: ChannelFunctions,
+}
+
+impl Gdtf {
+    /// Add a DMX Mode and return its index
+    pub fn add_dmx_mode(
+        &mut self,
+        name: Name,
+        description: String,
+        geometry: NodeIndex,
+    ) -> Result<usize, DmxModeError> {
+        let geometry = self.geometries.validate_index(geometry)?;
+        if !self.geometries.is_top_level(geometry) {
+            return Err(DmxModeError::NonTopLevelGeometry);
+        };
+        self.dmx_modes.push(DmxMode {
+            name,
+            description,
+            geometry,
+            channels: Default::default(),
+            subfixtures: Default::default(),
+            channel_functions: Default::default(),
+        });
+        Ok(self.dmx_modes.len() - 1)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DmxModeError {
+    #[error("invalid geometry: {0}")]
+    GeometriesError(#[from] GeometriesError),
+    #[error("DMX mode geometry must be top-level")]
+    NonTopLevelGeometry,
 }
 
 /// ModeMaster Edges go from dependency to dependent channel function
@@ -50,9 +89,9 @@ pub fn chfs<'a>(
 #[derive(Default, Debug, IntoIterator, derive_more::Deref, derive_more::DerefMut)]
 pub struct ChannelOffsets(Vec<u16>);
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum OffsetError {
-    #[error("Invalid Offset Format")]
+    #[error("invalid Offset Format")]
     Invalid,
     #[error("DXM address offsets must be between 1 and 512")]
     OutsideRange,

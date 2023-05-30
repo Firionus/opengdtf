@@ -4,9 +4,13 @@ use std::str::FromStr;
 
 use roxmltree::Node;
 
-use crate::{name::Name, parser::problems::HandleProblem, Problem, ProblemAt, Problems};
+use crate::{
+    name::Name,
+    parser::problems::{HandleProblem, ProblemsMut},
+    Problem, ProblemAt, Problems,
+};
 
-pub(crate) trait GetXmlAttribute {
+pub(crate) trait GetXmlAttribute<'a> {
     fn required_attribute(&self, attr: &str) -> Result<&str, ProblemAt>;
 
     fn parse_required_attribute<T: FromStr>(&self, attr: &str) -> Result<T, ProblemAt>
@@ -39,10 +43,10 @@ pub(crate) trait GetXmlAttribute {
         <T as FromStr>::Err: std::error::Error + 'static,
         F: FnOnce(Option<&str>) -> Option<&str>;
 
-    fn name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> Name;
+    fn name(&self, node_index_in_xml_parent: usize, problems: &mut impl ProblemsMut) -> Name;
 }
 
-impl GetXmlAttribute for Node<'_, '_> {
+impl<'a> GetXmlAttribute<'a> for Node<'_, '_> {
     /// Returns value of an atrribute, or a problem if missing.
     fn required_attribute(&self, name: &str) -> Result<&str, ProblemAt> {
         self.attribute(name).ok_or_else(|| {
@@ -123,13 +127,20 @@ impl GetXmlAttribute for Node<'_, '_> {
     ///
     /// If missing, provide a default and push a problem. If the Name is
     /// invalid, replace the disallowed chars and push a problem.
-    fn name(&self, node_index_in_xml_parent: usize, problems: &mut Problems) -> Name {
+    fn name(
+        &self,
+        node_index_in_xml_parent: usize,
+        problems_provider: &mut impl ProblemsMut,
+    ) -> Name {
         self.required_attribute("Name")
-            .map(|name| parse_name_or_fix(self, name, problems))
+            .map(|name| parse_name_or_fix(self, name, problems_provider))
             .unwrap_or_else(|p| {
                 let default_name =
                     Name::valid_default(self.tag_name().name(), node_index_in_xml_parent);
-                p.handled_by(format!("using default name '{default_name}'"), problems);
+                p.handled_by(
+                    format!("using default name '{default_name}'"),
+                    problems_provider,
+                );
                 default_name
             })
     }
@@ -155,7 +166,7 @@ where
     })
 }
 
-fn parse_name_or_fix(node: &Node, name: &str, problems: &mut Vec<crate::HandledProblem>) -> Name {
+fn parse_name_or_fix(node: &Node, name: &str, problems: &mut impl ProblemsMut) -> Name {
     Name::try_from(name).unwrap_or_else(|e| {
         let fixed = e.fixed.clone();
         Problem::InvalidAttribute {

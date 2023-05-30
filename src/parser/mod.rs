@@ -23,8 +23,8 @@ pub use self::{
 
 use self::{
     geometries::GeometriesParser,
-    modes::DmxModesParser,
     parse_xml::{get_xml_attribute::GetXmlAttribute, AssignOrHandle, GetXmlNode},
+    problems::ProblemsMut,
     yes_no::YesNoEnum,
 };
 
@@ -75,7 +75,7 @@ impl ParsedGdtf {
         let fixture_type = match gdtf.find_required_child("FixtureType") {
             Ok(g) => g,
             Err(p) => {
-                p.handled_by("returning empty fixture type", &mut self.problems);
+                p.handled_by("returning empty fixture type", self);
                 return;
             }
         };
@@ -108,12 +108,7 @@ impl ParsedGdtf {
         // TODO parse Attributes (needed for nice display of values in DMXChannel)
         // TODO then test Attribute linking in DMXChannel's
 
-        DmxModesParser::new(
-            &mut self.gdtf.geometries,
-            &mut self.gdtf.dmx_modes,
-            &mut self.problems,
-        )
-        .parse_from(&fixture_type);
+        self.parse_dmx_modes(fixture_type);
     }
 
     /// Parse RefFT attribute
@@ -129,7 +124,7 @@ impl ParsedGdtf {
         {
             Some(Ok(v)) => Some(v),
             Some(Err(p)) => {
-                p.handled_by("setting ref_ft to None", &mut self.problems);
+                p.handled_by("setting ref_ft to None", self);
                 None
             }
             None => None,
@@ -142,6 +137,12 @@ impl ParsedGdtf {
                 .map(bool::from)
                 .assign_or_handle(&mut self.gdtf.can_have_children, &mut self.problems)
         }
+    }
+}
+
+impl ProblemsMut for ParsedGdtf {
+    fn problems_mut(&mut self) -> &mut Problems {
+        &mut self.problems
     }
 }
 

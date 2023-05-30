@@ -4,11 +4,19 @@
 use roxmltree::{Node, TextPos};
 
 use crate::{
+    dmx_modes::DmxModeError,
     geometries::GeometriesError,
+    GdtfError,
     {dmx_break::Break, name::Name},
 };
 
 pub type Problems = Vec<HandledProblem>;
+
+impl ProblemsMut for Problems {
+    fn problems_mut(&mut self) -> &mut Problems {
+        self
+    }
+}
 
 /// A recoverable problem in a GDTF file, with position information and info on
 /// the action taken to recover from it.
@@ -98,6 +106,10 @@ pub enum Problem {
         ch: Name,
         mode: Name,
     },
+    #[error("Gdtf domain error: {0}")]
+    GdtfError(#[from] GdtfError),
+    #[error("dmx mode error: {0}")]
+    DmxModeError(#[from] DmxModeError),
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"
@@ -118,8 +130,12 @@ impl Problem {
 impl ProblemAt {
     /// Specify what action was taken to resolve the problem and then push it
     /// onto the problems.
-    pub fn handled_by<T: Into<String>>(self, action: T, problems: &mut Problems) {
-        problems.push(HandledProblem {
+    pub(crate) fn handled_by<T: Into<String>>(
+        self,
+        action: T,
+        problems_provider: &mut impl ProblemsMut,
+    ) {
+        problems_provider.problems_mut().push(HandledProblem {
             p: self,
             action: action.into(),
         });
@@ -130,19 +146,34 @@ impl ProblemAt {
     }
 }
 
+/// Implementors can provide a mutable reference to a Problems vector.
+///
+/// This shortens error handling code that must push onto the problem vector,
+/// since they don't have to write out the borrow and field access for owned or
+/// more complex types.
+pub(crate) trait ProblemsMut {
+    fn problems_mut(&mut self) -> &mut Problems;
+    // TODO switch all cases of &mut Problems (especially in this file) to &mut
+    // impl ProblemsMut
+
+    // TODO go through the codebase, checking for things
+    // like `&mut self.problems` or `self.problems` and replace with `self`.
+    // This might require more implementations for ProblemsMut.
+}
+
 pub(crate) trait HandleProblem<T, S: Into<String>> {
-    fn ok_or_handled_by(self, action: S, problems: &mut Problems) -> Option<T>;
+    fn ok_or_handled_by(self, action: S, problems: &mut impl ProblemsMut) -> Option<T>;
 }
 
 impl<T, S: Into<String>> HandleProblem<T, S> for Result<T, ProblemAt> {
     /// Specify what action will be taken to resolve a possible Err(Problem),
     /// push it onto problems and return None. If the result is Ok(v), Some(v)
     /// is returned instead.
-    fn ok_or_handled_by(self, action: S, problems: &mut Problems) -> Option<T> {
+    fn ok_or_handled_by(self, action: S, problems_provider: &mut impl ProblemsMut) -> Option<T> {
         match self {
             Ok(t) => Some(t),
             Err(p) => {
-                p.handled_by(action, problems);
+                p.handled_by(action, problems_provider);
                 None
             }
         }

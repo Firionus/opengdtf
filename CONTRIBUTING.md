@@ -62,6 +62,18 @@ Then, when something bad might happen, there are two ways to handle it:
 Further, you should always check the `parse_xml` traits to see whether a utility
 function already does what you need.
 
+## Validation Notes
+
+Validations during parsing should be divided into two parts:
+- Parsing validation, e.g. that a `Name` does not contain forbidden chars or
+  that a Geometry referenced by name does in fact exist in the Domain model and
+  its index can be retrieved
+- Domain validation, e.g. that the referenced Geometry of a Mode is top-level
+
+One should take care to put these validations where they belong, i.e. parsing
+validation belongs into the `parser` module, domain validation into the `gdtf`
+module.
+
 ## Benchmark
 
 A little comparison with [gdtf_parser](https://github.com/michaelhugi/gdtf_parser) is available by running
