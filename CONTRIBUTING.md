@@ -61,3 +61,11 @@ Then, when something bad might happen, there are two ways to handle it:
 
 Further, you should always check the `parse_xml` traits to see whether a utility
 function already does what you need.
+
+## Benchmark
+
+A little comparison with [gdtf_parser](https://github.com/michaelhugi/gdtf_parser) is available by running
+
+```sh
+cargo run --bin comparison_against_gdtf_parser --release
+```

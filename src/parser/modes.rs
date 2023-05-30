@@ -1028,6 +1028,8 @@ mod tests {
         assert!(chf_names.contains(&"Pixel2_Dimmer".into_valid()));
         assert_eq!(chf_names.iter().filter(|s| s == &"Dimmer").count(), 2);
 
+        // TODO test that LogicalChannel attribute/name is unique in Channel
+
         // TODO test that ChannelFunction name is unique in LogicalChannel (check before resolving modemaster)
 
         // TODO what happens if the modeMaster-referenced Channel or ChannelFunction is a template?
