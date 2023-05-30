@@ -10,6 +10,20 @@ pub mod geometries;
 pub mod geometry;
 pub mod name;
 
+/// A mid-level representation of a GDTF fixture.
+///
+/// This aims to be:
+/// - Constructed piece by piece
+/// - "Valid" at any construction step, in the sense of uniquely correlating to
+///   a valid and sensible GDTF file
+/// - Serializable to a GDTF file, Parseable from a GDTF file
+///
+/// As a mid-level representation, it does not have to completely copy the
+/// structure of GDTF but has to maintain enough information to be serializable
+/// to GDTF.  
+/// For example, template channels and geometries are kept as such and not
+/// instantiated. Yet, references between nodes don't have to be kept as strings
+/// but can be encoded with indices or graphs instead.
 #[derive(Debug)]
 pub struct Gdtf {
     pub data_version: DataVersion,

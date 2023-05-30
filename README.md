@@ -51,9 +51,9 @@ Value developer time.
   must be lenient to be useful. 
 - Noone, including me, seems to have much time left over for open source GDTF
 
-## Non-goals
+## Longer Term Goals
 
-- Serialize GDTF XML. This library provides a high level representation that can't be translated back to GDTF losslessly. GDTF creation is therefore out of scope for now, and might later be more easy to tackle with a wrapper around an XML mutable DOM library like minidom or similar. 
+- Serialize GDTF XML
 
 ## Why Rust?
 
