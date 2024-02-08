@@ -9,8 +9,9 @@ use roxmltree::Node;
 use thiserror::Error;
 
 use crate::{
+    channel_offsets::ChannelOffsets,
     dmx_break::Break,
-    dmx_modes::{Channel, ChannelFunction, ChannelOffsets, DmxMode, ModeMaster, Subfixture},
+    dmx_modes::{Channel, ChannelFunction, DmxMode, ModeMaster, Subfixture},
     geometries::Geometries,
     geometry::{Geometry, Type},
     name::{IntoValidName, Name},
