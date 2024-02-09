@@ -4,7 +4,7 @@ use std::io::Write;
 use chrono::Utc;
 use example_files::{
     check_for_duplicate_filenames, parse_expected_toml, parsed_examples_iter, ExpectedEntry,
-    EXPECTED_TOML_PATH,
+    ParsedInfo, EXPECTED_TOML_PATH,
 };
 use opengdtf::hash::hash_gdtf_to_string;
 
@@ -19,6 +19,15 @@ fn main() {
         let key = hash_gdtf_to_string(file).unwrap();
 
         let output_enum = parsed_result.into();
+
+        match output_enum {
+            example_files::OutputEnum::Ok(ParsedInfo { ref problems, .. }) => {
+                if !problems.is_empty() {
+                    println!("Problems: {problems:#?}");
+                }
+            }
+            example_files::OutputEnum::Err(ref e) => println!("Parsing Error: {}", e.error),
+        }
 
         let comment = if let Some(existing_entry) = expected.get(&key) {
             if existing_entry.output_enum == output_enum {

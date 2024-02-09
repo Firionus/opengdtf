@@ -22,4 +22,4 @@ intermediate struct.
 - [x] Test parsing in new arch
 - [ ] Test XML serialization in new arch by doind a roundtrip after parsing
 - [x] Switch to derived serialization/deserialization on Gdtf and wrappers for expected.toml
-- [ ] Write out problems or errors occuring while testing to a separate file and the console, this makes it easier to spot difficult examples
+- [x] Write out problems or errors occuring while testing to a separate file and/or the console, this makes it easier to spot difficult examples -> added to update_expected.rs
