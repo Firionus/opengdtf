@@ -34,7 +34,7 @@ impl TryFrom<Vec<u16>> for ChannelOffsets {
                 Err(OffsetError::OutsideRange)?
             }
             for (j, u) in vec.iter().enumerate() {
-                if i != j && v == u {
+                if v == u && i != j {
                     Err(OffsetError::Duplicate(*v))?
                 }
             }
@@ -48,23 +48,19 @@ impl FromStr for ChannelOffsets {
     type Err = OffsetError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut out = Self::default();
+        let mut out = Vec::<u16>::new();
 
         if let "None" | "" = s {
             // empty string is not allowed in GDTF 1.2, but some builder files use it
-            return Ok(out);
+            return out.try_into();
         }
 
         for s in s.split(',') {
             let u: u16 = s.parse().map_err(|_| OffsetError::Invalid)?;
-            if (1..=512).contains(&u) {
-                out.0.push(u);
-            } else {
-                return Err(OffsetError::OutsideRange);
-            }
+            out.push(u);
         }
 
-        Ok(out)
+        out.try_into()
     }
 }
 
@@ -99,6 +95,10 @@ mod tests {
         assert!(matches!(
             ChannelOffsets::try_from(vec![1, 1]),
             Err(OffsetError::Duplicate(1))
+        ));
+        assert!(matches!(
+            ChannelOffsets::from_str("4,4"),
+            Err(OffsetError::Duplicate(4))
         ));
         Ok(())
     }
