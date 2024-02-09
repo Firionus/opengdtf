@@ -1,10 +1,4 @@
-use std::io::{Read, Seek};
-
-use crate::{
-    gdtf::gdtf::Gdtf,
-    parse::{parse_description, ParsedGdtf},
-    Error, Problems,
-};
+use crate::{gdtf::gdtf::Gdtf, parse::ParsedGdtf, Problems};
 
 #[derive(Debug)]
 pub struct ValidatedGdtf {

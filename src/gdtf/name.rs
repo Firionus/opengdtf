@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use derive_more::{DebugCustom, Display};
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// GDTF Name type
@@ -17,7 +18,19 @@ use thiserror::Error;
 /// - U+003F (?)
 /// - U+005B..=U+005E ([\]^)
 /// - U+007B..=U+007F ({|}~<control>)
-#[derive(PartialOrd, PartialEq, Eq, Ord, Clone, Hash, Display, DebugCustom, Default)]
+#[derive(
+    PartialOrd,
+    PartialEq,
+    Eq,
+    Ord,
+    Clone,
+    Hash,
+    Display,
+    DebugCustom,
+    Default,
+    Serialize,
+    Deserialize,
+)]
 pub struct Name(String);
 
 impl TryFrom<&str> for Name {

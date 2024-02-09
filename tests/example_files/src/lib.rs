@@ -10,7 +10,7 @@ pub use duplicate_filenames::check_for_duplicate_filenames;
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse, Error, ValidatedGdtf};
+use opengdtf::{parse, Error, Gdtf, ValidatedGdtf};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
@@ -31,7 +31,7 @@ pub struct ExpectedEntry {
     pub output_enum: OutputEnum,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum OutputEnum {
     Ok(ParsedInfo),
@@ -43,45 +43,27 @@ pub struct ErrorInfo {
     pub error: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ParsedInfo {
-    pub data_version: String,
-    // pub manufacturer: String,
-    // pub name: String,
-    // pub fixture_type_id: String,
-    // pub problems: Vec<String>,
-    // pub geometries: Vec<String>,
-    // TODO include template relationships, when channel list is implemented and templates are used more
+    #[serde(flatten)]
+    pub gdtf: Gdtf,
+    pub problems: Vec<String>,
 }
 
 impl From<Result<ValidatedGdtf, Error>> for OutputEnum {
     fn from(value: Result<ValidatedGdtf, Error>) -> Self {
         match value {
             Ok(parsed) => OutputEnum::Ok(ParsedInfo {
-                data_version: parsed.gdtf.data_version.to_string(),
-                // manufacturer: parsed.gdtf.manufacturer,
-                // name: parsed.gdtf.name.to_string(),
-                // fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
-                // problems: {
-                //     let mut problem_strings: Vec<String> = parsed
-                //         .problems
-                //         .into_iter()
-                //         .map(|p| format!("{p}"))
-                //         .collect();
-                //     problem_strings.sort();
-                //     problem_strings
-                // },
-                // geometries: {
-                //     let mut qualified_names: Vec<String> = parsed
-                //         .gdtf
-                //         .geometries
-                //         .graph()
-                //         .node_indices()
-                //         .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
-                //         .collect();
-                //     qualified_names.sort();
-                //     qualified_names
-                // },
+                gdtf: parsed.gdtf,
+                problems: {
+                    let mut problem_strings: Vec<String> = parsed
+                        .problems
+                        .into_iter()
+                        .map(|p| format!("{p}"))
+                        .collect();
+                    problem_strings.sort();
+                    problem_strings
+                },
             }),
             Err(err) => OutputEnum::Err(ErrorInfo {
                 error: format!("{err}"),

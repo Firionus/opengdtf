@@ -1,14 +1,9 @@
-use std::{
-    f32::consts::E,
-    io::{Read, Seek},
-};
+use std::io::{Read, Seek};
 
-use quick_xml::{events::Event, Reader};
 use roxmltree::Node;
 
 use crate::{
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf, parser::problems::Problem, validate::validate,
-    Error, ValidatedGdtf,
+    low_level_gdtf::low_level_gdtf::LowLevelGdtf, validate::validate, Error, ValidatedGdtf,
 };
 
 use super::{
@@ -40,7 +35,7 @@ pub fn parse<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, Error> {
 }
 
 pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::Error> {
-    let doc = roxmltree::Document::parse(&description)?;
+    let doc = roxmltree::Document::parse(description)?;
     let gdtf = doc
         .descendants()
         .find(|n| n.has_tag_name("GDTF"))
