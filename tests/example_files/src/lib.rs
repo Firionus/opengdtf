@@ -10,7 +10,7 @@ pub use duplicate_filenames::check_for_duplicate_filenames;
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse, Error, ParsedGdtf};
+use opengdtf::{parse, Error, ValidatedGdtf};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
@@ -45,41 +45,43 @@ pub struct ErrorInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct ParsedInfo {
-    pub manufacturer: String,
-    pub name: String,
-    pub fixture_type_id: String,
-    pub problems: Vec<String>,
-    pub geometries: Vec<String>,
+    pub data_version: String,
+    // pub manufacturer: String,
+    // pub name: String,
+    // pub fixture_type_id: String,
+    // pub problems: Vec<String>,
+    // pub geometries: Vec<String>,
     // TODO include template relationships, when channel list is implemented and templates are used more
 }
 
-impl From<Result<ParsedGdtf, Error>> for OutputEnum {
-    fn from(value: Result<ParsedGdtf, Error>) -> Self {
+impl From<Result<ValidatedGdtf, Error>> for OutputEnum {
+    fn from(value: Result<ValidatedGdtf, Error>) -> Self {
         match value {
             Ok(parsed) => OutputEnum::Ok(ParsedInfo {
-                manufacturer: parsed.gdtf.manufacturer,
-                name: parsed.gdtf.name.to_string(),
-                fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
-                problems: {
-                    let mut problem_strings: Vec<String> = parsed
-                        .problems
-                        .into_iter()
-                        .map(|p| format!("{p}"))
-                        .collect();
-                    problem_strings.sort();
-                    problem_strings
-                },
-                geometries: {
-                    let mut qualified_names: Vec<String> = parsed
-                        .gdtf
-                        .geometries
-                        .graph()
-                        .node_indices()
-                        .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
-                        .collect();
-                    qualified_names.sort();
-                    qualified_names
-                },
+                data_version: parsed.gdtf.data_version.to_string(),
+                // manufacturer: parsed.gdtf.manufacturer,
+                // name: parsed.gdtf.name.to_string(),
+                // fixture_type_id: parsed.gdtf.fixture_type_id.to_string(),
+                // problems: {
+                //     let mut problem_strings: Vec<String> = parsed
+                //         .problems
+                //         .into_iter()
+                //         .map(|p| format!("{p}"))
+                //         .collect();
+                //     problem_strings.sort();
+                //     problem_strings
+                // },
+                // geometries: {
+                //     let mut qualified_names: Vec<String> = parsed
+                //         .gdtf
+                //         .geometries
+                //         .graph()
+                //         .node_indices()
+                //         .map(|geometry_index| parsed.gdtf.geometries.qualified_name(geometry_index))
+                //         .collect();
+                //     qualified_names.sort();
+                //     qualified_names
+                // },
             }),
             Err(err) => OutputEnum::Err(ErrorInfo {
                 error: format!("{err}"),
@@ -113,7 +115,7 @@ pub fn opened_examples_iter() -> impl Iterator<Item = (DirEntry, File)> {
 }
 
 pub fn parsed_examples_iter(
-) -> impl Iterator<Item = (DirEntry, File, Result<ParsedGdtf, opengdtf::Error>)> {
+) -> impl Iterator<Item = (DirEntry, File, Result<ValidatedGdtf, opengdtf::Error>)> {
     opened_examples_iter().map(|(entry, file)| {
         let parse_result = parse(&file);
         (entry, file, parse_result)
@@ -121,7 +123,7 @@ pub fn parsed_examples_iter(
 }
 
 pub fn examples_update_output_iter(
-) -> impl Iterator<Item = (DirEntry, File, Result<ParsedGdtf, opengdtf::Error>)> {
+) -> impl Iterator<Item = (DirEntry, File, Result<ValidatedGdtf, opengdtf::Error>)> {
     // clean outputs
     remove_dir_all(&*OUTPUTS_DIR).unwrap();
     create_dir_all(&*OUTPUTS_DIR).unwrap();

@@ -7,11 +7,18 @@ edition = "2021"
 
 [dependencies]
 derive_more = "0.99.17"
-quick-xml = {version="0.31.0", features = ["serialize"] }
+pretty_assertions = "1.4.0"
+quick-xml = { version = "0.31.0", features = ["serialize"] }
 roxmltree = "0.19.0"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_with = { version = "3.6.1", features = ["macros"] }
 strum = { version = "0.26.1", features = ["derive"] }
 thiserror = "1.0.56"
+xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
+zip = "0.6.6"
 
 [dev-dependencies]
+example_files = { path = "tests/example_files"}
+
+[workspace]
+default-members = [".", "tests/example_files"]

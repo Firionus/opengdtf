@@ -1,47 +1,63 @@
-use std::f32::consts::E;
-
-use quick_xml::{events::Event, Reader};
-
-use crate::{
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf,
-    parser::problems::{pos, Problem},
+use std::{
+    f32::consts::E,
+    io::{Read, Seek},
 };
 
-use super::problems::Problems;
+use quick_xml::{events::Event, Reader};
+use roxmltree::Node;
 
-#[derive(Debug)]
+use crate::{
+    low_level_gdtf::low_level_gdtf::LowLevelGdtf, parser::problems::Problem, validate::validate,
+    Error, ValidatedGdtf,
+};
+
+use super::{
+    parse_xml::{AssignOrHandle, GetXmlAttribute},
+    problems::Problems,
+};
+
+#[derive(Debug, Default)]
 pub struct ParsedGdtf {
     pub gdtf: LowLevelGdtf,
     pub problems: Problems,
 }
 
-pub(crate) fn parse_description(input: &str) -> ParsedGdtf {
-    let mut p = Problems::default();
+pub fn parse<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, Error> {
+    let mut zip = zip::ZipArchive::new(reader)?;
+    let mut description_file = zip
+        .by_name("description.xml")
+        .map_err(Error::DescriptionXmlMissing)?;
 
-    let mut r = Reader::from_str(input);
+    let size: usize = description_file.size().try_into().unwrap_or(0);
+    let mut description = String::with_capacity(size);
 
-    loop {
-        match r.read_event() {
-            Ok(Event::Start(t)) => {
-                if t.name().0 == b"GDTF" {
-                    for Ok(attr) in t.attributes() {
-                        todo!()
-                        // TODO right here I'm questioning my sanity
-                        // the API of quick-xml isn't enjoyable
-                        // The push parser from roxmltree would be nicer
-                        // or just use roxmltree anyway, it would be easier I think...
-                        // We can continue using quick-xml for serialization
-                    }
-                }
-            }
-            Ok(Event::Eof) => break,
-            Ok(_) => todo!(),
-            Err(e) => {
-                Problem::InvalidXml(e, pos(r, &mut p)).handle("aborting parsing", &mut p);
-                break;
-            }
-        }
+    description_file
+        .read_to_string(&mut description)
+        .map_err(Error::InvalidDescriptionXml)?;
+
+    let low_level_parsed = parse_description(&description)?;
+    Ok(validate(low_level_parsed))
+}
+
+pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::Error> {
+    let doc = roxmltree::Document::parse(&description)?;
+    let gdtf = doc
+        .descendants()
+        .find(|n| n.has_tag_name("GDTF"))
+        .ok_or(super::Error::NoRootNode)?;
+
+    let mut parsed = ParsedGdtf::default();
+    parsed.parse(gdtf);
+
+    Ok(parsed)
+}
+
+impl ParsedGdtf {
+    fn parse(&mut self, gdtf: Node) {
+        gdtf.parse_required_attribute("DataVersion")
+            .assign_or_handle(&mut self.gdtf.data_version, &mut self.problems);
+
+        // TODO uncomment
+        //self.parse_fixture_type(gdtf);
     }
-
-    todo!()
 }
