@@ -383,10 +383,12 @@ impl<'a> DmxModeParser<'a> {
                     name: channel_name,
                     dmx_break: actual_dmx_break,
                     offsets: offsets
-                        .iter()
-                        .map(|o| o + (offsets_offset as u16) - 1)
-                        .collect::<Vec<u16>>()
-                        .try_into()
+                        .clone()
+                        .add_all(
+                            (offsets_offset - 1)
+                                .try_into()
+                                .unexpected_err_at(&channel)?,
+                        )
                         .map_err(|e| Problem::ChannelOffsetError(e).at(&channel))
                         .ok_or_handled_by("using empty", self)
                         .unwrap_or_default(),

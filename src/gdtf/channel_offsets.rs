@@ -6,7 +6,7 @@ use derive_more::IntoIterator;
 ///
 /// Values go from 1 to 512. Empty indicates a virtual channel. The maximum
 /// number of supported bytes per channel is 4. Duplicates are disallowed.
-#[derive(Default, Debug, IntoIterator, derive_more::Deref, PartialEq)]
+#[derive(Default, Debug, IntoIterator, derive_more::Deref, PartialEq, Clone)]
 pub struct ChannelOffsets(Vec<u16>);
 
 #[derive(Debug, thiserror::Error)]
@@ -61,6 +61,14 @@ impl FromStr for ChannelOffsets {
         }
 
         out.try_into()
+    }
+}
+
+impl ChannelOffsets {
+    /// Adds `value` to all elements of the channel offset
+    pub fn add_all(mut self, value: u16) -> Result<Self, OffsetError> {
+        self.0.iter_mut().for_each(|v| *v += value);
+        self.0.try_into()
     }
 }
 
