@@ -2,19 +2,46 @@ use std::str::FromStr;
 
 use derive_more::IntoIterator;
 
-/// DMX address offset of a channel from most to least significant byte.
+/// DMX address offsets of a channel from most to least significant byte.
 ///
-/// Values go from 0 to 511. Empty indicates a virtual channel. The maximum
-/// number of supported bytes per channel is 4.
-#[derive(Default, Debug, IntoIterator, derive_more::Deref, derive_more::DerefMut)]
+/// Values go from 1 to 512. Empty indicates a virtual channel. The maximum
+/// number of supported bytes per channel is 4. Duplicates are disallowed.
+#[derive(Default, Debug, IntoIterator, derive_more::Deref, PartialEq)]
 pub struct ChannelOffsets(Vec<u16>);
 
 #[derive(Debug, thiserror::Error)]
 pub enum OffsetError {
     #[error("invalid Offset Format")]
     Invalid,
-    #[error("DXM address offsets must be between 1 and 512")]
+    #[error("DMX address offsets must be between 1 and 512 (or 0 and 511 internally)")]
     OutsideRange,
+    #[error("channels cannot have more than 4 bytes, this is a limitation of the implementation")]
+    UnsupportedByteCount,
+    #[error("duplicate channel offsets ${0}")]
+    Duplicate(u16),
+}
+
+impl TryFrom<Vec<u16>> for ChannelOffsets {
+    type Error = OffsetError;
+
+    fn try_from(vec: Vec<u16>) -> Result<Self, Self::Error> {
+        if vec.len() > 4 {
+            Err(OffsetError::UnsupportedByteCount)?
+        }
+
+        for (i, v) in vec.iter().enumerate() {
+            if !(1..=512).contains(v) {
+                Err(OffsetError::OutsideRange)?
+            }
+            for (j, u) in vec.iter().enumerate() {
+                if i != j && v == u {
+                    Err(OffsetError::Duplicate(*v))?
+                }
+            }
+        }
+
+        Ok(Self(vec))
+    }
 }
 
 impl FromStr for ChannelOffsets {
@@ -31,7 +58,7 @@ impl FromStr for ChannelOffsets {
         for s in s.split(',') {
             let u: u16 = s.parse().map_err(|_| OffsetError::Invalid)?;
             if (1..=512).contains(&u) {
-                out.0.push(u - 1);
+                out.0.push(u);
             } else {
                 return Err(OffsetError::OutsideRange);
             }
@@ -41,8 +68,38 @@ impl FromStr for ChannelOffsets {
     }
 }
 
-impl FromIterator<u16> for ChannelOffsets {
-    fn from_iter<I: IntoIterator<Item = u16>>(iter: I) -> Self {
-        Self(Vec::from_iter(iter))
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_creation() -> Result<(), OffsetError> {
+        assert_eq!(ChannelOffsets::default().0, []);
+        assert_eq!(ChannelOffsets::try_from(vec![])?, ChannelOffsets::default());
+        assert_eq!(
+            ChannelOffsets::from_str("1,4")?,
+            ChannelOffsets::try_from(vec![1, 4])?
+        );
+        assert_eq!(
+            ChannelOffsets::try_from(vec![1, 2, 3, 4])?,
+            ChannelOffsets(vec![1, 2, 3, 4])
+        );
+        assert!(matches!(
+            ChannelOffsets::try_from(vec![513]),
+            Err(OffsetError::OutsideRange)
+        ));
+        assert!(matches!(
+            ChannelOffsets::try_from(vec![0]),
+            Err(OffsetError::OutsideRange)
+        ));
+        assert!(matches!(
+            ChannelOffsets::try_from(vec![1, 2, 3, 4, 5]),
+            Err(OffsetError::UnsupportedByteCount)
+        ));
+        assert!(matches!(
+            ChannelOffsets::try_from(vec![1, 1]),
+            Err(OffsetError::Duplicate(1))
+        ));
+        Ok(())
     }
 }

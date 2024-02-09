@@ -4,10 +4,8 @@
 use roxmltree::{Node, TextPos};
 
 use crate::{
-    dmx_modes::DmxModeError,
-    geometries::GeometriesError,
-    GdtfError,
-    {dmx_break::Break, name::Name},
+    channel_offsets::OffsetError, dmx_break::Break, dmx_modes::DmxModeError,
+    geometries::GeometriesError, name::Name, GdtfError,
 };
 
 pub type Problems = Vec<HandledProblem>;
@@ -110,6 +108,8 @@ pub enum Problem {
     GdtfError(#[from] GdtfError),
     #[error("dmx mode error: {0}")]
     DmxModeError(#[from] DmxModeError),
+    #[error("invalid channel offsets: {0}")]
+    ChannelOffsetError(#[from] OffsetError),
     #[error(
         "unexpected condition occured. This is a fault in opengdtf. \
         Please open an issue at https://github.com/Firionus/opengdtf/issues/new. Caused by: {0}"

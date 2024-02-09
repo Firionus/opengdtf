@@ -1,6 +1,3 @@
-use std::str::FromStr;
-
-use derive_more::IntoIterator;
 use getset::Getters;
 use petgraph::{graph::NodeIndex, Directed};
 use thiserror;
@@ -66,7 +63,6 @@ pub struct Channel {
     pub dmx_break: Break,
     /// only between 1 to 4 bytes are supported
     pub bytes: u8,
-    /// 0-based (1-based in GDTF). MSB to LSB. Empty offsets might imply a virtual channel.
     pub offsets: ChannelOffsets,
     /// first one must always be the Raw DMX Channel Function
     pub channel_functions: Vec<NodeIndex>,

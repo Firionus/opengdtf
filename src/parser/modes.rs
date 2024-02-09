@@ -175,7 +175,7 @@ impl<'a> DmxModeParser<'a> {
             })
             .unwrap_or_default();
 
-        let mut offsets: ChannelOffsets = channel
+        let offsets: ChannelOffsets = channel
             .parse_attribute("Offset")
             .transpose()
             .ok_or_handled_by("using None", self)
@@ -184,15 +184,10 @@ impl<'a> DmxModeParser<'a> {
 
         let channel_bytes = if offsets.is_empty() {
             4 // use maximum resolution for virtual channel
-        } else if offsets.len() > 4 {
-            Problem::UnsupportedByteCount(offsets.len())
-                .at(&channel)
-                .handled_by("using only 4 most significant bytes", self);
-            offsets.truncate(4);
-            4
         } else {
             offsets.len() as u8
         };
+
         let max_dmx_value = bytes_max_value(channel_bytes);
 
         let mut channel_functions = Vec::<(ChannelFunction, Node)>::default();
@@ -390,7 +385,11 @@ impl<'a> DmxModeParser<'a> {
                     offsets: offsets
                         .iter()
                         .map(|o| o + (offsets_offset as u16) - 1)
-                        .collect(),
+                        .collect::<Vec<u16>>()
+                        .try_into()
+                        .map_err(|e| Problem::ChannelOffsetError(e).at(&channel))
+                        .ok_or_handled_by("using empty", self)
+                        .unwrap_or_default(),
                     channel_functions: channel_function_ids,
                     bytes: channel_bytes,
                     default,
@@ -868,7 +867,7 @@ mod tests {
         let mut channels = mode.channels.iter();
         let dimmer = channels.next().expect("first channel");
         assert_eq!(dimmer.name, "Beam_Dimmer");
-        assert_eq!(dimmer.offsets.first().expect("one offset"), &0);
+        assert_eq!(dimmer.offsets.first().expect("one offset"), &1);
         assert_eq!(dimmer.bytes, 1);
         assert_eq!(dimmer.bytes as usize, dimmer.offsets.len());
         assert_eq!(dimmer.default, 200); // 200/1 = 51200/2

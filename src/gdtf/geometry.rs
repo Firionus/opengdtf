@@ -34,6 +34,7 @@ pub struct Offset {
     /// should support "Universe.Address" format according to standard, but that
     /// is not implemented at the moment
     pub offset: i32, // TODO currently 1-based, but 0-based would probably be easier
+                     // TODO is there validation on it?
 }
 
 #[cfg(test)]
