@@ -92,3 +92,7 @@ pub enum GdtfError {
     #[error("DMX mode geometry must be top-level")]
     NonTopLevelGeometry,
 }
+
+// TODO it's probably worth having a test case here for constructing an example gdtf
+// For example, it seems totally within the standard to have a mode main geometry to be a template geometry,
+// something I don't think I have accounted for
