@@ -1,11 +1,7 @@
 use getset::Getters;
 use petgraph::{graph::NodeIndex, Directed};
-use thiserror;
 
-use crate::{
-    channel::Channel, checked_graph::CheckedGraph, geometries::GeometriesError, name::Name, Gdtf,
-    Problem,
-};
+use crate::{channel::Channel, checked_graph::CheckedGraph, name::Name, Gdtf, GdtfError, Problem};
 
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
@@ -29,10 +25,10 @@ impl Gdtf {
         name: Name,
         description: String,
         geometry: NodeIndex,
-    ) -> Result<usize, DmxModeError> {
+    ) -> Result<usize, GdtfError> {
         let geometry = self.geometries.validate_index(geometry)?;
         if !self.geometries.is_top_level(geometry) {
-            return Err(DmxModeError::NonTopLevelGeometry);
+            return Err(GdtfError::NonTopLevelGeometry);
         };
         self.dmx_modes.push(DmxMode {
             name,
@@ -44,14 +40,6 @@ impl Gdtf {
         });
         Ok(self.dmx_modes.len() - 1)
     }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum DmxModeError {
-    #[error("invalid geometry: {0}")]
-    GeometriesError(#[from] GeometriesError),
-    #[error("DMX mode geometry must be top-level")]
-    NonTopLevelGeometry,
 }
 
 /// ModeMaster Edges go from dependency to dependent channel function

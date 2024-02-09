@@ -1,7 +1,12 @@
 use getset::Getters;
 use uuid::Uuid;
 
-use self::{data_version::DataVersion, dmx_modes::DmxMode, geometries::Geometries, name::Name};
+use self::{
+    data_version::DataVersion,
+    dmx_modes::DmxMode,
+    geometries::{Geometries, GeometriesError},
+    name::Name,
+};
 
 pub mod channel;
 pub mod channel_offsets;
@@ -68,18 +73,22 @@ impl Gdtf {
     pub fn dmx_mode(&self, index: usize) -> Result<&DmxMode, GdtfError> {
         self.dmx_modes
             .get(index)
-            .ok_or(GdtfError::InvalidDmxModeIndex())
+            .ok_or(GdtfError::InvalidDmxModeIndex(index))
     }
 
     pub fn dmx_mode_mut(&mut self, index: usize) -> Result<&mut DmxMode, GdtfError> {
         self.dmx_modes
             .get_mut(index)
-            .ok_or(GdtfError::InvalidDmxModeIndex())
+            .ok_or(GdtfError::InvalidDmxModeIndex(index))
     }
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum GdtfError {
-    #[error("Invalid DMX mode index")]
-    InvalidDmxModeIndex(),
+    #[error("Invalid DMX mode index {0}")]
+    InvalidDmxModeIndex(usize),
+    #[error("invalid geometry: {0}")]
+    GeometriesError(#[from] GeometriesError),
+    #[error("DMX mode geometry must be top-level")]
+    NonTopLevelGeometry,
 }

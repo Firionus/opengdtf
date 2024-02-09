@@ -141,7 +141,7 @@ impl Geometries {
         qualified_name
     }
 
-    /// Returns the graph index of the geometry with given graph index.
+    /// Returns the graph index of the top level geometry of the geometry with given graph index.
     ///
     /// If graph_index doesn't exist or the geometry is top level itself, the
     /// input index is returned.
@@ -149,6 +149,9 @@ impl Geometries {
         self.ancestors(graph_index).last().unwrap_or(graph_index)
     }
 
+    // TODO why isn't this done while adding the Geometry if it is a reference,
+    // this way we can avoid constructing a reference without the corresponding
+    // reference relation
     pub fn add_template_relationship(
         &mut self,
         referenced: NodeIndex,

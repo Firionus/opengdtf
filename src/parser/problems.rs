@@ -4,8 +4,8 @@
 use roxmltree::{Node, TextPos};
 
 use crate::{
-    channel_offsets::OffsetError, dmx_break::Break, dmx_modes::DmxModeError,
-    geometries::GeometriesError, name::Name, GdtfError,
+    channel_offsets::OffsetError, dmx_break::Break, geometries::GeometriesError, name::Name,
+    GdtfError,
 };
 
 pub type Problems = Vec<HandledProblem>;
@@ -106,8 +106,6 @@ pub enum Problem {
     },
     #[error("Gdtf domain error: {0}")]
     GdtfError(#[from] GdtfError),
-    #[error("dmx mode error: {0}")]
-    DmxModeError(#[from] DmxModeError),
     #[error("invalid channel offsets: {0}")]
     ChannelOffsetError(#[from] OffsetError),
     #[error(
