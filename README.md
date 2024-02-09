@@ -51,10 +51,6 @@ Value developer time.
   must be lenient to be useful. 
 - Noone, including me, seems to have much time left over for open source GDTF
 
-## Longer Term Goals
-
-- Serialize GDTF XML
-
 ## Why Rust?
 
 Rust is my language of choice for this project, due to its interoperability with
@@ -77,9 +73,4 @@ see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Other Links and Projects
 
-- [gdtf_parser](https://github.com/michaelhugi/gdtf_parser): More complete
-  parser than opengdtf, but aims for a lower level of abstraction and less
-  forgiving parser
-- [mvrdevelopment/spec](https://github.com/mvrdevelopment/spec): The official
-  GDTF and MVR specification. Also the place to file issues against the
-  specification. 
+Check out https://gdtf.eu/docs/list-of-projects/. Their site is amazing. 
