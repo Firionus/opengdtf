@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use self::{data_version::DataVersion, dmx_modes::DmxMode, geometries::Geometries, name::Name};
 
+pub mod channel;
 pub mod channel_offsets;
 pub mod checked_graph;
 pub mod data_version;

@@ -35,6 +35,7 @@ pub struct Offset {
     /// is not implemented at the moment
     pub offset: i32, // TODO is there validation on it?
                      // TODO GDTF Builder disallows anything less than 1, so maybe we should switch this to validated 1..512 u16
+                     // TODO consider https://docs.rs/bounded-integer/latest/bounded_integer/
 }
 
 #[cfg(test)]

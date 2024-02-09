@@ -3,8 +3,8 @@ use petgraph::{graph::NodeIndex, Directed};
 use thiserror;
 
 use crate::{
-    channel_offsets::ChannelOffsets, checked_graph::CheckedGraph, dmx_break::Break,
-    geometries::GeometriesError, name::Name, Gdtf, Problem,
+    channel::Channel, checked_graph::CheckedGraph, geometries::GeometriesError, name::Name, Gdtf,
+    Problem,
 };
 
 #[derive(Debug, Getters)]
@@ -56,18 +56,6 @@ pub enum DmxModeError {
 
 /// ModeMaster Edges go from dependency to dependent channel function
 pub type ChannelFunctions = CheckedGraph<ChannelFunction, ModeMaster, Directed>;
-
-#[derive(Debug)]
-pub struct Channel {
-    pub name: Name,
-    pub dmx_break: Break,
-    /// only between 1 to 4 bytes are supported
-    pub bytes: u8,
-    pub offsets: ChannelOffsets,
-    /// first one must always be the Raw DMX Channel Function
-    pub channel_functions: Vec<NodeIndex>,
-    pub default: u32,
-}
 
 pub fn chfs<'a>(
     channel_function_inds: &'a [NodeIndex],
