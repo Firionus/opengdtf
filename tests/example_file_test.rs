@@ -1,10 +1,14 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    error::Error,
+    io::{BufReader, Cursor},
+};
 
 use example_files::{
     check_for_duplicate_filenames, opened_examples_iter, parse_expected_toml, parsed_examples_iter,
     OutputEnum,
 };
-use opengdtf::hash::hash_gdtf_to_string;
+use opengdtf::{hash::hash_gdtf_to_string, parse, serialize_gdtf, ValidatedGdtf};
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -75,4 +79,23 @@ fn expected_toml_matches_examples_output() {
 
         assert_eq!(expected_output, &parsed_entry);
     }
+}
+
+#[test]
+fn examples_roundtrip_deser_ser_deser() -> Result<(), Box<dyn Error>> {
+    for (_entry, _file, parsed_result) in parsed_examples_iter() {
+        let parsed = match parsed_result {
+            Ok(ValidatedGdtf { gdtf, .. }) => gdtf,
+            Err(_) => continue,
+        };
+
+        let serialized = serialize_gdtf(&parsed)?;
+        let serialized_reader = BufReader::new(Cursor::new(serialized));
+        let reparsed = parse(serialized_reader)?;
+
+        assert!(reparsed.problems.is_empty());
+
+        assert_eq!(parsed, reparsed.gdtf);
+    }
+    Ok(())
 }

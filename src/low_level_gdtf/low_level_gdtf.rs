@@ -3,6 +3,7 @@ use serde::Serialize;
 use crate::gdtf::data_version::DataVersion;
 
 #[derive(Serialize, Debug)]
+#[serde(rename = "GDTF")]
 pub struct LowLevelGdtf {
     #[serde(rename = "@DataVersion")]
     pub data_version: DataVersion,

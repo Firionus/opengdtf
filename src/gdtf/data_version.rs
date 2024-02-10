@@ -5,7 +5,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 /// We first use strum to derive FromStr and Display, then serde_with to derive
 /// Serialize/Deserialize based on that.
 #[derive(
-    Debug, PartialEq, strum::EnumString, strum::Display, SerializeDisplay, DeserializeFromStr,
+    Debug, PartialEq, strum::EnumString, strum::Display, SerializeDisplay, DeserializeFromStr, Clone,
 )]
 pub enum DataVersion {
     #[strum(to_string = "1.0")]
