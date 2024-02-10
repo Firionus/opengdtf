@@ -1,4 +1,5 @@
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::{gdtf::data_version::DataVersion, name::Name};
 
@@ -32,4 +33,6 @@ pub struct FixtureType {
     pub manufacturer: String,
     #[serde(rename = "@Description")]
     pub description: String,
+    #[serde(rename = "@FixtureTypeID")]
+    pub id: Uuid,
 }

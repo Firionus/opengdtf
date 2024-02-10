@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::name::Name;
 
@@ -13,4 +14,6 @@ pub struct Gdtf {
     pub long_name: String,
     pub manufacturer: String,
     pub description: String,
+
+    pub fixture_type_id: Uuid,
 }

@@ -14,6 +14,7 @@ serde = { version = "1.0.196", features = ["derive"] }
 serde_with = { version = "3.6.1", features = ["macros"] }
 strum = { version = "0.26.1", features = ["derive"] }
 thiserror = "1.0.56"
+uuid = { version = "1.7.0", features = ["v4", "serde"] }
 xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
 zip = "0.6.6"
 

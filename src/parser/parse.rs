@@ -80,10 +80,9 @@ impl ParsedGdtf {
         fixture_type
             .parse_required_attribute("Description")
             .assign_or_handle(&mut self.gdtf.fixture_type.description, &mut self.problems);
-        // TODO uncomment piece by piece
-        // fixture_type
-        //     .parse_required_attribute("FixtureTypeID")
-        //     .assign_or_handle(&mut self.gdtf.fixture_type.fixture_type_id, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("FixtureTypeID")
+            .assign_or_handle(&mut self.gdtf.fixture_type.id, &mut self.problems);
 
         // self.parse_ref_ft(fixture_type);
         // self.parse_can_have_children(fixture_type);

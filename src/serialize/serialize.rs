@@ -17,6 +17,7 @@ pub fn serialize_gdtf(gdtf: &Gdtf) -> Result<Vec<u8>, SerializationError> {
             long_name: gdtf.long_name.to_owned(),
             manufacturer: gdtf.manufacturer.to_owned(),
             description: gdtf.description.to_owned(),
+            id: gdtf.fixture_type_id.to_owned(),
         },
     };
     let mut description: String = concat!(r#"<?xml version="1.0" encoding="UTF-8"?>"#, "\n").into();

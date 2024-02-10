@@ -15,6 +15,7 @@ pub fn validate(parsed: ParsedGdtf) -> ValidatedGdtf {
             long_name: parsed.gdtf.fixture_type.long_name,
             manufacturer: parsed.gdtf.fixture_type.manufacturer,
             description: parsed.gdtf.fixture_type.description,
+            fixture_type_id: parsed.gdtf.fixture_type.id,
         },
         problems: parsed.problems,
     }
