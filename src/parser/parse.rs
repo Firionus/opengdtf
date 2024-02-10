@@ -3,11 +3,12 @@ use std::io::{Read, Seek};
 use roxmltree::Node;
 
 use crate::{
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf, validate::validate, Error, ValidatedGdtf,
+    low_level_gdtf::low_level_gdtf::LowLevelGdtf, problems::ProblemsMut, validate::validate, Error,
+    ValidatedGdtf,
 };
 
 use super::{
-    parse_xml::{AssignOrHandle, GetXmlAttribute},
+    parse_xml::{get_xml_node::GetXmlNode, AssignOrHandle, GetXmlAttribute},
     problems::Problems,
 };
 
@@ -42,17 +43,60 @@ pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::Error> 
         .ok_or(super::Error::NoRootNode)?;
 
     let mut parsed = ParsedGdtf::default();
-    parsed.parse(gdtf);
+    parsed.parse_gdtf_root(gdtf);
 
     Ok(parsed)
 }
 
 impl ParsedGdtf {
-    fn parse(&mut self, gdtf: Node) {
+    fn parse_gdtf_root(&mut self, gdtf: Node) {
         gdtf.parse_required_attribute("DataVersion")
             .assign_or_handle(&mut self.gdtf.data_version, &mut self.problems);
 
-        // TODO uncomment
-        //self.parse_fixture_type(gdtf);
+        self.parse_fixture_type(gdtf);
+    }
+
+    fn parse_fixture_type(&mut self, gdtf: Node) {
+        let fixture_type = match gdtf.find_required_child("FixtureType") {
+            Ok(g) => g,
+            Err(p) => {
+                p.handled_by("returning empty fixture type", self);
+                return;
+            }
+        };
+
+        fixture_type
+            .parse_required_attribute("Name")
+            .assign_or_handle(&mut self.gdtf.fixture_type.name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("ShortName")
+            .assign_or_handle(&mut self.gdtf.fixture_type.short_name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("LongName")
+            .assign_or_handle(&mut self.gdtf.fixture_type.long_name, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("Manufacturer")
+            .assign_or_handle(&mut self.gdtf.fixture_type.manufacturer, &mut self.problems);
+        fixture_type
+            .parse_required_attribute("Description")
+            .assign_or_handle(&mut self.gdtf.fixture_type.description, &mut self.problems);
+        // TODO uncomment piece by piece
+        // fixture_type
+        //     .parse_required_attribute("FixtureTypeID")
+        //     .assign_or_handle(&mut self.gdtf.fixture_type.fixture_type_id, &mut self.problems);
+
+        // self.parse_ref_ft(fixture_type);
+        // self.parse_can_have_children(fixture_type);
+
+        // GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
+        //     .parse_from(&fixture_type);
+
+        // self.parse_dmx_modes(fixture_type);
+    }
+}
+
+impl ProblemsMut for ParsedGdtf {
+    fn problems_mut(&mut self) -> &mut Problems {
+        &mut self.problems
     }
 }

@@ -1,1097 +1,1912 @@
 [143506b660e6e899543e0057a1afae30]
 filename = "Ayrton@Domino_LT@V1.1_ADDStandardMode.gdtf"
-saved_on = "2024-02-09T23:22:27.672492336Z"
+saved_on = "2024-02-10T09:48:37.822424257Z"
 comment = ""
 data_version = "1.1"
+name = "Domino LT"
+short_name = "DominoLT"
+long_name = "Domino LT"
+manufacturer = "Ayrton"
+description = "Classical 9 Series - GDTF "
 problems = []
 
 [1cfaa349c1c5e3709b42aaf5dccd9e66]
 filename = "Ayrton@Domino_Profile@V2.13_-_CMY_AnimationCorrection.gdtf"
-saved_on = "2024-02-09T23:22:29.258952534Z"
+saved_on = "2024-02-10T09:48:39.442338620Z"
 comment = ""
 data_version = "1.2"
+name = "Domino Profile"
+short_name = "Domino"
+long_name = "Domino Profile"
+manufacturer = "Ayrton"
+description = "Classical 9 Series - GDTF in progress"
 problems = []
 
 [1e7e434907dd52073eaf805cd20ae594]
 filename = "Test@Channel_Layout_Test@v1_first_try.missing_break_in_geometry_reference.gdtf"
-saved_on = "2024-02-09T23:22:29.226477409Z"
+saved_on = "2024-02-10T09:48:39.409291579Z"
 comment = ""
 data_version = "1.1"
+name = "Channel Layout Test"
+short_name = ""
+long_name = ""
+manufacturer = "Test"
+description = ""
 problems = []
 
 [1f66cb8a8ec85f9248e11410fc5d3970]
 filename = "Ayrton@Huracan_Profile@V2.14_-_Soft_V2XX_-_Add_EnableDisablePanTiltMotor.gdtf"
-saved_on = "2024-02-09T23:22:23.412291582Z"
+saved_on = "2024-02-10T09:48:33.512562786Z"
 comment = ""
 data_version = "1.1"
+name = "Huracan Profile"
+short_name = "HuracanX"
+long_name = "Huracan Profile"
+manufacturer = "Ayrton"
+description = "Classical 9 Series - GDTF in progress"
 problems = []
 
 [21b964af18c30243bd86bb013c61e0b3]
 filename = "ARRI@SkyPanel_S60C@DMX_v4.4_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:28.615391077Z"
+saved_on = "2024-02-10T09:48:38.787354481Z"
 comment = ""
 data_version = "1.1"
+name = "SkyPanel S60C"
+short_name = "S60C"
+long_name = "ARRI SkyPanel S60C "
+manufacturer = "ARRI"
+description = "SkyPanel S60-C RGBW Soft Light with ECC"
 problems = []
 
 [21bb5df9520ec5beaa17f758518ce89f]
 filename = "Robe_Lighting@Robin_T2_Profile_FS@2022-11-16__Wheels_attribute_correction.gdtf"
-saved_on = "2024-02-09T23:22:23.728294335Z"
+saved_on = "2024-02-10T09:48:33.831280104Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T2 Profile FS"
+short_name = "T2ProfileFS"
+long_name = "ROBIN T2 Profile™ FS"
+manufacturer = "Robe Lighting"
+description = "T2 FS. Taking Multispectral perfection even further! While simultaneously maintaining the absolute colour finesse of Robe’s phenomenally successful T1 series, featuring the MSL™ (Multi-Spectral) LED engine, our T2 Profile™ provides an enhanced output of more than 17.500 lumens, measured at the front lens, via its 850W MSL™ source, to throw their beautiful light even further than before. With a zoom range of 5–55°, T2 Profile™ is ideally suited to its longer-throw role in theatre, television, and touring."
 problems = []
 
 [2239c0446af7e3530e97de49b4465160]
 filename = "Robe_Lighting@Robin_T1_Profile@2022-11-15__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:22.440793046Z"
+saved_on = "2024-02-10T09:48:32.549433193Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T1 Profile"
+short_name = "T1Profile"
+long_name = "ROBIN T1 Profile™"
+manufacturer = "Robe Lighting"
+description = "T1. The new ONE and only fixture you need for theatre, television and touring. "
 problems = []
 
 [232528cebbc1d2a8f1013b3b4fedcd90]
 filename = "Ayrton@Perseo_BEAM@V1.2_Prism.gdtf"
-saved_on = "2024-02-09T23:22:27.120273956Z"
+saved_on = "2024-02-10T09:48:37.258298685Z"
 comment = ""
 data_version = "1.1"
+name = "Perseo BEAM"
+short_name = "P_BEAM"
+long_name = "Perseo BEAM"
+manufacturer = "Ayrton"
+description = "Classical 5 Series - GDTF in progress"
 problems = []
 
 [2619963a6c8e00dc70253bba2997edbf]
 filename = "Ayrton@WildSun_500C@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:27.706120667Z"
+saved_on = "2024-02-10T09:48:37.858114744Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun 500C"
+short_name = "WS500C"
+long_name = "Ayrton WildSun 500C"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [297d2279f21cf665a259bd2d79ac3d6]
 filename = "Robe_Lighting@Robin_Esprite_PC@2022-11-14__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:29.505283833Z"
+saved_on = "2024-02-10T09:48:39.645338535Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Esprite PC"
+short_name = "ESPRITE™ PC"
+long_name = "Robin Esprite PC"
+manufacturer = "Robe Lighting"
+description = "The ESPRITE PC offers you a dynamic, high performance wash light, whilst  enjoying the many advantages of our TE™ Transferable Engine technology."
 problems = []
 
 [2a3822bbd40ab5cc491b531a166caf86]
 filename = "Ayrton@WildSun_500K7@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:22.540776522Z"
+saved_on = "2024-02-10T09:48:32.652875529Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun 500K7"
+short_name = "WS500K7"
+long_name = "Ayrton WildSun 500 K7"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [2ac635ffd93f7c06281ceb874371612d]
 filename = "Ayrton@DreamPanel_Shift@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:24.961264566Z"
+saved_on = "2024-02-10T09:48:35.062429031Z"
 comment = ""
 data_version = "1.2"
+name = "DreamPanel Shift"
+short_name = "DPS"
+long_name = "Ayrton DreamPanel Shift"
+manufacturer = "Ayrton"
+description = "DREAMPANEL SHIFT IMAGINE DISPLAY"
 problems = []
 
 [2af537cf673747e501cd0e35c258ffec]
 filename = "Ayrton@MagicPanel_602@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:26.826174218Z"
+saved_on = "2024-02-10T09:48:36.959933527Z"
 comment = ""
 data_version = "1.2"
+name = "MagicPanel 602"
+short_name = "MP602"
+long_name = "MagicPanel 602"
+manufacturer = "Ayrton"
+description = "MagicPanel 602"
 problems = []
 
 [2b91cbed8882ec2623ab138c3d3c6bb8]
 filename = "Ayrton@MagicRing_R9@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:27.649899530Z"
+saved_on = "2024-02-10T09:48:37.797942482Z"
 comment = ""
 data_version = "1.2"
+name = "MagicRing R9"
+short_name = "MRR9"
+long_name = "Ayrton MagicRing R9"
+manufacturer = "Ayrton"
+description = "MagicRing-R9 – Creative solution"
 problems = []
 
 [2e4fb30eb324b03ae1e447e6342e13c2]
 filename = "Ayrton@WildSun_K25-TC@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:26.935465308Z"
+saved_on = "2024-02-10T09:48:37.069278574Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun K25-TC"
+short_name = "WSK25TC"
+long_name = "WildSun™K25-TC"
+manufacturer = "Ayrton"
+description = "WILDSUN-K25 TC – CLASSICAL MULTI SOURCES 9 SERIE"
 problems = []
 
 [34202556121b8e1cdd99ea5931c93b68]
 filename = "Robe_Lighting@pixelPATT@2022-12-06__RDM_revision__DMX_channel_geometry_update.gdtf"
-saved_on = "2024-02-09T23:22:25.335906896Z"
+saved_on = "2024-02-10T09:48:35.468879685Z"
 comment = ""
 data_version = "1.2"
+name = "pixelPATT"
+short_name = "pixelPATT"
+long_name = "pixelPATT™"
+manufacturer = "Robe Lighting"
+description = """
+Joining Robe’s line of retro style lighting products is pixelPATT, the latest addition to the PATT family. In spite of its eye catching retro design, pixelPATT is based on modern LED pixel controlled technology.
+
+For full data (consuption, voltage etc.) please add PATT Driver."""
 problems = []
 
 [35581248b31e7688b4301e7f9b6e4c80]
 filename = "Robe_Lighting@MediaSpinner_100_AT@2022-10-10__Share_release.gdtf"
-saved_on = "2024-02-09T23:22:27.711218609Z"
+saved_on = "2024-02-10T09:48:37.862879254Z"
 comment = ""
 data_version = "1.2"
+name = "MediaSpinner 100 AT"
+short_name = "MS100"
+long_name = "MediaSpinner 100 AT"
+manufacturer = "Robe Lighting"
+description = "The MediaSpinner 100 AT is enhanced with a panel for the connection of audio, video and power supplies, so plasma screens, LCD diplays, projectors or loudspeakers and similar devices can be attached and rotated. The MediaSpinner 100 AT is constructed to enable the display and rotation of advertising banners - at exhibitions, on stage, in theatres and other applications where advertising needs to be highlighted and showcased. "
 problems = []
 
 [371a70e0eadabea0f351b6e1b459c64d]
 filename = "Robe_Lighting@Robin_LEDBeam_350_FW@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:27.348492861Z"
+saved_on = "2024-02-10T09:48:37.490748133Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 350 FW"
+short_name = "LEDBeam 350 FW"
+long_name = "Robin LEDBeam 350 FW"
+manufacturer = "Robe Lighting"
+description = "Bigger, bolder, brighter! Building on the highly successful LEDBeam 150™ the big brother LEDBeam 350™ has arrived, delivering more punch and presence to create even more fast sweeping beams and gorgeous washes. The LEDBeam 350™ FW version offers a Fresnel-Wash type of beam for smoother edges and better colour homogenization."
 problems = []
 
 [389a5a1af56d9bc440da5d997205bf1e]
 filename = "Robe_Lighting@Omega_Adaptor_9_CL@2022-10-10__Share_release.gdtf"
-saved_on = "2024-02-09T23:22:26.285931138Z"
+saved_on = "2024-02-10T09:48:36.431742763Z"
 comment = ""
 data_version = "1.2"
+name = "Omega Adaptor 9 CL"
+short_name = "OmegaCL"
+long_name = "Omega Adaptor 9 CL 99010420"
+manufacturer = "Robe Lighting"
+description = """
+Robe ordering code: 99010420-02
+Standard mounting bracket."""
 problems = []
 
 [3a3245f5da72d2ee55edf482fe4692f0]
 filename = "Robe_Lighting@Robin_T11_Profile@2023-01-05__Weight_update__DMX_channel_update_in_Mode_6.gdtf"
-saved_on = "2024-02-09T23:22:30.624390869Z"
+saved_on = "2024-02-10T09:48:40.445098995Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T11 Profile"
+short_name = "T11Profile"
+long_name = "ROBIN T11 Profile™"
+manufacturer = "Robe Lighting"
+description = "Our unique T11 Profile™ delivers both superb performance and total generic flexibility!"
 problems = []
 
 [3b141a170a1ad2e7e5ec5b796685ff95]
 filename = "Robe_Lighting@Robin_Forte@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:28.726568002Z"
+saved_on = "2024-02-10T09:48:38.900763933Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Forte"
+short_name = "FORTE"
+long_name = "Robin Forte"
+manufacturer = "Robe Lighting"
+description = "Forte means Excellence, Speciality, Strength. Our FORTE™ certainly lives up to its name! Producing a blistering 50.000 lumens of high quality performance light, combined with the ability to maintain light quality from the revolutionary TRANSFERABLE ENGINE, and packed full of specialist innovation, you have the fixture ready to lead you into the future."
 problems = []
 
 [3b671f44b841afe3fafb45988d5b1dff]
 filename = "Ayrton@ColorSun_200s@V2.3_Add_Picture.gdtf"
-saved_on = "2024-02-09T23:22:30.167748480Z"
+saved_on = "2024-02-10T09:48:40.135868280Z"
 comment = ""
 data_version = "1.2"
+name = "ColorSun 200s"
+short_name = "CS200S"
+long_name = "Ayrton ColorSun 200s"
+manufacturer = "Ayrton"
+description = "AYRTON COLOR SUN ™ 200 S is a color changer equipped with 12 LEDs of 13 Watts derived from the WILDSUN 200 S."
 problems = []
 
 [3b6d2feae289ad6de1f32c788b28f7f2]
 filename = "Ayrton@Versapix_RS@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:23.303041752Z"
+saved_on = "2024-02-10T09:48:33.404724858Z"
 comment = ""
 data_version = "1.2"
+name = "Versapix RS"
+short_name = "VPRS"
+long_name = "Versapix RS"
+manufacturer = "Ayrton"
+description = "Versapix RS - CREATIVE SOLUTION"
 problems = []
 
 [3ba678872187df5897c36e55fce89368]
 filename = "Robe_Lighting@Robin_600X_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:22.519291902Z"
+saved_on = "2024-02-10T09:48:32.630588625Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 600X LEDWash"
+short_name = "600X LEDWash"
+long_name = "Robin 600X LEDWash"
+manufacturer = "Robe Lighting"
+description = "The super-slim LEDWash 600X features a new generation of 30% brighter 37 x 15 Watt RGBW multichip LEDs with colour output ranging from gentle pastels to the richest saturation."
 problems = []
 
 [3cc0059db5902beda86391c437fc3a6a]
 filename = "Robe_Lighting@Robin_ProMotion@2022-11-24__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:29.216772257Z"
+saved_on = "2024-02-10T09:48:39.399408587Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ProMotion"
+short_name = "ProMotion"
+long_name = "Robin ProMotion"
+manufacturer = "Robe Lighting"
+description = "Take your bar, club and retail promotions to the next level with the futuristic Robe ProMotion moving head effects and video projector."
 problems = []
 
 [3fcfc4b1b35e753be2a59398271cbe7f]
 filename = "Robe_Lighting@Robin_DL7F_Wash@2022-11-21__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:25.565429219Z"
+saved_on = "2024-02-10T09:48:35.699655715Z"
 comment = ""
 data_version = "1.2"
+name = "Robin DL7F Wash"
+short_name = "DL7F Wash"
+long_name = "Robin DL7F Wash"
+manufacturer = "Robe Lighting"
+description = "Adjust seven colours, individually, to give unprecedented smooth, stable and even colour mixing and a very high CRI of 90 to meet the high standards of your applications."
 problems = []
 
 [4301fee8bb58309c4cbc15d1993d4ec4]
 filename = "Robe_Lighting@Robin_TetraX@2022-12-05__DMX_channel_geometry_revision.gdtf"
-saved_on = "2024-02-09T23:22:24.029293259Z"
+saved_on = "2024-02-10T09:48:34.132264484Z"
 comment = ""
 data_version = "1.2"
+name = "Robin TetraX"
+short_name = "TetraX"
+long_name = "Robin TetraX™"
+manufacturer = "Robe Lighting"
+description = """
+
+Need something exceptional to stand out from the crowd? Something very different to create a powerful signature effect. Lack that missing X factor? Then go to the extreme with the visually sensational TetraX™!"""
 problems = []
 
 [49dc64f0c909fb1b258361d9db3a029f]
 filename = "ARRI@SkyPanel_S30C@DMX_v4.4_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:27.868533351Z"
+saved_on = "2024-02-10T09:48:38.018799280Z"
 comment = ""
 data_version = "1.1"
+name = "SkyPanel S30C"
+short_name = "S30C"
+long_name = "ARRI SkyPanel S30C "
+manufacturer = "ARRI"
+description = "SkyPanel S60-C RGBW Soft Light with ECC"
 problems = []
 
 [4a8377c7785869d0d6193da265b41b7e]
 filename = "Ayrton@MagicPanel_FX@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:24.917125381Z"
+saved_on = "2024-02-10T09:48:35.017845591Z"
 comment = ""
 data_version = "1.2"
+name = "MagicPanel FX"
+short_name = "MagicPanel FX"
+long_name = "MagicPanel FX"
+manufacturer = "Ayrton"
+description = "Ayrton MagicPanel FX"
 problems = []
 
 [5145d245e505ad5877fa1b2b27a3160a]
 filename = "Robe_Lighting@Robin_iSpiider@2022-11-23__DMX_shutter_revision__Thumbnails_updated__Wiring_revision.gdtf"
-saved_on = "2024-02-09T23:22:28.363878916Z"
+saved_on = "2024-02-10T09:48:38.529816778Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iSpiider"
+short_name = "iSpiider"
+long_name = "Robin iSpiider™"
+manufacturer = "Robe Lighting"
+description = "Unlike other spiders, our new IP65 rated iSpiider®, with its highly advanced protective design, is perfectly happy to play in the rain! "
 problems = []
 
 [5200edd45695a60d78cb09ac62f3b4f3]
 filename = "Ayrton@MagicBlade_R@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:24.899807818Z"
+saved_on = "2024-02-10T09:48:35.000094850Z"
 comment = ""
 data_version = "1.2"
+name = "MagicBlade R"
+short_name = "MBLR"
+long_name = "MagicBlade R"
+manufacturer = "Ayrton"
+description = "Magic Blade R - CREATIVE SOLUTION"
 problems = []
 
 [536abc1dec9d6396d0e0d2236449bea]
 filename = "Robe_Lighting@Robin_Viva_CMY@2022-11-24__SVG_thumbnail_added.gdtf"
-saved_on = "2024-02-09T23:22:23.369325209Z"
+saved_on = "2024-02-10T09:48:33.471286566Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Viva CMY"
+short_name = "Viva™ CMY"
+long_name = "Robin Viva™ CMY"
+manufacturer = "Robe Lighting"
+description = "Powerfully smooth, Robe’s VIVA CMY combines brightness of exceptionally clear zero-fringing white beam together with continuous color transitions of CMY mixing. "
 problems = []
 
 [54094c7a63fa4622049fe6fec14197f7]
 filename = "Robe_Lighting@Robin_LEDBeam_150_FW_RGBW@2022-12-08_Pigtail_moved_to_correct_position.gdtf"
-saved_on = "2024-02-09T23:22:28.051258315Z"
+saved_on = "2024-02-10T09:48:38.210707121Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 150 FW RGBW"
+short_name = "LEDBeam150FW"
+long_name = "Robin LEDBeam 150 FW RGBW"
+manufacturer = "Robe Lighting"
+description = "Fast sweeping beams and a wide far-reaching quality wash in compact housing."
 problems = []
 
 [54dc241fa9420d865b9546abf6b0f1ea]
 filename = "Robe_Lighting@LEDForce_18_RGBW@2022-11-04__Color_wheels_correction.gdtf"
-saved_on = "2024-02-09T23:22:22.663383084Z"
+saved_on = "2024-02-10T09:48:32.777951236Z"
 comment = ""
 data_version = "1.2"
+name = "LEDForce 18 RGBW"
+short_name = "LEDForce 18"
+long_name = "LEDForce 18™ RGBW"
+manufacturer = "Robe Lighting"
+description = """
+GDTF info: 3D model does not match 100% physical appearance of the light. Proportions of 3D model are correct. 
+
+LEDForce 18 RGB and LEDForce 18 RGBW Par Cans will blind you with powerful light output of 18 x 3IN1 RGB LED or 18 x 4IN1 RGBW LED multichip New Tri-color and Quad-color LED technology. Superior color mixing with no multicolor shadows and extremely bright beam of 25°beam angle will please any lighting professional. Die cast aluminum casting with double hanging brackets – for truss mounting and floor standing allows mounting in any position. Gel frame included as standard and optional 10° lens kit available upon demand."""
 problems = []
 
 [552d693a7e421eb4a7c39203948ec0cf]
 filename = "Robe_Lighting@Robin_LEDBeam_150_RGBA@2022-12-08_Pigtail_moved_to_correct_position.gdtf"
-saved_on = "2024-02-09T23:22:22.779707872Z"
+saved_on = "2024-02-10T09:48:32.882374964Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 150 RGBA"
+short_name = "LEDBeam150RGBA"
+long_name = "Robin LEDBeam 150 RGBA"
+manufacturer = "Robe Lighting"
+description = "Fast sweeping beams and a wide far-reaching quality wash in compact housing."
 problems = []
 
 [571f50ead0ce4210079651fb804acc03]
 filename = "Ayrton@MagicDot_XT@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:24.965811482Z"
+saved_on = "2024-02-10T09:48:35.067109247Z"
 comment = ""
 data_version = "1.2"
+name = "MagicDot XT"
+short_name = "MDXT"
+long_name = "MagicDot-XT"
+manufacturer = "Ayrton"
+description = " MAGIDOT-XT CREATIVE SOLUTION"
 problems = []
 
 [5d3df4f22e620f40452dca4fb18f663f]
 filename = "Robe_Lighting@Robin_BMFL_Spot@2022-12-01__DMX_channel_attributes_update__Wiring_object_revision.gdtf"
-saved_on = "2024-02-09T23:22:22.919087743Z"
+saved_on = "2024-02-10T09:48:33.010317611Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL Spot"
+short_name = "BMFL Spot"
+long_name = "Robin BMFL Spot"
+manufacturer = "Robe Lighting"
+description = "The BMFL™ – Bright Multi-Functional Luminaire – much anticipated new lighting fixture from Robe, brings a real game changer in the world of moving lights."
 problems = []
 
 [5f06e2a84bd93a9d78e680fcf456e1f1]
 filename = "Robe_Lighting@Robin_BMFL_Blade@2023-01-10_Update_RDM_Model_ID.gdtf"
-saved_on = "2024-02-09T23:22:23.203571515Z"
+saved_on = "2024-02-10T09:48:33.304491501Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL Blade"
+short_name = "BMFLBlade"
+long_name = "Robin BMFL Blade"
+manufacturer = "Robe Lighting"
+description = "Four fast shutter blades with smooth and precise movement in the new BMFL Blade lighting fixture. Individually angled and positioned within a frame - which itself can rotate through 90 degrees, providing a sharp or soft, precisely repeatable, frame for the projected image."
 problems = []
 
 [5fe2f3b66bc8a0685fc7243c7921cda]
 filename = "Robe_Lighting@Robin_Pointe@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:29.672648527Z"
+saved_on = "2024-02-10T09:48:39.769678495Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Pointe"
+short_name = "Pointe"
+long_name = "Robin Pointe"
+manufacturer = "Robe Lighting"
+description = "It’s very bright and super-fast with a sharp parallel beam that cuts through the air and across video with ease."
 problems = []
 
 [5feae6f5d715a6eb880695f9a7faeaad]
 filename = "Robe_Lighting@LEDForce_7_RGBW@2022-11-04__Color_wheels_correction.gdtf"
-saved_on = "2024-02-09T23:22:25.081536438Z"
+saved_on = "2024-02-10T09:48:35.185412579Z"
 comment = ""
 data_version = "1.2"
+name = "LEDForce 7 RGBW"
+short_name = "LEDForce 7"
+long_name = "LEDForce 7™ RGBW"
+manufacturer = "Robe Lighting"
+description = """
+GDTF info: 3D model does not match 100% physical appearance of the light. Proportions of 3D model are correct.
+
+The LEDForce 7 RGB and LEDForce 7 RGBW are new compact TriColor and Quadcolor LED based Par Can fixtures in sturdy high-impact aluminum body equipped with 7 x 3 Watt Tri Color RGB LEDs and 7 x5 Watt Quad Color RGBW LEDs. Fitted with LED control display for easy setting up and with double hanging brackets – for truss mounting and floor standing. Powerful Tri-color and Quad-color LEDs will amaze you with bright saturated colors with no multicolor shadows. Special driving technology ensures flicker free operation while maintaining long 50.000 hours of LED‘s life time."""
 problems = []
 
 [6251dc231e4069e66c67d75fe9b21b6c]
 filename = "Ayrton@WildSun_S25@V1.5_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.267252166Z"
+saved_on = "2024-02-10T09:48:35.376864845Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun S25"
+short_name = "WSS25"
+long_name = "WildSun™S25"
+manufacturer = "Ayrton"
+description = "WILDSUN-S25 – CLASSICAL MULTI SOURCES 9 SERIE"
 problems = []
 
 [6402a38722597734fee4f5ae83801aa]
 filename = "Robe_Lighting@Robin_ParFect_150_FW_RGBW@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:29.990120124Z"
+saved_on = "2024-02-10T09:48:40.016931300Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ParFect 150 FW RGBW"
+short_name = "ParFect150FWRGBW"
+long_name = "Robin ParFect 150 FW RGBW"
+manufacturer = "Robe Lighting"
+description = "ParFect 150 FW is a static fixture with a fresnel wash type of light output."
 problems = []
 
 [65d9cfec3f819098c68a51a302ecac49]
 filename = "Robe_Lighting@Omega_Adaptor_Long_TT_CL@2022-10-10__Share_release.gdtf"
-saved_on = "2024-02-09T23:22:29.024718834Z"
+saved_on = "2024-02-10T09:48:39.206530083Z"
 comment = ""
 data_version = "1.2"
+name = "Omega Adaptor Long TT CL"
+short_name = "OmegaLong"
+long_name = "Omega Adaptor Long TT CL 99016241-02"
+manufacturer = "Robe Lighting"
+description = """
+Robe ordering code: 99016241-02
+Omega Adaptor Long for linear fixtures."""
 problems = []
 
 [66b8cd2a0ece59de763d644bf4c1b6eb]
 filename = "Robe_Lighting@Robin_LEDBeam_150_RGBW@2022-12-08__Pigtail_moved_to_correct_position.gdtf"
-saved_on = "2024-02-09T23:22:30.257986599Z"
+saved_on = "2024-02-10T09:48:40.166925792Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 150 RGBW"
+short_name = "LEDBeam150"
+long_name = "Robin LEDBeam 150 RGBW"
+manufacturer = "Robe Lighting"
+description = "Fast sweeping beams and a wide far-reaching quality wash in compact housing."
 problems = []
 
 [6707cd072c2751285603aa96ce627f52]
 filename = "Robe_Lighting@Robin_ColorStrobe_IP@2022-12-01__Geometry_names_update.gdtf"
-saved_on = "2024-02-09T23:22:24.089719315Z"
+saved_on = "2024-02-10T09:48:34.192146980Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ColorStrobe IP"
+short_name = "ColorStrobe IP"
+long_name = "Robin ColorStrobe IP"
+manufacturer = "Robe Lighting"
+description = "Powerful strobe in color for outdoor exposures. Add color into your outdoor blinding strobing sequences with the ColorStrobe IP to achieve dyed effects, white flashing with colorful backgrounds or continuous bright light output with colored animations."
 problems = []
 
 [688e863e3c335a4e0886d2a944dcfa68]
 filename = "Ayrton@Cobra@V1.35_AddControlSoftwareV120.gdtf"
-saved_on = "2024-02-09T23:22:24.750371282Z"
+saved_on = "2024-02-10T09:48:34.853025836Z"
 comment = ""
 data_version = "1.2"
+name = "Cobra"
+short_name = "Cobra"
+long_name = "Cobra"
+manufacturer = "Ayrton"
+description = "Classical 3 Series - GDTF in progress"
 problems = []
 
 [6ac99ddac4b2c53e9eb789932ee48acd]
 filename = "Robe_Lighting@Robin_ParFect_150_RGBW@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:23.947753675Z"
+saved_on = "2024-02-10T09:48:34.046363778Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ParFect 150 RGBW"
+short_name = "ParFect150RGBW"
+long_name = "Robin ParFect 150 RGBW"
+manufacturer = "Robe Lighting"
+description = "An LED source ACL beam at an affordable price made in Europe, now with zoom included."
 problems = []
 
 [6ad54179899f08ca5a29ff503a12b0ff]
 filename = "Robe_Lighting@Robin_Spikie@2022-12-07__Pigtail_moved_to_correct_position.gdtf"
-saved_on = "2024-02-09T23:22:28.768565180Z"
+saved_on = "2024-02-10T09:48:38.944156492Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Spikie"
+short_name = "Spikie"
+long_name = "Robin Spikie"
+manufacturer = "Robe Lighting"
+description = "Spikie, a small, super fast LED WashBeam, which utilises a single 60W RGBW light source with a specially designed 110mm wide front lens producing a solid beam."
 problems = []
 
 [6c08d256d6b2a89956fbf7972ba1de7]
 filename = "Ayrton@Karif@V2.13_-_DefautChannelShutterChange.gdtf"
-saved_on = "2024-02-09T23:22:23.604770786Z"
+saved_on = "2024-02-10T09:48:33.708467493Z"
 comment = ""
 data_version = "1.2"
+name = "Karif"
+short_name = "Karif"
+long_name = "Karif"
+manufacturer = "Ayrton"
+description = "Classical 3 Series - GDTF in progress"
 problems = []
 
 [6c90a7788d1383d97a531bcecadef458]
 filename = "ARRI@SkyPanel_S60RP@DMX_v4.4_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:27.708379174Z"
+saved_on = "2024-02-10T09:48:37.860145811Z"
 comment = ""
 data_version = "1.1"
+name = "SkyPanel S60RP"
+short_name = "S60-RP"
+long_name = "ARRI SkyPanel S60RP"
+manufacturer = "ARRI"
+description = """
+SkyPanel S60-RP (Remote Phosphor) Soft Light
+Phosphor Panels available in 2700k, 3200k, 4300k, 5600k, 6500k, 10000k, and Chroma Green"""
 problems = []
 
 [6d168cee2748e7083667601a3b2e613]
 filename = "Ayrton@IceColor_250@V1.3_3D_low.gdtf"
-saved_on = "2024-02-09T23:22:28.021406492Z"
+saved_on = "2024-02-10T09:48:38.179750081Z"
 comment = ""
 data_version = "1.2"
+name = "IceColor 250"
+short_name = "IC250"
+long_name = "Ayrton IceColor 250"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [6e635703011ecc3b55aba80d3e157bb4]
 filename = "Robe_Lighting@Robin_BMFL_FollowSpot@2023-01-10_Update_RDM_Model_ID.gdtf"
-saved_on = "2024-02-09T23:22:25.894161725Z"
+saved_on = "2024-02-10T09:48:36.037329163Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL FollowSpot"
+short_name = "BMFL FollowSpot"
+long_name = "Robin BMFL FollowSpot"
+manufacturer = "Robe Lighting"
+description = "Created specifically for follow-spot operation, this custom modified version of BMFL comes with specific features to provide both motorised movement and manual operation with follow-spot handles."
 problems = []
 
 [6fca2211edfb45a7aaf5fd00d314ea73]
 filename = "Robe_Lighting@Robin_300_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:30.474644527Z"
+saved_on = "2024-02-10T09:48:40.323473230Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 300 LEDWash"
+short_name = "300 LEDWash"
+long_name = "Robin 300 LEDWash"
+manufacturer = "Robe Lighting"
+description = "Utilizing 19 multichip LEDs and motorized linear zoom 15 – 60 degrees the ROBIN® 300 LEDWash offers great flexibility with superior homogenization of the light source."
 problems = []
 
 [70849319532858e89207e1a4c3be649e]
 filename = "Ayrton@Intellipix_XT@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.057245657Z"
+saved_on = "2024-02-10T09:48:35.160448156Z"
 comment = ""
 data_version = "1.2"
+name = "Intellipix XT"
+short_name = "IPXT"
+long_name = "Ayrton Intellipix XT"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [733ceeb6f75e0c73052a73b47e755fc5]
 filename = "Ayrton@CosmoPix_R@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.062525373Z"
+saved_on = "2024-02-10T09:48:35.165736006Z"
 comment = ""
 data_version = "1.2"
+name = "CosmoPix R"
+short_name = "CPR"
+long_name = "Ayrton CosmoPix R"
+manufacturer = "Ayrton"
+description = "COSMOPIX-R CREATIVE SOLUTION"
 problems = []
 
 [73969ce3b5a9091bbc2e7bbd9b00b71b]
 filename = "Ayrton@Bora@V2.13_-_Soft_V2XX_-_CTOGobo.gdtf"
-saved_on = "2024-02-09T23:22:24.893899688Z"
+saved_on = "2024-02-10T09:48:34.994348562Z"
 comment = ""
 data_version = "1.1"
+name = "Bora"
+short_name = "Bora"
+long_name = "Bora"
+manufacturer = "Ayrton"
+description = "Classical 7 Series - GDTF in progress"
 problems = []
 
 [73a3cfac790cb605a39ed50ec96f4658]
 filename = "Ayrton@IceColor_1000@V1.3_3D_low.gdtf"
-saved_on = "2024-02-09T23:22:28.132788589Z"
+saved_on = "2024-02-10T09:48:38.296877856Z"
 comment = ""
 data_version = "1.2"
+name = "IceColor 1000"
+short_name = "IC1000"
+long_name = "Ayrton IceColor 1000"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [73affff7fa5cb53082116f09f9d3f50b]
 filename = "Ayrton@Zonda_9_WASH@V1.18_ChaseCorrection.gdtf"
-saved_on = "2024-02-09T23:22:22.535965811Z"
+saved_on = "2024-02-10T09:48:32.647767174Z"
 comment = ""
 data_version = "1.2"
+name = "Zonda 9 WASH"
+short_name = "ZW9"
+long_name = "Zonda 9 WASH"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [74e8eab80565556cbd45a185faf39a2]
 filename = "Robe_Lighting@ColorWash_2500E_AT@2022-11-15_Updating_color_highlight_values.gdtf"
-saved_on = "2024-02-09T23:22:26.164792121Z"
+saved_on = "2024-02-10T09:48:36.309840517Z"
 comment = ""
 data_version = "1.2"
+name = "ColorWash 2500E AT"
+short_name = "CW 2500EAT"
+long_name = "ColorWash 2500E AT"
+manufacturer = "Robe Lighting"
+description = "The ColorWash 2500E AT II is newly equipped with a the Philips MSR Gold 1500 FastFit lamp, which makes it the most powerful Robe moving wash light fixture."
 problems = []
 
 [7613f0318de81455976465e66483fc74]
 filename = "Robe_Lighting@Robin_800X_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:26.907501089Z"
+saved_on = "2024-02-10T09:48:37.041047471Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 800X LEDWash"
+short_name = "800X LEDWash"
+long_name = "Robin 800X LEDWash"
+manufacturer = "Robe Lighting"
+description = "The enhanced ROBIN® 800 LEDWash X brings Robe’s patented system for seamless, even and smooth zoom and output of RGBW multichip LED technology a step further."
 problems = []
 
 [7623004463c7a40e0c0dbdd938374b4a]
 filename = "Ayrton@Levante@V2.11_-_Soft_V2XX_-_3DReplaced.gdtf"
-saved_on = "2024-02-09T23:22:26.923559232Z"
+saved_on = "2024-02-10T09:48:37.057203639Z"
 comment = ""
 data_version = "1.1"
+name = "Levante"
+short_name = "Levante"
+long_name = "Levante"
+manufacturer = "Ayrton"
+description = "Classical 3 Series - GDTF in progress"
 problems = []
 
 [78b57f191598c3c7be247874edf0a635]
 filename = "Test@Channel_Layout_Test_v1-2@replicated_v1-1_channel_layout_test.gdtf"
-saved_on = "2024-02-09T23:22:29.227843950Z"
+saved_on = "2024-02-10T09:48:39.410696988Z"
 comment = ""
 data_version = "1.2"
+name = "Channel Layout Test v1-2"
+short_name = ""
+long_name = ""
+manufacturer = "Test"
+description = "A re-creation of the channel layout test fixture from v1.1 that is breaking GDTF Share in the new GDTF 1.2 Builder"
 problems = []
 
 [791b915d2dda14b138540e70fdb39871]
 filename = "Ayrton@Khamsin@V2.13_-_Soft_V2XX_-_CTOPrism.gdtf"
-saved_on = "2024-02-09T23:22:28.075911398Z"
+saved_on = "2024-02-10T09:48:38.236951554Z"
 comment = ""
 data_version = "1.1"
+name = "Khamsin"
+short_name = "Khamsin"
+long_name = "Khamsin"
+manufacturer = "Ayrton"
+description = "Classical 7 Series - GDTF in progress"
 problems = []
 
 [798ab24863138bf51fe27e2eb8241936]
 filename = "Ayrton@MagicRing_R1@V1.4_AddPicture.gdtf"
-saved_on = "2024-02-09T23:22:27.562405793Z"
+saved_on = "2024-02-10T09:48:37.710115253Z"
 comment = ""
 data_version = "1.2"
+name = "MagicRing R1"
+short_name = "MRR1"
+long_name = "Ayrton MagicRing R1"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [7a87b9e46ae13b19148fd9fbeb85b44b]
 filename = "Ayrton@NandoBeam-S6@V1.5_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:26.314611572Z"
+saved_on = "2024-02-10T09:48:36.460459685Z"
 comment = ""
 data_version = "1.2"
+name = "NandoBeam-S6"
+short_name = "NBS6"
+long_name = "NandoBeam-S6"
+manufacturer = "Ayrton"
+description = "NANDOBEAM S6 WASH LUMINAIRE"
 problems = []
 
 [7b2c5130995723f05e1dc4edeb0e106b]
 filename = "Robe_Lighting@Robin_MiniPointe@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:30.380850359Z"
+saved_on = "2024-02-10T09:48:40.254706461Z"
 comment = ""
 data_version = "1.2"
+name = "Robin MiniPointe"
+short_name = "miniPointe"
+long_name = "ROBIN miniPointe ®"
+manufacturer = "Robe Lighting"
+description = "MiniPointe is a tiny agile air cutter specifically designed to produce sharp beam and aerial effects especially in venues constrained by size."
 problems = []
 
 [7b7f7321e444a99365255371d76172f1]
 filename = "Robe_Lighting@Robin_BMFL_Wash_XF@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:28.454697921Z"
+saved_on = "2024-02-10T09:48:38.622592099Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL Wash XF"
+short_name = "BMFL Wash XF"
+long_name = "Robin BMFL Wash XF"
+manufacturer = "Robe Lighting"
+description = "The Optional XF module expands the features of the BMFL™ Wash with innovative internal Scrim having a graduated filter, which can be inserted to the light path and allowing rotation of the whole assembly +/- 180° to achieve even wash coverage when projecting onto a non-perpendicular surface and internal motorised barndoors for creating different unique shapes and chases which also simulate barndoor effects."
 problems = []
 
 [7d1e37e8c34aaec6992f6a764ddd9f2c]
 filename = "Robe_Lighting@Robin_T2_PC@2022-11-16__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:26.817979097Z"
+saved_on = "2024-02-10T09:48:36.951727889Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T2 PC"
+short_name = "T2PC"
+long_name = "Robin T2 PC™"
+manufacturer = "Robe Lighting"
+description = "T2. Multispectral perfection, only further! While simultaneously maintaining the absolute colour finesse of Robe’s phenomenally successful T1 series, featuring the MSL™ (Multi-Spectral) LED engine, our T2 PC™ provides an enhanced output of over 16.000 lumens, measured at the front lens, via its 850W MSL™ source."
 problems = []
 
 [835d6e4b7ab8fda85a572048ab61cc35]
 filename = "Ayrton@WildSun_200s@V1.2_BaseCorrected.gdtf"
-saved_on = "2024-02-09T23:22:23.298993431Z"
+saved_on = "2024-02-10T09:48:33.400641336Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun 200s"
+short_name = "WS200S"
+long_name = "Ayrton WildSun 200s"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [86f3492a56f7df6f9ea8f77cca674ed1]
 filename = "Robe_Lighting@Robin_BMFL_WashBeam@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:23.829902116Z"
+saved_on = "2024-02-10T09:48:33.932538621Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL WashBeam"
+short_name = "BMFL WashBeam"
+long_name = "Robin BMFL WashBeam"
+manufacturer = "Robe Lighting"
+description = "The strong-arm of the BMFL™ family - the superbly powerful BMFL WashBeam comes with extra bright output and an abundance of great features, e.g newly developed framing shutters, super wide front lens and animation wheel. "
 problems = []
 
 [891fa0da6615e5e944b5211da0dd491f]
 filename = "Robe_Lighting@Robin_300X_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:23.097061786Z"
+saved_on = "2024-02-10T09:48:33.196497104Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 300X LEDWash"
+short_name = "300X LEDWash"
+long_name = "Robin 300X LEDWash"
+manufacturer = "Robe Lighting"
+description = "Utilizing a new generation of 30% brighter 19 x 15W RGBW multichip LEDs and Robe‘s patented motorized linear zoom 8°– 63°, the LEDWash 300X offers great flexibility with superior homogenization of the light source."
 problems = []
 
 [8a33ab01d38bb8af8c93a70d7945ffb6]
 filename = "Ayrton@Eurus@v2.22_-_Soft_V2XX_-_Prismgobo.gdtf"
-saved_on = "2024-02-09T23:22:26.078483463Z"
+saved_on = "2024-02-10T09:48:36.223379681Z"
 comment = ""
 data_version = "1.1"
+name = "Eurus"
+short_name = "Eurus"
+long_name = "Eurus"
+manufacturer = "Ayrton"
+description = "Classical 5 Series - GDTF in progress"
 problems = []
 
 [8ab6072502ac6c156351322d6c19d8ec]
 filename = "Robe_Lighting@PATT_2013@2022-10-24__Wiring_objects_revision.gdtf"
-saved_on = "2024-02-09T23:22:25.924858640Z"
+saved_on = "2024-02-10T09:48:36.066580738Z"
 comment = ""
 data_version = "1.2"
+name = "PATT 2013"
+short_name = "PATT2013"
+long_name = "PATT 2013"
+manufacturer = "Robe Lighting"
+description = "Patt 2013 is the first in a series of retro style lighting – designed specifically to further the current trend for tungsten eye-candy on stage and set - for bands, television, film and general prop lighting. "
 problems = []
 
 [8b976b165e21ee2da197c5761fdc845f]
 filename = "Robe_Lighting@Robin_iParFect_150_FW_RGBA@2022-11-23__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:29.936466183Z"
+saved_on = "2024-02-10T09:48:39.974517350Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iParFect 150 FW RGBA"
+short_name = "iParFect150FWRGBA"
+long_name = "Robin iParFect 150 FW RGBA"
+manufacturer = "Robe Lighting"
+description = "The all-new iParFect 150 FW RGBA features an exceptionally-wide zoom range and silent operation with passive cooling, making it ideal for theatres, concert halls and television. With an IP 65 rating, it is also perfect for any outdoor application"
 problems = []
 
 [8badaf2e10bbab17fe6345bd870d037d]
 filename = "Robe_Lighting@Robin_Forte_FS@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:23.030205160Z"
+saved_on = "2024-02-10T09:48:33.128065680Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Forte FS"
+short_name = "FORTE FS"
+long_name = "Robin Forte FS"
+manufacturer = "Robe Lighting"
+description = "Forte means Excellence, Speciality, Strength. Our FORTE™ certainly lives up to its name! Producing a blistering 50.000 lumens of high quality performance light, combined with the ability to maintain light quality from the revolutionary TRANSFERABLE ENGINE, and packed full of specialist innovation, you have the fixture ready to lead you into the future."
 problems = []
 
 [8c866c6e5f063c518654503c2ee309a8]
 filename = "Ayrton@NandoBeam-S9@V1.51_CorrectedDimmer.gdtf"
-saved_on = "2024-02-09T23:22:23.843757040Z"
+saved_on = "2024-02-10T09:48:33.945338048Z"
 comment = ""
 data_version = "1.2"
+name = "NandoBeam-S9"
+short_name = "NBS9"
+long_name = "NandoBeam-S9"
+manufacturer = "Ayrton"
+description = "NANDOBEAM S9 WASH LUMINAIRE"
 problems = []
 
 [8cdc57e8ef6c63047a332a89a5664061]
 filename = "Ayrton@IceColor_500@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:23.394994123Z"
+saved_on = "2024-02-10T09:48:33.495834442Z"
 comment = ""
 data_version = "1.2"
+name = "IceColor 500"
+short_name = "IC500"
+long_name = "Ayrton IceColor 500"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [8ecf39f9275e3288039cdedfe9065be9]
 filename = "Ayrton@MiniBurst@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:26.730839310Z"
+saved_on = "2024-02-10T09:48:36.863559769Z"
 comment = ""
 data_version = "1.2"
+name = "MiniBurst"
+short_name = "MiB"
+long_name = "Ayrton MiniBurst"
+manufacturer = "Ayrton"
+description = "MINIBURST CREATIVE SOLUTION"
 problems = []
 
 [8fff6cefcdc6b57abaf85aaf0a79236d]
 filename = "Robe_Lighting@Robin_600_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:27.197130523Z"
+saved_on = "2024-02-10T09:48:37.336556947Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 600 LEDWash"
+short_name = "600 LEDWash"
+long_name = "ROBIN 600 LEDWash"
+manufacturer = "Robe Lighting"
+description = "The super-slim ROBIN® 600 LEDWash features 37x 10 Watt RGBW multichip LEDs with colour output ranging from gentle pastels to the richest saturation."
 problems = []
 
 [90b8f27fe66c9432e31bf9c357801016]
 filename = "Ayrton@Diablo@V2.15_-_CorrectionControl.gdtf"
-saved_on = "2024-02-09T23:22:25.916361142Z"
+saved_on = "2024-02-10T09:48:36.058952364Z"
 comment = ""
 data_version = "1.2"
+name = "Diablo"
+short_name = "Diablo"
+long_name = "Diablo"
+manufacturer = "Ayrton"
+description = "Classical 3 Series - GDTF in progress"
 problems = []
 
 [92a688a99d59dd27a9535ef6bd2b6f6c]
 filename = "Robe_Lighting@Robin_DL7S_Profile@2023-01-10_Iris_channel_set_physical_values_revision.gdtf"
-saved_on = "2024-02-09T23:22:23.565405002Z"
+saved_on = "2024-02-10T09:48:33.669353282Z"
 comment = ""
 data_version = "1.2"
+name = "Robin DL7S Profile"
+short_name = "DL7S Profile"
+long_name = "Robin DL7S Profile"
+manufacturer = "Robe Lighting"
+description = "The DL7S Profile is the first DL range fixture to receive a powerful new 800W version of the LED engine with seven colours for unprecedented smooth, stable and even colour mixing and a very high CRI."
 problems = []
 
 [92b09d69059c776f7531b7eeb8093ba3]
 filename = "Robe_Lighting@Robin_LEDBeam_150_FW_RGBA@2022-12-08__Pigtail_moved_to_correct_position.gdtf"
-saved_on = "2024-02-09T23:22:29.546203735Z"
+saved_on = "2024-02-10T09:48:39.675699732Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 150 FW RGBA"
+short_name = "LEDBeam150FWRGBA"
+long_name = "Robin LEDBeam 150 FW RGBA"
+manufacturer = "Robe Lighting"
+description = "Fast sweeping beams and a wide far-reaching quality wash in compact housing."
 problems = []
 
 [92c64dc5a670093deabc7a5cad860f6a]
 filename = "Robe_Lighting@Robin_ColorStrobe@2022-12-01__Geometry_update.gdtf"
-saved_on = "2024-02-09T23:22:30.702697933Z"
+saved_on = "2024-02-10T09:48:40.507409051Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ColorStrobe"
+short_name = "ColorStrobe"
+long_name = "Robin ColorStrobe"
+manufacturer = "Robe Lighting"
+description = "Power is everything, now in color! Add colour into your blinding strobing sequences with the ColorStrobe to achieve dyed effects, white flashing with colorful backgrounds or continuous bright light output with colored animations."
 problems = []
 
 [9351e08ca06b984d256ae0ecb489619b]
 filename = "Test@Channel_Layout_Test@v1_first_try.channel_clash.gdtf"
-saved_on = "2024-02-09T23:22:29.225008136Z"
+saved_on = "2024-02-10T09:48:39.407780928Z"
 comment = ""
 data_version = "1.1"
+name = "Channel Layout Test"
+short_name = ""
+long_name = ""
+manufacturer = "Test"
+description = ""
 problems = []
 
 [94f8dac8517237b646a21a6fb08ed8b4]
 filename = "Ayrton@Zonda_9_FX@V1.18_DimmerCorrection_STD_EXT2.gdtf"
-saved_on = "2024-02-09T23:22:28.115821940Z"
+saved_on = "2024-02-10T09:48:38.278385932Z"
 comment = ""
 data_version = "1.2"
+name = "Zonda 9 FX"
+short_name = "ZX9"
+long_name = "Zonda 9 FX"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [957642ebbdb5d1a23a3d9ada78e03677]
 filename = "Robe_Lighting@Robin_1200_LEDWash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:29.107115907Z"
+saved_on = "2024-02-10T09:48:39.289586137Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 1200 LEDWash"
+short_name = "1200 LEDWash "
+long_name = "Robin 1200 LEDWash"
+manufacturer = "Robe Lighting"
+description = "The super-slim ROBIN® 1200 LEDWash features 61 RGBW multichip LEDs with colour output ranging from gentle pastels to the richest saturation."
 problems = []
 
 [96eb69ff99e6e776ad168fd1bc2d2f1e]
 filename = "ARRI@SkyPanel_S120C@DMX_v4.4_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:27.504429347Z"
+saved_on = "2024-02-10T09:48:37.650850160Z"
 comment = ""
 data_version = "1.1"
+name = "SkyPanel S120C"
+short_name = "S120C"
+long_name = "ARRI SkyPanel S120C"
+manufacturer = "ARRI"
+description = "SkyPanel S120-C RGBW Soft Light with ECC"
 problems = []
 
 [970ca09ecb455002a6df4d36ee1e7bad]
 filename = "ARRI@Orbiter@DMX_v5.0.dbg.gdtf"
-saved_on = "2024-02-09T23:22:29.135892493Z"
+saved_on = "2024-02-10T09:48:39.318719096Z"
 comment = ""
 data_version = "1.2"
+name = "Orbiter"
+short_name = "Orbiter"
+long_name = "ARRI Orbiter"
+manufacturer = "ARRI"
+description = "ARRI Orbiter  Illumination|Reshaped"
 problems = []
 
 [97242267c083d12a83811f76d8f26726]
 filename = "Robe_Lighting@Robin_TX1_PosiProfile@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:25.801472609Z"
+saved_on = "2024-02-10T09:48:35.946301770Z"
 comment = ""
 data_version = "1.2"
+name = "Robin TX1 PosiProfile"
+short_name = "TX1 PosiProfile"
+long_name = "Robin TX1 PosiProfile™"
+manufacturer = "Robe Lighting"
+description = """
+Preliminary physical and color measurements.
+Bridging the divide between manual generic and fully automated fixtures, the TX1 PosiProfile™ combines both worlds into one revolutionary luminaire."""
 problems = []
 
 [99aa06d3014798d86001c324468d497f]
 filename = "Test@Channel_Layout_Test@v1_first_try.empty.gdtf"
-saved_on = "2024-02-09T23:22:29.225039662Z"
+saved_on = "2024-02-10T09:43:51.681720926Z"
 comment = ""
 error = "'description.xml' not found in GDTF zip archive: specified file not found in archive"
 
 [9cada0e1154304120ac90401fde08f10]
 filename = "Ayrton@Intellipix_R@V2.3_FonctionName.gdtf"
-saved_on = "2024-02-09T23:22:26.727341467Z"
+saved_on = "2024-02-10T09:48:36.859996089Z"
 comment = ""
 data_version = "1.1"
+name = "Intellipix R"
+short_name = "IPR"
+long_name = "Ayrton Intellipix R"
+manufacturer = "Ayrton"
+description = "Intellipix-R - CREATIVE SOLUTION"
 problems = []
 
 [9d1d795463cc3652d57e1f7224e12155]
 filename = "Robe_Lighting@Robin_DL4S_Profile@2022-11-21__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:23.295078805Z"
+saved_on = "2024-02-10T09:48:33.396696020Z"
 comment = ""
 data_version = "1.2"
+name = "Robin DL4S Profile"
+short_name = "DL4S Profile"
+long_name = "Robin DL4S Profile"
+manufacturer = "Robe Lighting"
+description = """
+With real color measurements.
+Without real world physical behavior values.
+
+Extending the possibilities of the playful, colorful DLS Profile, the new DL4S is equipped with enhanced version of the ROBE RGBW LED module for brighter saturated colours and more powerful output. """
 problems = []
 
 [9e28554a2b1de26343a0f0f6471ff0d]
 filename = "ARRI@L5C@DMX_v3.5_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:22.735448726Z"
+saved_on = "2024-02-10T09:48:32.850378123Z"
 comment = ""
 data_version = "1.1"
+name = "L5C"
+short_name = "L5C"
+long_name = "ARRI L5C"
+manufacturer = "ARRI"
+description = "Arri L5C Fresnel"
 problems = []
 
 [a346ab290261551747e5de116b98c95d]
 filename = "Ayrton@Huracan_Wash@V1.0_First_Release.gdtf"
-saved_on = "2024-02-09T23:22:30.144916315Z"
+saved_on = "2024-02-10T09:48:40.121932254Z"
 comment = ""
 data_version = "1.2"
+name = "Huracan Wash"
+short_name = "Huracan Wsh"
+long_name = "Huracan Wash"
+manufacturer = "Ayrton"
+description = "Classical 9 Series - GDTF in progress"
 problems = []
 
 [a44a45df3ebb27054ee4a8c1f4ea3453]
 filename = "Robe_Lighting@Robin_iForte@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:24.876279116Z"
+saved_on = "2024-02-10T09:48:34.977098129Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iForte"
+short_name = "iFORTE"
+long_name = "Robin iForte"
+manufacturer = "Robe Lighting"
+description = "Even the mighty need the right protection! With unique game-changing patented technology, you can shift the power outside, rain or shine, dust, smoke and haze, with the iFORTE™!"
 problems = []
 
 [a4c6105aeb9769257fba7204900b9c72]
 filename = "Ayrton@Arcaline_2_3G_50CM@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:27.565718492Z"
+saved_on = "2024-02-10T09:48:37.713519653Z"
 comment = ""
 data_version = "1.2"
+name = "Arcaline 2 3G 50CM"
+short_name = "Arc50CM"
+long_name = "Ayrton Arcaline 2 3G 50CM"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [a78afebc8a8ea9097ae3832b045eb57e]
 filename = "Robe_Lighting@Robin_LEDBeam_350_RGBA@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:29.024158303Z"
+saved_on = "2024-02-10T09:48:39.205981541Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 350 RGBA"
+short_name = "LEDBeam 350 RGBA"
+long_name = "Robin LEDBeam 350 RGBA"
+manufacturer = "Robe Lighting"
+description = "Bigger, bolder, brighter! Building on the highly successful LEDBeam 150™ the big brother LEDBeam 350™ has arrived, delivering more punch and presence to create even more fast sweeping beams and gorgeous washes."
 problems = []
 
 [a7b8a9260bb519b9133b65856d8c99ba]
 filename = "Ayrton@DreamPanel_TWIN@V2.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.951265539Z"
+saved_on = "2024-02-10T09:48:36.093604858Z"
 comment = ""
 data_version = "1.2"
+name = "DreamPanel TWIN"
+short_name = "DPT"
+long_name = "Ayrton DreamPanel TWIN"
+manufacturer = "Ayrton"
+description = "DREAMPANEL TWIN IMAGINE DISPLAY"
 problems = []
 
 [a896aeadb11de0f8d3cf05e0e2a7fbe4]
 filename = "Ayrton@Huracan_LT@V1.0_First_Release.gdtf"
-saved_on = "2024-02-09T23:22:29.896346066Z"
+saved_on = "2024-02-10T09:48:39.943420607Z"
 comment = ""
 data_version = "1.1"
+name = "Huracan LT"
+short_name = "HuracanLT"
+long_name = "Huracan LT"
+manufacturer = "Ayrton"
+description = "Classical 9 Series - GDTF "
 problems = []
 
 [aab32ff5561e3a7a2d3bfde13bd69f7c]
 filename = "Robe_Lighting@Robin_MiniMe@2022-11-29__DMX_keystone_update.gdtf"
-saved_on = "2024-02-09T23:22:26.411088340Z"
+saved_on = "2024-02-10T09:48:36.555844758Z"
 comment = ""
 data_version = "1.2"
+name = "Robin MiniMe"
+short_name = "MiniMe"
+long_name = "ROBIN MiniMe®"
+manufacturer = "Robe Lighting"
+description = "The MiniMe is an effects lighting luminaire with the addition of full video output. "
 problems = []
 
 [ad3c64e8ddee92bb8ecbcffc2d76e638]
 filename = "Ayrton@Arcaline_2_3G_1M@V1.3_3D_low.gdtf"
-saved_on = "2024-02-09T23:22:27.510002111Z"
+saved_on = "2024-02-10T09:48:37.656541743Z"
 comment = ""
 data_version = "1.2"
+name = "Arcaline 2 3G 1M"
+short_name = "Arc1M"
+long_name = "Ayrton Arcaline 2 3G 1M"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [adbf02f8690710a4345bd2864556216c]
 filename = "Robe_Lighting@Omega_Adaptor_Tall_CL@2022-10-10__Share_release.gdtf"
-saved_on = "2024-02-09T23:22:22.536439288Z"
+saved_on = "2024-02-10T09:48:32.648259768Z"
 comment = ""
 data_version = "1.2"
+name = "Omega Adaptor Tall CL"
+short_name = "OmegaTall"
+long_name = "Omega Adaptor Tall CL 10980501"
+manufacturer = "Robe Lighting"
+description = """
+Robe ordering code: 99016260
+An adaptor between device and an omega clamp."""
 problems = []
 
 [adfca9d182d0b9181bd6567dfb763d62]
 filename = "Robe_Lighting@Robin_LEDBeam_350@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:26.380963703Z"
+saved_on = "2024-02-10T09:48:36.526305240Z"
 comment = ""
 data_version = "1.2"
+name = "Robin LEDBeam 350"
+short_name = "LEDBeam 350"
+long_name = "Robin LEDBeam 350"
+manufacturer = "Robe Lighting"
+description = "Bigger, bolder, brighter! Building on the highly successful LEDBeam 150™ the big brother LEDBeam 350™ has arrived, delivering more punch and presence to create even more fast sweeping beams and gorgeous washes."
 problems = []
 
 [ae6c8bbbfea0967fc52bd7779ea7123b]
 filename = "Robe_Lighting@Robin_BMFL_FollowSpot_LT@2023-01-10_Update_RDM_Model_ID.gdtf"
-saved_on = "2024-02-09T23:22:27.108501247Z"
+saved_on = "2024-02-10T09:48:37.246366824Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL FollowSpot LT"
+short_name = "BMFL FollowSpot LT"
+long_name = "Robin BMFL FollowSpot LT"
+manufacturer = "Robe Lighting"
+description = "BMFL FollowSpot LT – A compact, affordable solution for the larger arena."
 problems = []
 
 [b05000efc852464195aacdc525aa048c]
 filename = "Ayrton@Rollapix_100@V1.3_3D_low.gdtf"
-saved_on = "2024-02-09T23:22:25.938360402Z"
+saved_on = "2024-02-10T09:48:36.080228951Z"
 comment = ""
 data_version = "1.2"
+name = "Rollapix 100"
+short_name = "RPX"
+long_name = "Ayrton Rollapix"
+manufacturer = "Ayrton"
+description = "ROLLAPIX™100"
 problems = []
 
 [b187335dd91312b28a940b4ba55298d8]
 filename = "Robe_Lighting@Robin_Actor_6@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:27.642542615Z"
+saved_on = "2024-02-10T09:48:37.790582096Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Actor 6"
+short_name = "Actor 6"
+long_name = "ROBIN Actor 6"
+manufacturer = "Robe Lighting"
+description = "ROBIN Actor 6 is based on the hugely successful ROBIN® LEDWash Series and has been developed specifically for the theatrical and TV markets. This lightweight static head with manual pan/tilt uses 37 super-bright RGBW multichip LEDs with a linear motorized zoom of 8-63 degrees, smooth colour mixing and linear dimming without RGB ’breakup’ or grey shadows."
 problems = []
 
 [b18d0570dd45ec99dfb2f707053d2c8]
 filename = "Robe_Lighting@Robin_Esprite_Fresnel@2022-11-14__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:30.890622710Z"
+saved_on = "2024-02-10T09:48:40.650132236Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Esprite Fresnel"
+short_name = "ESPRITE Fresnel"
+long_name = "Robin Esprite Fresnel"
+manufacturer = "Robe Lighting"
+description = "ESPRITE Fresnel is for those demanding a classic Fresnel beam whilst enjoying the many advantages of our TE™ Transferable Engine technology."
 problems = []
 
 [b19291d2ca7139352da07315c680377f]
 filename = "Robe_Lighting@Robin_T1_Profile_FS@2022-11-15_Major_update.gdtf"
-saved_on = "2024-02-09T23:22:26.678967239Z"
+saved_on = "2024-02-10T09:48:36.810349820Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T1 Profile FS"
+short_name = "T1ProfileFS"
+long_name = "ROBIN T1 Profile FS™"
+manufacturer = "Robe Lighting"
+description = "T1. The new ONE and only fixture you need for theatre, television and touring and now with the option to be connected to the Robe innovative RoboSpot system. The T1 Profile FollowSpot is equipped with the digital camera on the head and can be connected with the RoboSpot BaseStation for off-stage follow spot operation."
 problems = []
 
 [b545a8d32a841a46cc118fc4fa5c8c1d]
 filename = "Robe_Lighting@Robin_Tetra2@2022-12-05__Geometry_names_revision.gdtf"
-saved_on = "2024-02-09T23:22:27.285114524Z"
+saved_on = "2024-02-10T09:48:37.426326203Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Tetra2"
+short_name = "Tetra2"
+long_name = "Robin Tetra2"
+manufacturer = "Robe Lighting"
+description = "TETRA2 (TETRAgnatha) is a Linear bar building on the Spiider and Tarrantula technology."
 problems = []
 
 [b6f4e8882ef3a8d98223c7782b6327ab]
 filename = "Ayrton@Ghibli@V2.12_-_Soft_V2XX_-_BladeCorrection.gdtf"
-saved_on = "2024-02-09T23:22:26.307381262Z"
+saved_on = "2024-02-10T09:48:36.453325984Z"
 comment = ""
 data_version = "1.1"
+name = "Ghibli"
+short_name = "Ghibli"
+long_name = "Ghibli"
+manufacturer = "Ayrton"
+description = "Classical 5 Series - GDTF in progress"
 problems = []
 
 [b73cc952cb0e408f64720cd27a01bd02]
 filename = "Ayrton@Merak@V1.14_DimmerreacttoGM.gdtf"
-saved_on = "2024-02-09T23:22:24.763757550Z"
+saved_on = "2024-02-10T09:48:34.866061136Z"
 comment = ""
 data_version = "1.2"
+name = "Merak"
+short_name = "Mrk"
+long_name = "Merak"
+manufacturer = "Ayrton"
+description = "MERAK-CS - CLASSICAL 3 SERIES"
 problems = []
 
 [b97e0d2fcbc68be0a4218bee2eda3db5]
 filename = "Ayrton@MagicPanel_R@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.446961923Z"
+saved_on = "2024-02-10T09:48:35.579900765Z"
 comment = ""
 data_version = "1.2"
+name = "MagicPanel R"
+short_name = "MaPR"
+long_name = "Ayrton MagicPanel R"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [badc370b259a78e093d2bb01518dbcce]
 filename = "Robe_Lighting@Robin_Esprite@2022-11-11__DMX_animation_wheel_revision.gdtf"
-saved_on = "2024-02-09T23:22:28.012479790Z"
+saved_on = "2024-02-10T09:48:38.170627589Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Esprite"
+short_name = "ESPRITE"
+long_name = "Robin ESPRITE™"
+manufacturer = "Robe Lighting"
+description = "This very bright and precise moving light is the first to use Robe’s ground-breaking new generation 650W WTE™ (White Transferrable Engine) light source."
 problems = []
 
 [bba4bdb5e09e9f3f2796cc6f7d4f54dd]
 filename = "Robe_Lighting@Robin_100_LEDBeam@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:26.722899010Z"
+saved_on = "2024-02-10T09:48:36.855551549Z"
 comment = ""
 data_version = "1.2"
+name = "Robin 100 LEDBeam"
+short_name = "100 LEDBeam"
+long_name = "Robin 100 LEDBeam"
+manufacturer = "Robe Lighting"
+description = "A highly optimized motorised control produces speedy pan and tilt movement, three LED zones allow the creation of various colour chases, and the extra punchy 7 degree beam angle can be amplified with fast strobing. "
 problems = []
 
 [bbbabd9c6d6ead39fc1e8841e19635f4]
 filename = "Robe_Lighting@Robin_T1_PC@2022-11-16__Emitter_spectrum_correction.gdtf"
-saved_on = "2024-02-09T23:22:28.858178015Z"
+saved_on = "2024-02-10T09:48:39.033848814Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T1 PC"
+short_name = "T1PC"
+long_name = "ROBIN T1 PC™"
+manufacturer = "Robe Lighting"
+description = "T1 PC. The new ONE and only wash fixture you need for theatre, television and touring."
 problems = []
 
 [bbca21ce76311885cd89cebba2332155]
 filename = "Ayrton@MiniPanel_FX@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:29.944749262Z"
+saved_on = "2024-02-10T09:48:39.980475100Z"
 comment = ""
 data_version = "1.2"
+name = "MiniPanel FX"
+short_name = "MiPFX"
+long_name = "Ayrton MiniPanel FX"
+manufacturer = "Ayrton"
+description = "MINIPANEL-FX CREATIVE SOLUTION"
 problems = []
 
 [bd34cca4c6133d2984149ed26f51581d]
 filename = "ARRI@L10C@DMX_v3.5_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:27.875253752Z"
+saved_on = "2024-02-10T09:48:38.025482644Z"
 comment = ""
 data_version = "1.1"
+name = "L10C"
+short_name = "L10C"
+long_name = "ARRI L10C"
+manufacturer = "ARRI"
+description = "Arri L10C Fresnel"
 problems = []
 
 [be636f6dff6b3936878999d225ddb6c3]
 filename = "Robe_Lighting@Robin_T2_Profile@2022-11-16__Wheels_attribute_correction.gdtf"
-saved_on = "2024-02-09T23:22:26.285442433Z"
+saved_on = "2024-02-10T09:48:36.431245839Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T2 Profile"
+short_name = "T2Profile"
+long_name = "ROBIN T2 Profile™"
+manufacturer = "Robe Lighting"
+description = "T2. Taking Multispectral perfection even further! While simultaneously maintaining the absolute colour finesse of Robe’s phenomenally successful T1 series, featuring the MSL™ (Multi-Spectral) LED engine, our T2 Profile™ provides an enhanced output of more than 17.500 lumens, measured at the front lens, via its 850W MSL™ source, to throw their beautiful light even further than before. With a zoom range of 5–55°, T2 Profile™ is ideally suited to its longer-throw role in theatre, television, and touring."
 problems = []
 
 [c0af8da2e2ea56a8a3f3dea563a81050]
 filename = "Robe_Lighting@Robin_Spote@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:29.878288958Z"
+saved_on = "2024-02-10T09:48:39.929872922Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Spote"
+short_name = "Spote"
+long_name = "Robin SPOTE™"
+manufacturer = "Robe Lighting"
+description = "When you demand quality, with absolutely no compromise, in a compact spot then SPOTE™ fits the bill! Fun, fast and feature packed, SPOTE™ is ideal for your club, bar or corporate event."
 problems = []
 
 [c248515673122b876d4ef3770e99b629]
 filename = "Ayrton@MagicBlade_FX@V2.2_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:23.382804665Z"
+saved_on = "2024-02-10T09:48:33.484176560Z"
 comment = ""
 data_version = "1.2"
+name = "MagicBlade FX"
+short_name = "MaBl FX"
+long_name = "MagicBlade FX"
+manufacturer = "Ayrton"
+description = "Ayrton MagicBlade FX "
 problems = []
 
 [c3261823559b0082d7e09fe59306a218]
 filename = "Robe_Lighting@Robin_iPointe65@2022-11-16_Major_update.gdtf"
-saved_on = "2024-02-09T23:22:22.643774350Z"
+saved_on = "2024-02-10T09:48:32.758380351Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iPointe65"
+short_name = "iPointe65"
+long_name = "Robin iPointe65"
+manufacturer = "Robe Lighting"
+description = "iPointe65® plays where you want it to! Indoors or out, whatever the weather, our IP65 rated iPointe65® gives you the perfect all-weather playmate!"
 problems = []
 
 [c54577fc5e74fd369f961d53c116321c]
 filename = "Robe_Lighting@Robin_ParFect_150_FW_RGBA@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:30.927070404Z"
+saved_on = "2024-02-10T09:48:40.677885169Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ParFect 150 FW RGBA"
+short_name = "ParFect150FWRGBA"
+long_name = "Robin ParFect 150 FW RGBA"
+manufacturer = "Robe Lighting"
+description = "The ParFect 150 FW RGBA has a bright, Fresnel style soft-beam edge, with zoom control and a high CRI in an economical LED format.."
 problems = []
 
 [c73af2f07bafa6bce4b23b83f6a5ea52]
 filename = "Robe_Lighting@Robin_SuperSpikie@2022-11-22__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:27.557121719Z"
+saved_on = "2024-02-10T09:48:37.704466247Z"
 comment = ""
 data_version = "1.2"
+name = "Robin SuperSpikie"
+short_name = "SuperSpikie"
+long_name = "Robin SuperSpikie"
+manufacturer = "Robe Lighting"
+description = " Bigger, brighter and bolder, the SuperSpikie takes the look to another level.  Four times brighter than the original Spikie and with the addition of rotating gobos – this effects machine has even more looks to blast through its 165mm front lens. "
 problems = []
 
 [c8da046fc953d4917dae885a896f8749]
 filename = "Ayrton@NandoBeam-S3@V1.3_3D_low.gdtf"
-saved_on = "2024-02-09T23:22:25.922162838Z"
+saved_on = "2024-02-10T09:48:36.064589217Z"
 comment = ""
 data_version = "1.2"
+name = "NandoBeam-S3"
+short_name = "NBS3"
+long_name = "NandoBeam-S3"
+manufacturer = "Ayrton"
+description = "NANDOBEAM S3 WASH LUMINAIRE"
 problems = []
 
 [caa37207f5ace0460fe3aeaa08a5f29b]
 filename = "Test@Channel_Layout_Test@v1_first_try.gdtf"
-saved_on = "2024-02-09T23:22:29.229084779Z"
+saved_on = "2024-02-10T09:48:39.411970231Z"
 comment = ""
 data_version = "1.1"
+name = "Channel Layout Test"
+short_name = ""
+long_name = ""
+manufacturer = "Test"
+description = ""
 problems = []
 
 [cfeb835988e5e283b57de1278681f3f]
 filename = "Robe_Lighting@Robin_MegaPointe@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:25.441753597Z"
+saved_on = "2024-02-10T09:48:35.574787715Z"
 comment = ""
 data_version = "1.2"
+name = "Robin MegaPointe"
+short_name = "MegaPointe"
+long_name = "Robin MegaPointe®"
+manufacturer = "Robe Lighting"
+description = "MEGA bright with MEGA features and still compact. The MegaPointe from Robe."
 problems = []
 
 [d121a319c537fec6c1328ece90f3e370]
 filename = "Robe_Lighting@Robin_BMFL_Wash@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:25.053611844Z"
+saved_on = "2024-02-10T09:48:35.156763626Z"
 comment = ""
 data_version = "1.2"
+name = "Robin BMFL Wash"
+short_name = "BMFL Wash"
+long_name = "Robin BMFL Wash"
+manufacturer = "Robe Lighting"
+description = "BMFL™ - Wash is the ultimate fresnel based 1.700 W lamp based wash light with large 200 mm diameter front fresnel lens for high quality traditional wash output ranging from punchy tight 4.5° to smooth 55°."
 problems = []
 
 [d19645ac7ba7ffdb53eb565774076517]
 filename = "Ayrton@Perseo_Profile@V2.12_-_Soft_V2XX_-_BladeCorrection.gdtf"
-saved_on = "2024-02-09T23:22:30.742751777Z"
+saved_on = "2024-02-10T09:48:40.537530077Z"
 comment = ""
 data_version = "1.1"
+name = "Perseo Profile"
+short_name = "Perseo"
+long_name = "Perseo Profile"
+manufacturer = "Ayrton"
+description = "Classical IP65 5 Series - GDTF in progress"
 problems = []
 
 [d2fb1ed87c3ba1583ad453a5ffc3102e]
 filename = "Robe_Lighting@Robin_Spiider@2022-12-19__Pixel_subfixture_order_update.gdtf"
-saved_on = "2024-02-09T23:22:25.244595364Z"
+saved_on = "2024-02-10T09:48:35.350184628Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Spiider"
+short_name = "Spiider"
+long_name = "Robin Spiider"
+manufacturer = "Robe Lighting"
+description = "Spiider, a superbright next generation of LED WashBeam luminaires, using 18 x 40 Watt and 1 x 60 Watt LEDs and combining it with a very efficient 12,5 :1 zoom optical system ranging from tight 4° Beam to wide 50° Wash, makes the product in its class the most powerful LED fixture on the market. Now equipped with Robe's innovative lens coating technology which brings benefits such as  bright and clear lenses, no scratches or marks, higher light output  and longer intervals between cleaning. "
 problems = []
 
 [d62406f2589c5d1b946633af67cf258]
 filename = "Ayrton@MagicDot_SX@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.271152551Z"
+saved_on = "2024-02-10T09:48:35.385619566Z"
 comment = ""
 data_version = "1.2"
+name = "MagicDot SX"
+short_name = "MDSX"
+long_name = "MagicDot SX"
+manufacturer = "Ayrton"
+description = "MAGIDOT-SX CREATIVE SOLUTION"
 problems = []
 
 [d6b340f32e7340de6d6f9fc7ca3730e8]
 filename = "Robe_Lighting@Robin_SpikiePlus@2022-12-01__DMX_channel_attributes_update.gdtf"
-saved_on = "2024-02-09T23:22:24.959192246Z"
+saved_on = "2024-02-10T09:48:35.060318101Z"
 comment = ""
 data_version = "1.2"
+name = "Robin SpikiePlus"
+short_name = "Spikie+"
+long_name = "Robin Spikie+"
+manufacturer = "Robe Lighting"
+description = "Retaining the fast-moving, compact design of the original, the new Spikie+® generates 25% more lumen output from its single 60W RGBW source, giving you even more impact!"
 problems = []
 
 [d71e66832defbc96fec9bc43521e936f]
 filename = "Ayrton@MagicBurst@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:25.943771824Z"
+saved_on = "2024-02-10T09:48:36.085857639Z"
 comment = ""
 data_version = "1.2"
+name = "MagicBurst"
+short_name = "MaB"
+long_name = "Ayrton Magicburst"
+manufacturer = "Ayrton"
+description = "MAGICBURST CREATIVE SOLUTION"
 problems = []
 
 [d8d0a617bcae48b7c97da77882e4f04d]
 filename = "Ayrton@WildSun_500K3@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:23.834731083Z"
+saved_on = "2024-02-10T09:48:33.937000786Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun 500K3"
+short_name = "WS500K3"
+long_name = "Ayrton WildSun 500 K3"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [d9d432df6fc96605f46405f9854dadbd]
 filename = "ARRI@L7C@DMX_v3.5_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:29.223526025Z"
+saved_on = "2024-02-10T09:48:39.406252586Z"
 comment = ""
 data_version = "1.1"
+name = "L7C"
+short_name = "L7C"
+long_name = "ARRI L7C"
+manufacturer = "ARRI"
+description = "Arri L7C Fresnel"
 problems = []
 
 [d9e3579cbf7e1e0947a87b6aac1184cd]
 filename = "Ayrton@AlienPix_RS@V2.3_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:28.459963136Z"
+saved_on = "2024-02-10T09:48:38.628741862Z"
 comment = ""
 data_version = "1.2"
+name = "AlienPix RS"
+short_name = "APRS"
+long_name = "Ayrton AlienPix RS"
+manufacturer = "Ayrton"
+description = "ALIENPIX-RS CREATIVE SOLUTION"
 problems = []
 
 [da091776a98f37f482751d5da28b7adc]
 filename = "Robe_Lighting@Robin_Esprite_FS@2022-11-14__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:26.552460590Z"
+saved_on = "2024-02-10T09:48:36.695351859Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Esprite FS"
+short_name = "EspriteFS"
+long_name = "Robin Esprite FS"
+manufacturer = "Robe Lighting"
+description = "This very bright and precise moving light is the first to use Robe’s ground-breaking new generation 650W TE™ (Transferrable Engine) light source. Now with the option to be connected to the Robe innovative RoboSpot system. "
 problems = []
 
 [ddf4d070fbe6e13d3b2536b129ce4cd8]
 filename = "ARRI@SkyPanel_S30RP@DMX_v4.4_13_Jan_2021.gdtf"
-saved_on = "2024-02-09T23:22:26.925450410Z"
+saved_on = "2024-02-10T09:48:37.059084801Z"
 comment = ""
 data_version = "1.1"
+name = "SkyPanel S30RP"
+short_name = "S30-RP"
+long_name = "ARRI SkyPanel S30RP"
+manufacturer = "ARRI"
+description = """
+SkyPanel S30-RP (Remote Phosphor) Soft Light
+Phosphor Panels available in 2700k, 3200k, 4300k, 5600k, 6500k, 10000k, and Chroma Green"""
 problems = []
 
 [e1145f8d048545a8bd61ccb17090a246]
 filename = "ARRI@Orbiter@DMX_v5.0.gdtf"
-saved_on = "2024-02-09T23:22:24.700155359Z"
+saved_on = "2024-02-10T09:48:34.802562619Z"
 comment = ""
 data_version = "1.2"
+name = "Orbiter"
+short_name = "Orbiter"
+long_name = "ARRI Orbiter"
+manufacturer = "ARRI"
+description = "ARRI Orbiter  Illumination|Reshaped"
 problems = []
 
 [e202e496b2cc57946093352aa5a79c68]
 filename = "Robe_Lighting@Robin_T2_Fresnel@2022-11-16__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:29.356206717Z"
+saved_on = "2024-02-10T09:48:39.531139647Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T2 Fresnel"
+short_name = "T2Fresnel"
+long_name = "Robin T2 Fresnel™"
+manufacturer = "Robe Lighting"
+description = "T2. Multispectral perfection, only further! While simultaneously maintaining the absolute colour finesse of Robe’s phenomenally successful T1 series, featuring the MSL™ (Multi-Spectral) LED engine, our T2 Fresnel™ provides an enhanced output of more than 14.500 lumens from its 850W MSL™ source."
 problems = []
 
 [e44d0f5bf495840c96e0c98a59177da8]
 filename = "Ayrton@Versapix_100@V1.21_CorrectedDimmer.gdtf"
-saved_on = "2024-02-09T23:22:29.953947169Z"
+saved_on = "2024-02-10T09:48:39.988010747Z"
 comment = ""
 data_version = "1.2"
+name = "Versapix 100"
+short_name = "VP100"
+long_name = "Ayrton Versapix 100"
+manufacturer = "Ayrton"
+description = "VERSAPIX 100 - CREATIVE SOLUTION"
 problems = []
 
 [e4c20c1d12e5524210467cae5a764e67]
 filename = "Robe_Lighting@PATT_Driver@2022-12-01__DMX_mode_revision.gdtf"
-saved_on = "2024-02-09T23:22:22.736441445Z"
+saved_on = "2024-02-10T09:48:32.851381224Z"
 comment = ""
 data_version = "1.2"
+name = "PATT Driver"
+short_name = "PATT Driver"
+long_name = "PATT Driver"
+manufacturer = "Robe Lighting"
+description = "PATT Driver – a power and data box specifically designed for pixlePATT, PATT 2017 and onePATT family of products."
 problems = []
 
 [e51f123fe34902379a89fef79715ea7a]
 filename = "Robe_Lighting@Robin_Painte@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:23.918639565Z"
+saved_on = "2024-02-10T09:48:34.019143382Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Painte"
+short_name = "Painte"
+long_name = "ROBIN Painte™"
+manufacturer = "Robe Lighting"
+description = "PAINTE™ delivers the perfect compact, quiet, quality profile solution for short to medium throw scenarios in theatrical, television, installation, live or corporate settings to create your masterpiece!"
 problems = []
 
 [e78a5d2c31d78847883062e7ba026654]
 filename = "Robe_Lighting@Robin_iParFect_150_FW_RGBW@2022-11-23__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:25.110782924Z"
+saved_on = "2024-02-10T09:48:35.214782136Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iParFect 150 FW RGBW"
+short_name = "iParFect150FWRGBW"
+long_name = "Robin iParFect 150 FW RGBW"
+manufacturer = "Robe Lighting"
+description = "The all-new iParFect 150 FW RGBW is loaded with killer features. It has an exceptionally-wide zoom range, is completely silent with passive cooling and with an IP 65 rating, is ideal for television, theatres, concert halls and any kind of outdoor events."
 problems = []
 
 [e7c623d30a1dccf68440fa2e1b3b9872]
 filename = "Ayrton@WildSun_500S@V1.4_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:22.311111137Z"
+saved_on = "2024-02-10T09:48:32.423379158Z"
 comment = ""
 data_version = "1.2"
+name = "WildSun 500S"
+short_name = "WS500S"
+long_name = "Ayrton WildSun 500S"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [e81192a42ce879d51695d20c94332289]
 filename = "Robe_Lighting@Robin_SilverScan@2022-12-08__DMX_channels_geometry_revision.gdtf"
-saved_on = "2024-02-09T23:22:22.728854641Z"
+saved_on = "2024-02-10T09:48:32.843733749Z"
 comment = ""
 data_version = "1.2"
+name = "Robin SilverScan"
+short_name = "SilverScan"
+long_name = "Robin SilverScan™"
+manufacturer = "Robe Lighting"
+description = "With super-fast mirror movement, the bright and colorful SilverScan utilizes all the massive improvements technology has made and brings it back to its roots."
 problems = []
 
 [e9017250b1ca944a4b144f6376a7186f]
 filename = "Ayrton@MagicDot_R@V2.2_3D_Low.gdtf"
-saved_on = "2024-02-09T23:22:28.213849527Z"
+saved_on = "2024-02-10T09:48:38.379557925Z"
 comment = ""
 data_version = "1.2"
+name = "MagicDot R"
+short_name = "MDR"
+long_name = "Ayrton MagicDot R"
+manufacturer = "Ayrton"
+description = "MAGIDOT-R CREATIVE SOLUTION"
 problems = []
 
 [eb183adacf27b2848cdf72030f9b78d1]
 filename = "Robe_Lighting@Robin_Tetra1@2022-12-05__DMX_channel_geometry_revision.gdtf"
-saved_on = "2024-02-09T23:22:28.210101001Z"
+saved_on = "2024-02-10T09:48:38.375702759Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Tetra1"
+short_name = "Tetra1"
+long_name = "Robin Tetra1"
+manufacturer = "Robe Lighting"
+description = "TETRA1 (TETRAgnatha) is a Linear bar building on the Spiider and Tarrantula technology."
 problems = []
 
 [eb670a8eaf068c8d7cbc1b57a5abfa8]
 filename = "Robe_Lighting@Robin_Cuete@2023-01-11__Gobo2PosRotate_physical_values_revision.gdtf"
-saved_on = "2024-02-09T23:22:30.124643461Z"
+saved_on = "2024-02-10T09:48:40.109058953Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Cuete"
+short_name = "CUETE"
+long_name = "Robin Cuete"
+manufacturer = "Robe Lighting"
+description = """
+CUETE™ by name, cute by nature, this spot delivers the perfect compact, quality solution for smaller performance spaces or installations.
+Delivering outstandingly fast pan and tilt movement, so beloved by EDM, DJ’s and clubs, with dynamic effects, projections, and enhanced by its superior CMY colour
+mixing system, CUETE™ punches way above its weight, with an impressive 4.200 lumens of sparkling, clear, white light.
+"""
 problems = []
 
 [ed0eac15586dbe932bff0fedbeee27af]
 filename = "Robe_Lighting@Robin_iPointe@2022-11-16__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:26.054570361Z"
+saved_on = "2024-02-10T09:48:36.199599293Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iPointe"
+short_name = "iPointe"
+long_name = "Robin iPointe"
+manufacturer = "Robe Lighting"
+description = "Robe’s brand new IP65 rated iPointe combines innovative ingress protection with the spectacular effect features of the MegaPointe - the best product on the market in its category. "
 problems = []
 
 [f2d3829f41f415a0ab7fe3265800a664]
 filename = "Robe_Lighting@Robin_DL4X_Spot@2022-11-21__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:27.018054228Z"
+saved_on = "2024-02-10T09:48:37.155132848Z"
 comment = ""
 data_version = "1.2"
+name = "Robin DL4X Spot"
+short_name = "DL4X Spot"
+long_name = "Robin DL4X Spot"
+manufacturer = "Robe Lighting"
+description = """
+With real color measurements.
+Without real world physical behavior values.
+
+Improved, brighter version of the ROBE RGBW LED module allows the DL4X Spot fixture to utilize the specifically modified colour mixing and dimming for extra smooth, stepless operation especially at minimum brightness levels while giving colour outputs brighter than a 1200 Watt discharge unit, but with an average very eco-friendly power consumption of only 250 Watts."""
 problems = []
 
 [f2e3b75662f8a073fe0d7adfed931ed3]
 filename = "Ayrton@Mistral@V2.13_-_Soft_V2XX_-_CTOPrism.gdtf"
-saved_on = "2024-02-09T23:22:22.801819735Z"
+saved_on = "2024-02-10T09:48:32.900938357Z"
 comment = ""
 data_version = "1.1"
+name = "Mistral"
+short_name = "Mistral"
+long_name = "Mistral"
+manufacturer = "Ayrton"
+description = "Classical 3 Series - GDTF in progress"
 problems = []
 
 [f55d3853896f43e6b2358fc242186b41]
 filename = "Ayrton@WildBeam_R@V1.4_AddPicture.gdtf"
-saved_on = "2024-02-09T23:22:25.929743010Z"
+saved_on = "2024-02-10T09:48:36.071672455Z"
 comment = ""
 data_version = "1.2"
+name = "WildBeam R"
+short_name = "WBR"
+long_name = "Ayrton WildBeam R"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [f89184862204f02971972fff3eefb50f]
 filename = "Ayrton@Zonda_3_FX@V1.12_BackDimmer0.gdtf"
-saved_on = "2024-02-09T23:22:26.141632907Z"
+saved_on = "2024-02-10T09:48:36.286535654Z"
 comment = ""
 data_version = "1.2"
+name = "Zonda 3 FX"
+short_name = "ZFX3"
+long_name = "Zonda 3 FX"
+manufacturer = "Ayrton"
+description = ""
 problems = []
 
 [f9075f03262dc09b2cd5d23d28c93d46]
 filename = "Robe_Lighting@Robin_ParFect_150_RGBA@2022-11-10__DMX_Input_adjustment.gdtf"
-saved_on = "2024-02-09T23:22:27.700158674Z"
+saved_on = "2024-02-10T09:48:37.851462307Z"
 comment = ""
 data_version = "1.2"
+name = "Robin ParFect 150 RGBA"
+short_name = "ParFect150RGBA"
+long_name = "Robin ParFect 150 RGBA"
+manufacturer = "Robe Lighting"
+description = "An LED source ACL beam at an affordable price made in Europe, now with zoom included."
 problems = []
 
 [f973adba728111ab75df337d121e6017]
 filename = "Robe_Lighting@Robin_T1_Fresnel@2022-11-15__Major_update.gdtf"
-saved_on = "2024-02-09T23:22:29.783784547Z"
+saved_on = "2024-02-10T09:48:39.857793711Z"
 comment = ""
 data_version = "1.2"
+name = "Robin T1 Fresnel"
+short_name = "T1Fresnel"
+long_name = "Robin T1 Fresnel™"
+manufacturer = "Robe Lighting"
+description = "T1 Fresnel. The new ONE and only wash fixture you need for theatre, television and touring."
 problems = []
 
 [fbd01cf4d3c5916d976836e626790434]
 filename = "Robe_Lighting@Robin_Tarrantula@2022-12-05__Geometry_names_revision.gdtf"
-saved_on = "2024-02-09T23:22:28.959300724Z"
+saved_on = "2024-02-10T09:48:39.139176271Z"
 comment = ""
 data_version = "1.2"
+name = "Robin Tarrantula"
+short_name = "Tarrantula"
+long_name = "Robin Tarrantula"
+manufacturer = "Robe Lighting"
+description = "Building on the success of the LEDWash 1200 and Spiider‘s advanced technology, the all new Tarrantula is the most powerful LED beam/wash/effects fixture on the market. Now equipped with Robe's innovative lens coating technology which brings benefits such as  bright and clear lenses, no scratches or marks, higher light output and longer intervals between cleaning. "
 problems = []
 
 [fd4bd29860609228f4d52bdb9e3e6790]
 filename = "Robe_Lighting@Robin_iBar_15@2022-12-06__DMX_channel_revision.gdtf"
-saved_on = "2024-02-09T23:22:25.630687384Z"
+saved_on = "2024-02-10T09:48:35.769463368Z"
 comment = ""
 data_version = "1.2"
+name = "Robin iBar 15"
+short_name = "iBar15"
+long_name = "Robin iBar 15"
+manufacturer = "Robe Lighting"
+description = "iBar 15 is a lightweight static IP65 rated 1.000 mm linear bar which uses 15 equally spaced new generation of 30% brighter 15W RGBW multichip LEDs for enhanced 18-bit smooth colour mixing and linear dimming without RGB ’breakup’ or grey shadows."
 problems = []
