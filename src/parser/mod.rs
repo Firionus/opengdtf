@@ -10,7 +10,7 @@ pub mod yes_no;
 
 pub use self::{
     errors::Error,
-    parse::parse,
+    parse::parse_gdtf,
     problems::{HandledProblem, Problem, ProblemAt, Problems},
     validate::ValidatedGdtf,
 };

@@ -1,9 +1,11 @@
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::{gdtf::data_version::DataVersion, name::Name, yes_no::YesNoEnum};
+use crate::{
+    gdtf::data_version::DataVersion, geometries::Geometries, name::Name, yes_no::YesNoEnum,
+};
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename = "GDTF")]
 pub struct LowLevelGdtf {
     #[serde(rename = "@DataVersion")]
@@ -21,7 +23,8 @@ impl Default for LowLevelGdtf {
     }
 }
 
-#[derive(Serialize, Debug, Default)]
+#[derive(Serialize, Debug, Default, PartialEq)]
+#[serde(rename_all = "PascalCase")]
 pub struct FixtureType {
     #[serde(rename = "@Name")]
     pub name: Name,
@@ -40,4 +43,6 @@ pub struct FixtureType {
     pub ref_ft: Option<Uuid>,
     #[serde(rename = "@CanHaveChildren")]
     pub can_have_children: YesNoEnum,
+    #[serde(default)]
+    pub geometries: Geometries,
 }

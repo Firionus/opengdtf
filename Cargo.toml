@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+derivative = "2.2.0"
 derive_more = "0.99.17"
+duplicate = "1.0.0"
 pretty_assertions = "1.4.0"
 quick-xml = { version = "0.31.0", features = ["serialize"] }
 roxmltree = "0.19.0"

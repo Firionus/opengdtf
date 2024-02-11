@@ -4,6 +4,7 @@ use quick_xml::DeError;
 use zip::result::ZipError;
 
 use crate::{
+    geometries::Geometries,
     low_level_gdtf::low_level_gdtf::{FixtureType, LowLevelGdtf},
     Gdtf,
 };
@@ -20,8 +21,13 @@ pub fn serialize_gdtf(gdtf: &Gdtf) -> Result<Vec<u8>, SerializationError> {
             id: gdtf.fixture_type_id.to_owned(),
             ref_ft: gdtf.ref_ft,
             can_have_children: gdtf.can_have_children.into(),
+            geometries: Geometries::default(), // TODO
         },
     };
+    serialize_low_level_gdtf(&llgdtf)
+}
+
+pub fn serialize_low_level_gdtf(llgdtf: &LowLevelGdtf) -> Result<Vec<u8>, SerializationError> {
     let mut description: String = concat!(r#"<?xml version="1.0" encoding="UTF-8"?>"#, "\n").into();
     quick_xml::se::to_writer(&mut description, &llgdtf)?;
     // println!("{description}");

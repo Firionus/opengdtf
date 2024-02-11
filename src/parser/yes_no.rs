@@ -1,10 +1,18 @@
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 #[derive(
-    Debug, strum::Display, strum::EnumString, SerializeDisplay, DeserializeFromStr, Clone, PartialEq,
+    Debug,
+    strum::Display,
+    strum::EnumString,
+    SerializeDisplay,
+    DeserializeFromStr,
+    Clone,
+    PartialEq,
+    Default,
 )]
 pub enum YesNoEnum {
     #[strum(to_string = "Yes")]
+    #[default] // this works for CanHaveChildren attribute
     Yes,
     #[strum(to_string = "No")]
     No,
@@ -25,12 +33,5 @@ impl From<bool> for YesNoEnum {
             true => YesNoEnum::Yes,
             false => YesNoEnum::No,
         }
-    }
-}
-
-/// Default "Yes" works for CanHaveChildren attribute
-impl Default for YesNoEnum {
-    fn default() -> Self {
-        Self::Yes
     }
 }

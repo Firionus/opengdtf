@@ -19,21 +19,23 @@ pub struct ParsedGdtf {
     pub problems: Problems,
 }
 
-pub fn parse<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, Error> {
+pub fn parse_gdtf<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, Error> {
+    let low_level_parsed = parse_low_level_gdtf(reader)?;
+    Ok(validate(low_level_parsed))
+}
+
+pub fn parse_low_level_gdtf<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, Error> {
     let mut zip = zip::ZipArchive::new(reader)?;
     let mut description_file = zip
         .by_name("description.xml")
         .map_err(Error::DescriptionXmlMissing)?;
-
     let size: usize = description_file.size().try_into().unwrap_or(0);
     let mut description = String::with_capacity(size);
-
     description_file
         .read_to_string(&mut description)
         .map_err(Error::InvalidDescriptionXml)?;
-
     let low_level_parsed = parse_description(&description)?;
-    Ok(validate(low_level_parsed))
+    Ok(low_level_parsed)
 }
 
 pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::Error> {
@@ -87,6 +89,10 @@ impl ParsedGdtf {
 
         self.parse_ref_ft(fixture_type);
         self.parse_can_have_children(fixture_type);
+
+        // TODO parse Geometries, probably with a good amount of rewriting to adapt to the recursive nature
+        // in LowLevelGdtf
+        // but should be simpler than in v1
 
         // GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
         //     .parse_from(&fixture_type);

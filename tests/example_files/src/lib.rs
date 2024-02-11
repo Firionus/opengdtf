@@ -10,7 +10,7 @@ pub use duplicate_filenames::check_for_duplicate_filenames;
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse, Error, Gdtf, ValidatedGdtf};
+use opengdtf::{parse_gdtf, Error, Gdtf, ValidatedGdtf};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
@@ -99,7 +99,7 @@ pub fn opened_examples_iter() -> impl Iterator<Item = (DirEntry, File)> {
 pub fn parsed_examples_iter(
 ) -> impl Iterator<Item = (DirEntry, File, Result<ValidatedGdtf, opengdtf::Error>)> {
     opened_examples_iter().map(|(entry, file)| {
-        let parse_result = parse(&file);
+        let parse_result = parse_gdtf(&file);
         (entry, file, parse_result)
     })
 }
