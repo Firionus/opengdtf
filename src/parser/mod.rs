@@ -6,6 +6,7 @@ pub mod parse;
 mod parse_xml;
 pub mod problems;
 pub mod validate;
+pub mod yes_no;
 
 pub use self::{
     errors::Error,

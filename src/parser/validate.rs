@@ -16,6 +16,8 @@ pub fn validate(parsed: ParsedGdtf) -> ValidatedGdtf {
             manufacturer: parsed.gdtf.fixture_type.manufacturer,
             description: parsed.gdtf.fixture_type.description,
             fixture_type_id: parsed.gdtf.fixture_type.id,
+            ref_ft: parsed.gdtf.fixture_type.ref_ft,
+            can_have_children: bool::from(parsed.gdtf.fixture_type.can_have_children),
         },
         problems: parsed.problems,
     }

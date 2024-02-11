@@ -1,14 +1,14 @@
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::{gdtf::data_version::DataVersion, name::Name};
+use crate::{gdtf::data_version::DataVersion, name::Name, yes_no::YesNoEnum};
 
 #[derive(Serialize, Debug)]
 #[serde(rename = "GDTF")]
 pub struct LowLevelGdtf {
     #[serde(rename = "@DataVersion")]
     pub data_version: DataVersion,
-
+    #[serde(rename = "FixtureType")]
     pub fixture_type: FixtureType,
 }
 
@@ -35,4 +35,9 @@ pub struct FixtureType {
     pub description: String,
     #[serde(rename = "@FixtureTypeID")]
     pub id: Uuid,
+    // Not implemented: Thumbnail, ThumbnailOffsetX, ThumbnailOffsetY
+    #[serde(rename = "@RefFT")]
+    pub ref_ft: Option<Uuid>,
+    #[serde(rename = "@CanHaveChildren")]
+    pub can_have_children: YesNoEnum,
 }

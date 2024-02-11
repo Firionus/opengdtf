@@ -18,10 +18,13 @@ pub fn serialize_gdtf(gdtf: &Gdtf) -> Result<Vec<u8>, SerializationError> {
             manufacturer: gdtf.manufacturer.to_owned(),
             description: gdtf.description.to_owned(),
             id: gdtf.fixture_type_id.to_owned(),
+            ref_ft: gdtf.ref_ft,
+            can_have_children: gdtf.can_have_children.into(),
         },
     };
     let mut description: String = concat!(r#"<?xml version="1.0" encoding="UTF-8"?>"#, "\n").into();
     quick_xml::se::to_writer(&mut description, &llgdtf)?;
+    // println!("{description}");
 
     let mut out = Vec::<u8>::new();
     let buf = std::io::Cursor::new(&mut out);

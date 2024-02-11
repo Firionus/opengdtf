@@ -1,10 +1,11 @@
 use std::io::{Read, Seek};
 
 use roxmltree::Node;
+use uuid::Uuid;
 
 use crate::{
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf, problems::ProblemsMut, validate::validate, Error,
-    ValidatedGdtf,
+    low_level_gdtf::low_level_gdtf::LowLevelGdtf, problems::ProblemsMut, validate::validate,
+    yes_no::YesNoEnum, Error, ValidatedGdtf,
 };
 
 use super::{
@@ -84,13 +85,42 @@ impl ParsedGdtf {
             .parse_required_attribute("FixtureTypeID")
             .assign_or_handle(&mut self.gdtf.fixture_type.id, &mut self.problems);
 
-        // self.parse_ref_ft(fixture_type);
-        // self.parse_can_have_children(fixture_type);
+        self.parse_ref_ft(fixture_type);
+        self.parse_can_have_children(fixture_type);
 
         // GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
         //     .parse_from(&fixture_type);
 
         // self.parse_dmx_modes(fixture_type);
+    }
+
+    /// Parse RefFT attribute
+    ///
+    /// Even though the DIN requires this attribute, both a missing RefFT
+    /// attribute or an empty string (used by GDTF Builder) are parsed to `None`
+    /// without raising a Problem. Only invalid UUIDs cause a Problem. This
+    /// behavior is useful since both semantically and in practice this
+    /// attribute is often absent.
+    fn parse_ref_ft(&mut self, fixture_type: Node) {
+        self.gdtf.fixture_type.ref_ft = match fixture_type
+            .map_parse_attribute::<Uuid, _>("RefFT", |opt| opt.filter(|s| !s.is_empty()))
+        {
+            Some(Ok(v)) => Some(v),
+            Some(Err(p)) => {
+                p.handled_by("setting ref_ft to None", self);
+                None
+            }
+            None => None,
+        };
+    }
+
+    fn parse_can_have_children(&mut self, fixture_type: Node) {
+        if let Some(result) = fixture_type.parse_attribute::<YesNoEnum>("CanHaveChildren") {
+            result.assign_or_handle(
+                &mut self.gdtf.fixture_type.can_have_children,
+                &mut self.problems,
+            )
+        }
     }
 }
 

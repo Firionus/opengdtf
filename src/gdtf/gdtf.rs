@@ -16,4 +16,7 @@ pub struct Gdtf {
     pub description: String,
 
     pub fixture_type_id: Uuid,
+    // Not implemented: Thumbnail, ThumbnailOffsetX, ThumbnailOffsetY
+    pub ref_ft: Option<Uuid>,
+    pub can_have_children: bool,
 }
