@@ -1,3 +1,4 @@
+//! TODO we could probably use the GDTF Share API to make the example file stuff more easy to set up for new contributors
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::{

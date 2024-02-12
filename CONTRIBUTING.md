@@ -1,6 +1,19 @@
 :construction: This file for contributors is a work in progress. If you can't find something here you want to know, do
 not hesitate even a second to open an issue: https://github.com/Firionus/opengdtf/issues/new :relaxed:
 
+## Architecture
+
+```mermaid
+flowchart LR
+  file[GDTF file] --parse--> low_level --validate--> high_level;
+  high_level --serialize--> low_level --serde--> file;
+  high_level <--API--> user;
+```
+
+A GDTF file is first parsed into a low level form which closely resembles a GDTF file, such that GDTF can also be serialized from it easily with quick-xml and serde. In this first parsing step, only *local* validation is applied, i.e. each field or element itself is validated, but not the conatainer (e.g. uniqueness of names) or the links between elements.  
+In a second step, a high level representation is built from the low level one, piece-by-piece with fully validating APIs.  
+To go the other way, a low level form is first created by hand-written code and then serialized with quick-xml and serde. The parser is hand-written based on roxmltree to enable more fine-grained error handling compared to serde. 
+
 ## Example File Tests
 
 ### Setup

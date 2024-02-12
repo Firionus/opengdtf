@@ -23,3 +23,15 @@ intermediate struct.
 - [x] Test XML serialization in new arch by doind a roundtrip after parsing
 - [x] Switch to derived serialization/deserialization on Gdtf and wrappers for expected.toml
 - [x] Write out problems or errors occuring while testing to a separate file and/or the console, this makes it easier to spot difficult examples -> added to update_expected.rs
+
+## Geometries Design
+
+- Geometries form a tree
+- References can "instantiate" a "template" in the tree, linking the template and the reference geometry
+- Geometries reference models
+- DmxModes and channels reference Geometries
+- and so on...
+- How to handle all of this referencing?
+  - I want a non-panicking API, so petgraph is out
+  - I want something rock-solid, not something with dangling references
+  - Performance is not important
