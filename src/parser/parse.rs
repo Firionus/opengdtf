@@ -1,11 +1,19 @@
-use std::io::{Read, Seek};
+use std::{
+    io::{Read, Seek},
+    num::NonZeroU8,
+};
 
 use roxmltree::Node;
 use uuid::Uuid;
 
 use crate::{
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf, problems::ProblemsMut, validate::validate,
-    yes_no::YesNoEnum, Error, ValidatedGdtf,
+    geometries::{BasicGeometry, Break, GeometryType},
+    low_level_gdtf::low_level_gdtf::LowLevelGdtf,
+    name::Name,
+    problems::{HandleProblem, ProblemsMut},
+    validate::validate,
+    yes_no::YesNoEnum,
+    Error, Problem, ValidatedGdtf,
 };
 
 use super::{
@@ -90,6 +98,13 @@ impl ParsedGdtf {
         self.parse_ref_ft(fixture_type);
         self.parse_can_have_children(fixture_type);
 
+        self.parse_geometries(fixture_type);
+
+        // fixture_type
+        //     .find_required_child("Geometries")
+        //     .ok_or_handled_by("leaving geometries empty", self)
+        //     .map(|geometries| self.parse_geometries(geometries));
+
         // TODO parse Geometries, probably with a good amount of rewriting to adapt to the recursive nature
         // in LowLevelGdtf
         // but should be simpler than in v1
@@ -128,10 +143,93 @@ impl ParsedGdtf {
             )
         }
     }
+
+    // return Option(()) only to enable early return with `?``
+    fn parse_geometries(&mut self, fixture_type: Node<'_, '_>) -> Option<()> {
+        let geometries = fixture_type
+            .find_required_child("Geometries")
+            .ok_or_handled_by("leaving geometries empty", self)?;
+        let children = parse_geometry_children(&mut self.problems, geometries);
+        self.gdtf.fixture_type.geometries.children.extend(children);
+
+        Some(())
+    }
 }
 
 impl ProblemsMut for ParsedGdtf {
     fn problems_mut(&mut self) -> &mut Problems {
         &mut self.problems
     }
+}
+
+pub(crate) fn parse_geometry_children<'a>(
+    p: &'a mut impl ProblemsMut,
+    geometry: Node<'a, 'a>,
+) -> impl Iterator<Item = GeometryType> + 'a {
+    geometry
+        .children()
+        .filter(|n| n.is_element())
+        .enumerate()
+        .filter_map(move |(i, n)| {
+            let name = n.name(i, p);
+            let model = n
+                .parse_attribute::<Name>("Model")
+                .and_then(|r| r.ok_or_handled_by("using None", p));
+
+            match n.tag_name().name() {
+                "Geometry" | "Axis" | "FilterBeam" | "FilterColor" | "FilterGobo"
+                | "FilterShaper" | "Beam" | "MediaServerLayer" | "MediaServerCamera"
+                | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
+                | "Structure" | "Support" | "Magnet" => {
+                    let children = parse_geometry_children(p, n).collect();
+                    Some(GeometryType::Geometry {
+                        basic: BasicGeometry { name, model },
+                        children,
+                    })
+                }
+                "GeometryReference" => {
+                    let breaks = parse_reference_breaks(p, n);
+                    let geometry = n
+                        .parse_required_attribute("Geometry")
+                        .ok_or_handled_by("not parsing node", p)?;
+                    Some(GeometryType::GeometryReference {
+                        basic: BasicGeometry { name, model },
+                        geometry,
+                        breaks,
+                    })
+                }
+                other_tag => {
+                    Problem::UnexpectedXmlNode(other_tag.into())
+                        .at(&n)
+                        .handled_by("ignoring node", p);
+                    None
+                }
+            }
+        })
+}
+
+fn parse_reference_breaks<'a>(
+    p: &'a mut impl ProblemsMut,
+    geometry_reference: Node<'a, 'a>,
+) -> Vec<Break> {
+    geometry_reference
+        .children()
+        .filter(|n| n.is_element())
+        .map(|n| {
+            let dmx_offset = n
+                .parse_attribute("DMXOffset")
+                .transpose()
+                .ok_or_handled_by("using default 1", p)
+                .flatten()
+                .unwrap_or_default();
+            let dmx_break = n
+                .parse_attribute("DMXBreak")
+                .and_then(|r| r.ok_or_handled_by("using default 1", p))
+                .unwrap_or(NonZeroU8::MIN);
+            Break {
+                dmx_offset,
+                dmx_break,
+            }
+        })
+        .collect()
 }

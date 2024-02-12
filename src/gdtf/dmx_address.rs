@@ -131,4 +131,9 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn assert_default() {
+        assert_eq!(DmxAddress::default(), 1.try_into().unwrap())
+    }
 }

@@ -30,7 +30,7 @@ pub fn serialize_gdtf(gdtf: &Gdtf) -> Result<Vec<u8>, SerializationError> {
 pub fn serialize_low_level_gdtf(llgdtf: &LowLevelGdtf) -> Result<Vec<u8>, SerializationError> {
     let mut description: String = concat!(r#"<?xml version="1.0" encoding="UTF-8"?>"#, "\n").into();
     quick_xml::se::to_writer(&mut description, &llgdtf)?;
-    // println!("{description}");
+    // println!("serialized with quick-xml from low level to XML:\n{description}");
 
     let mut out = Vec::<u8>::new();
     let buf = std::io::Cursor::new(&mut out);

@@ -147,9 +147,13 @@ fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> 
         // - [ ] try to replace quick-xml ser with https://lib.rs/crates/yaserde or https://lib.rs/crates/serde-xml-rust
         parsed.fixture_type.description = parsed.fixture_type.description.replace('\n', "");
 
+        // dbg!(&parsed.fixture_type.geometries.children);
+
         let serialized = serialize_low_level_gdtf(&parsed)?;
         let serialized_reader = BufReader::new(Cursor::new(serialized));
         let reparsed = parse_low_level_gdtf(serialized_reader)?;
+
+        // dbg!(&reparsed.gdtf.fixture_type.geometries.children);
 
         // dbg!(&reparsed.problems);
         assert!(
@@ -158,6 +162,13 @@ fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> 
         );
 
         assert_eq!(parsed, reparsed.gdtf);
+
+        // assert_eq!(
+        //     count_geometry_children(&parsed.fixture_type.geometries.children),
+        //     count_geometry_children(&reparsed.gdtf.fixture_type.geometries.children)
+        // );
+
+        // println!("Test Fine with {} geometries, advancing to next fixture\n=========================================================================", count_geometry_children(&reparsed.gdtf.fixture_type.geometries.children));
     }
     Ok(())
 }
