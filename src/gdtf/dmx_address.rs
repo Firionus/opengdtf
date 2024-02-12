@@ -1,12 +1,7 @@
-use std::{
-    num::{NonZeroU32, ParseIntError},
-    str::FromStr,
-};
+use std::{num::ParseIntError, str::FromStr};
 
-use derivative::Derivative;
 use duplicate::duplicate_item;
-use serde::{de::Unexpected, Serialize};
-use serde_with::{DeserializeFromStr, DisplayFromStr, SerializeDisplay};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// GDTF DMXAddress
 ///

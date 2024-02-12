@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::num::NonZeroU8;
 
 use derivative::Derivative;
 use serde::Serialize;
@@ -43,9 +43,12 @@ pub enum GeometryType {
 pub struct Break {
     #[serde(rename = "@DMXOffset")]
     dmx_offset: DmxAddress,
-    #[derivative(Default(value = "NonZeroU32::MIN"))]
+    /// The GDTF builder does not really allow one to use a DMXBreak of 0, it
+    /// always somehow changes back to 1. Also, 1 byte size is specified in the
+    /// DIN. Therefore, use NonZeroU8.
+    #[derivative(Default(value = "NonZeroU8::MIN"))]
     #[serde(rename = "@DMXBreak")]
-    dmx_break: NonZeroU32,
+    dmx_break: NonZeroU8,
 }
 
 #[cfg(test)]
@@ -73,7 +76,7 @@ mod tests {
                 model: "Yolo".try_into().unwrap(),
                 children: Vec::new(),
             }),
-            _ => (),
+            _ => unreachable!(),
         };
         // println!("{}", quick_xml::se::to_string(&gdtf).unwrap());
         assert_eq!(

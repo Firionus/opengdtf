@@ -10,7 +10,7 @@ use example_files::{
 };
 use opengdtf::{
     hash::hash_gdtf_to_string,
-    parse::{self, parse_low_level_gdtf, ParsedGdtf},
+    parse::{parse_low_level_gdtf, ParsedGdtf},
     parse_gdtf, serialize_gdtf, serialize_low_level_gdtf, ValidatedGdtf,
 };
 use pretty_assertions::assert_eq;
@@ -125,7 +125,7 @@ fn examples_roundtrip_deser_ser_deser() -> Result<(), Box<dyn Error>> {
 }
 #[test]
 fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> {
-    for (entry, file) in opened_examples_iter() {
+    for (_entry, file) in opened_examples_iter() {
         let mut parsed = match parse_low_level_gdtf(file) {
             Ok(ParsedGdtf { gdtf, .. }) => gdtf,
             Err(_) => continue,
