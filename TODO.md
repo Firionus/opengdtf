@@ -35,3 +35,6 @@ intermediate struct.
   - I want a non-panicking API, so petgraph is out
   - I want something rock-solid, not something with dangling references
   - Performance is not important
+- Idea: Just use straight forwards trees with vecs of vecs
+  - Just use the gdtf keys for lookup, which mostly are strings
+- [ ] refactor module names and exports while taking care about duplicate names in low_level and high_level

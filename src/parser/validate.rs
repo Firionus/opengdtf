@@ -7,18 +7,19 @@ pub struct ValidatedGdtf {
 }
 
 pub fn validate(parsed: ParsedGdtf) -> ValidatedGdtf {
+    let mut gdtf = Gdtf::default();
+    gdtf.data_version = parsed.gdtf.data_version;
+    gdtf.name = parsed.gdtf.fixture_type.name;
+    gdtf.short_name = parsed.gdtf.fixture_type.short_name;
+    gdtf.long_name = parsed.gdtf.fixture_type.long_name;
+    gdtf.manufacturer = parsed.gdtf.fixture_type.manufacturer;
+    gdtf.description = parsed.gdtf.fixture_type.description;
+    gdtf.fixture_type_id = parsed.gdtf.fixture_type.id;
+    gdtf.ref_ft = parsed.gdtf.fixture_type.ref_ft;
+    gdtf.can_have_children = bool::from(parsed.gdtf.fixture_type.can_have_children);
+    // TODO geometries
     ValidatedGdtf {
-        gdtf: Gdtf {
-            data_version: parsed.gdtf.data_version,
-            name: parsed.gdtf.fixture_type.name,
-            short_name: parsed.gdtf.fixture_type.short_name,
-            long_name: parsed.gdtf.fixture_type.long_name,
-            manufacturer: parsed.gdtf.fixture_type.manufacturer,
-            description: parsed.gdtf.fixture_type.description,
-            fixture_type_id: parsed.gdtf.fixture_type.id,
-            ref_ft: parsed.gdtf.fixture_type.ref_ft,
-            can_have_children: bool::from(parsed.gdtf.fixture_type.can_have_children),
-        },
+        gdtf,
         problems: parsed.problems,
     }
 }

@@ -14,6 +14,8 @@ A GDTF file is first parsed into a low level form which closely resembles a GDTF
 In a second step, a high level representation is built from the low level one, piece-by-piece with fully validating APIs.  
 To go the other way, a low level form is first created by hand-written code and then serialized with quick-xml and serde. The parser is hand-written based on roxmltree to enable more fine-grained error handling compared to serde. 
 
+The layered architecture results in more scattered and repeating code but was chosen because a previous version combined parsing and validation in one step which resulted in very long, less readable code. Trying to do everything in one step while scattering parsing, validation and domain logic all over the place is known as shotgun parsing, an anti-pattern. 
+
 ## Example File Tests
 
 ### Setup
