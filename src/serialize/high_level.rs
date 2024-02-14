@@ -3,23 +3,22 @@ use crate::{
     Gdtf, SerializationError,
 };
 
-use super::low_level;
-
-// TODO turn into impl on &Gdtf?
-pub fn serialize(gdtf: &Gdtf) -> Result<Vec<u8>, SerializationError> {
-    let llgdtf = LowLevelGdtf {
-        data_version: gdtf.data_version.to_owned(),
-        fixture_type: FixtureType {
-            name: gdtf.name.to_owned(),
-            short_name: gdtf.short_name.to_owned(),
-            long_name: gdtf.long_name.to_owned(),
-            manufacturer: gdtf.manufacturer.to_owned(),
-            description: gdtf.description.to_owned(),
-            id: gdtf.fixture_type_id.to_owned(),
-            ref_ft: gdtf.ref_ft,
-            can_have_children: gdtf.can_have_children.into(),
-            geometries: Geometries::default(), // TODO
-        },
-    };
-    low_level::serialize(&llgdtf)
+impl Gdtf {
+    pub fn serialize(&self) -> Result<Vec<u8>, SerializationError> {
+        let llgdtf = LowLevelGdtf {
+            data_version: self.data_version.to_owned(),
+            fixture_type: FixtureType {
+                name: self.name.to_owned(),
+                short_name: self.short_name.to_owned(),
+                long_name: self.long_name.to_owned(),
+                manufacturer: self.manufacturer.to_owned(),
+                description: self.description.to_owned(),
+                id: self.fixture_type_id.to_owned(),
+                ref_ft: self.ref_ft,
+                can_have_children: self.can_have_children.into(),
+                geometries: Geometries::default(), // TODO
+            },
+        };
+        llgdtf.serialize()
+    }
 }

@@ -88,18 +88,6 @@ impl ParsedGdtf {
 
         self.parse_geometries(fixture_type);
 
-        // fixture_type
-        //     .find_required_child("Geometries")
-        //     .ok_or_handled_by("leaving geometries empty", self)
-        //     .map(|geometries| self.parse_geometries(geometries));
-
-        // TODO parse Geometries, probably with a good amount of rewriting to adapt to the recursive nature
-        // in LowLevelGdtf
-        // but should be simpler than in v1
-
-        // GeometriesParser::new(&mut self.gdtf.geometries, &mut self.problems)
-        //     .parse_from(&fixture_type);
-
         // self.parse_dmx_modes(fixture_type);
     }
 
