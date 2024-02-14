@@ -4,13 +4,13 @@ use std::{
     io::{BufReader, Cursor},
 };
 
-use opengdtf::parse::low_level::{parse_low_level_gdtf, ParsedGdtf};
+use opengdtf::parse::low_level::ParsedGdtf;
 
 use example_files::{
     check_for_duplicate_filenames, opened_examples_iter, parse_expected_toml, parsed_examples_iter,
     OutputEnum,
 };
-use opengdtf::{hash::hash_gdtf_to_string, parse_gdtf, ValidatedGdtf};
+use opengdtf::{hash::hash_gdtf_to_string, ValidatedGdtf};
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -87,7 +87,7 @@ fn expected_toml_matches_examples_output() {
 fn examples_roundtrip_deser_ser_deser() -> Result<(), Box<dyn Error>> {
     for (_entry, _file, parsed_result) in parsed_examples_iter() {
         let mut parsed = match parsed_result {
-            Ok(ValidatedGdtf { gdtf, .. }) => gdtf,
+            Ok(v) => v.gdtf().clone(),
             Err(_) => continue,
         };
 
@@ -109,22 +109,22 @@ fn examples_roundtrip_deser_ser_deser() -> Result<(), Box<dyn Error>> {
 
         let serialized = parsed.serialize()?;
         let serialized_reader = BufReader::new(Cursor::new(serialized));
-        let reparsed = parse_gdtf(serialized_reader)?;
+        let reparsed = ValidatedGdtf::from_reader(serialized_reader)?;
 
         // dbg!(&reparsed.problems);
         assert!(
-            reparsed.problems.is_empty(),
+            reparsed.problems().is_empty(),
             "our serialization should not result in problems when parsed again"
         );
 
-        assert_eq!(parsed, reparsed.gdtf);
+        assert_eq!(&parsed, reparsed.gdtf());
     }
     Ok(())
 }
 #[test]
 fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> {
     for (_entry, file) in opened_examples_iter() {
-        let mut parsed = match parse_low_level_gdtf(file) {
+        let mut parsed = match ParsedGdtf::from_reader(file) {
             Ok(ParsedGdtf { gdtf, .. }) => gdtf,
             Err(_) => continue,
         };
@@ -149,7 +149,7 @@ fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> 
 
         let serialized = parsed.serialize()?;
         let serialized_reader = BufReader::new(Cursor::new(serialized));
-        let reparsed = parse_low_level_gdtf(serialized_reader)?;
+        let reparsed = ParsedGdtf::from_reader(serialized_reader)?;
 
         // dbg!(&reparsed.gdtf.fixture_type.geometries.children);
 

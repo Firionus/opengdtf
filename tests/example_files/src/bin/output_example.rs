@@ -1,7 +1,7 @@
 use std::{env, fs::File, io::Write};
 
 use example_files::{EXAMPLES_DIR, OUTPUTS_DIR};
-use opengdtf::parse_gdtf;
+use opengdtf::ValidatedGdtf;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,7 +12,7 @@ fn main() {
     let path = EXAMPLES_DIR.to_owned().join(&args[1]);
     println!("parsing {:?}", &path);
     let file = File::open(path).unwrap();
-    let parse_result = parse_gdtf(&file);
+    let parse_result = ValidatedGdtf::from_reader(&file);
     let outpath = OUTPUTS_DIR.to_owned().join(&args[1]);
     println!("writing output to {outpath:?}");
     let mut output_file = File::create(outpath).unwrap();

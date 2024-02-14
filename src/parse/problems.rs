@@ -141,9 +141,6 @@ impl ProblemAt {
     }
 }
 
-// TODO are all traits below exported to the outside user at top module level? That's not the goal...
-// TODO just check all exported API in docs...
-
 /// Implementors can provide a mutable reference to a Problems vector.
 ///
 /// This shortens error handling code that must push onto the problem vector,

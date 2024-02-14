@@ -9,7 +9,7 @@ use crate::{
 
 use super::data_version::DataVersion;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Derivative)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Derivative, Clone)]
 #[derivative(Default)]
 pub struct Gdtf {
     #[derivative(Default(value = "DataVersion::V1_2"))]

@@ -19,19 +19,20 @@ pub struct ParsedGdtf {
     pub problems: Problems,
 }
 
-// TODO impl for ParsedGdtf? Like ParsedGdtf::parse? Or does that intersect with an std trait?
-pub fn parse_low_level_gdtf<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, GdtfParseError> {
-    let mut zip = zip::ZipArchive::new(reader)?;
-    let mut description_file = zip
-        .by_name("description.xml")
-        .map_err(GdtfParseError::DescriptionXmlMissing)?;
-    let size: usize = description_file.size().try_into().unwrap_or(0);
-    let mut description = String::with_capacity(size);
-    description_file
-        .read_to_string(&mut description)
-        .map_err(GdtfParseError::InvalidDescriptionXml)?;
-    let low_level_parsed = parse_description(&description)?;
-    Ok(low_level_parsed)
+impl ParsedGdtf {
+    pub fn from_reader<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, GdtfParseError> {
+        let mut zip = zip::ZipArchive::new(reader)?;
+        let mut description_file = zip
+            .by_name("description.xml")
+            .map_err(GdtfParseError::DescriptionXmlMissing)?;
+        let size: usize = description_file.size().try_into().unwrap_or(0);
+        let mut description = String::with_capacity(size);
+        description_file
+            .read_to_string(&mut description)
+            .map_err(GdtfParseError::InvalidDescriptionXml)?;
+        let low_level_parsed = parse_description(&description)?;
+        Ok(low_level_parsed)
+    }
 }
 
 pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::GdtfParseError> {

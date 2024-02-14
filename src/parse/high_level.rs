@@ -1,19 +1,23 @@
 use std::io::{Read, Seek};
 
+use getset::Getters;
+
 use crate::{Gdtf, GdtfParseError, Problems};
 
-use super::low_level::{parse_low_level_gdtf, ParsedGdtf};
+use super::low_level::ParsedGdtf;
 
-// TODO turn into impl on ValidatedGdtf?
-pub fn parse_gdtf<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, GdtfParseError> {
-    let low_level_parsed = parse_low_level_gdtf(reader)?;
-    Ok(validate(low_level_parsed))
+#[derive(Debug, Getters)]
+#[getset(get = "pub")]
+pub struct ValidatedGdtf {
+    gdtf: Gdtf,
+    problems: Problems,
 }
 
-#[derive(Debug)]
-pub struct ValidatedGdtf {
-    pub gdtf: Gdtf,
-    pub problems: Problems,
+impl ValidatedGdtf {
+    pub fn from_reader<T: Read + Seek>(reader: T) -> Result<Self, GdtfParseError> {
+        let low_level_parsed = ParsedGdtf::from_reader(reader)?;
+        Ok(validate(low_level_parsed))
+    }
 }
 
 pub fn validate(parsed: ParsedGdtf) -> ValidatedGdtf {

@@ -11,7 +11,7 @@ pub use duplicate_filenames::check_for_duplicate_filenames;
 
 use chrono::Utc;
 use once_cell::sync::Lazy;
-use opengdtf::{parse_gdtf, Gdtf, GdtfParseError, ValidatedGdtf};
+use opengdtf::{Gdtf, GdtfParseError, ValidatedGdtf};
 use serde::{Deserialize, Serialize};
 use walkdir::{DirEntry, WalkDir};
 
@@ -55,13 +55,10 @@ impl From<Result<ValidatedGdtf, GdtfParseError>> for OutputEnum {
     fn from(value: Result<ValidatedGdtf, GdtfParseError>) -> Self {
         match value {
             Ok(parsed) => OutputEnum::Ok(ParsedInfo {
-                gdtf: parsed.gdtf,
+                gdtf: parsed.gdtf().clone(),
                 problems: {
-                    let mut problem_strings: Vec<String> = parsed
-                        .problems
-                        .into_iter()
-                        .map(|p| format!("{p}"))
-                        .collect();
+                    let mut problem_strings: Vec<String> =
+                        parsed.problems().iter().map(|p| format!("{p}")).collect();
                     problem_strings.sort();
                     problem_strings
                 },
@@ -105,7 +102,7 @@ pub fn parsed_examples_iter() -> impl Iterator<
     ),
 > {
     opened_examples_iter().map(|(entry, file)| {
-        let parse_result = parse_gdtf(&file);
+        let parse_result = ValidatedGdtf::from_reader(&file);
         (entry, file, parse_result)
     })
 }
