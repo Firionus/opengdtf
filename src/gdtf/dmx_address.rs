@@ -28,7 +28,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 /// GDTF Builder refuses them. I'll take that as "we shouldn't allow that" and
 /// will use NonZeroU32.
 #[derive(
-    Debug, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq, derive_more::Display,
+    Debug, SerializeDisplay, DeserializeFromStr, Default, PartialEq, Eq, derive_more::Display, Clone,
 )]
 #[display(fmt = "{}", "self.get()")]
 pub struct DmxAddress(u32);

@@ -21,6 +21,7 @@ xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
 zip = "0.6.6"
 
 [dev-dependencies]
+anyhow = { version = "1.0.79", features = ["backtrace"] }
 example_files = { path = "tests/example_files"}
 
 [workspace]

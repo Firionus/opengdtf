@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{dmx_address::DmxAddress, name::Name};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Geometry {
-    name: Name,
+    pub name: Name,
     // TODO: model, position
-    t: GeometryType,
+    pub t: GeometryType,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GeometryType {
     Geometry {
         children: Vec<Geometry>,
@@ -30,4 +30,38 @@ pub enum GeometryType {
         /// this DMX offset.
         offsets: HashMap<NonZeroU8, DmxAddress>,
     },
+}
+
+pub fn find_geometry<'a>(collection: &'a [Geometry], name: &Name) -> Option<&'a Geometry> {
+    for g in collection.iter() {
+        if &g.name == name {
+            return Some(g);
+        }
+        match &g.t {
+            GeometryType::Geometry { children } => match find_geometry(children, name) {
+                Some(c) => return Some(c),
+                None => continue,
+            },
+            GeometryType::GeometryReference { .. } => continue,
+        }
+    }
+    None
+}
+pub fn find_geometry_mut<'a>(
+    collection: &'a mut [Geometry],
+    name: &Name,
+) -> Option<&'a mut Geometry> {
+    for g in collection.iter_mut() {
+        if &g.name == name {
+            return Some(g);
+        }
+        match &mut g.t {
+            GeometryType::Geometry { children } => match find_geometry_mut(children, name) {
+                Some(c) => return Some(c),
+                None => continue,
+            },
+            GeometryType::GeometryReference { .. } => continue,
+        }
+    }
+    None
 }

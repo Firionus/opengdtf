@@ -38,3 +38,5 @@ intermediate struct.
 - Idea: Just use straight forwards trees with vecs of vecs
   - Just use the gdtf keys for lookup, which mostly are strings
 - [ ] refactor module names and exports while taking care about duplicate names in low_level and high_level
+- [ ] review when we parse things to Name type, whether we can just use the "fixed version" instead of a default or other less good error handling
+- [ ] remove all unwrap from tests and replace with anyhow::Result return type and question mark, so much shorter
