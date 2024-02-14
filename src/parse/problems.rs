@@ -3,7 +3,7 @@
 
 use roxmltree::{Node, TextPos};
 
-use crate::name::Name;
+use crate::Name;
 
 pub type Problems = Vec<HandledProblem>;
 
@@ -140,6 +140,9 @@ impl ProblemAt {
         &self.p
     }
 }
+
+// TODO are all traits below exported to the outside user at top module level? That's not the goal...
+// TODO just check all exported API in docs...
 
 /// Implementors can provide a mutable reference to a Problems vector.
 ///

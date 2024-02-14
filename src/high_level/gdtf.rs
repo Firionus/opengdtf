@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    error::GdtfError,
-    geometry::{find_geometry, find_geometry_mut, Geometry, GeometryType},
-    name::Name,
+    high_level::geometry::{find_geometry, find_geometry_mut, Geometry, GeometryType},
+    GdtfError, Name,
 };
 
 use super::data_version::DataVersion;

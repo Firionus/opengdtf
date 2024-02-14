@@ -4,15 +4,13 @@ use std::{
     io::{BufReader, Cursor},
 };
 
+use opengdtf::parse::low_level::{parse_low_level_gdtf, ParsedGdtf};
+
 use example_files::{
     check_for_duplicate_filenames, opened_examples_iter, parse_expected_toml, parsed_examples_iter,
     OutputEnum,
 };
-use opengdtf::{
-    hash::hash_gdtf_to_string,
-    parse::{parse_low_level_gdtf, ParsedGdtf},
-    parse_gdtf, serialize_gdtf, serialize_low_level_gdtf, ValidatedGdtf,
-};
+use opengdtf::{hash::hash_gdtf_to_string, parse_gdtf, serialize, ValidatedGdtf};
 use pretty_assertions::assert_eq;
 
 #[test]
@@ -109,7 +107,7 @@ fn examples_roundtrip_deser_ser_deser() -> Result<(), Box<dyn Error>> {
         // - [ ] try to replace quick-xml ser with https://lib.rs/crates/yaserde or https://lib.rs/crates/serde-xml-rust
         parsed.description = parsed.description.replace('\n', "");
 
-        let serialized = serialize_gdtf(&parsed)?;
+        let serialized = serialize(&parsed)?;
         let serialized_reader = BufReader::new(Cursor::new(serialized));
         let reparsed = parse_gdtf(serialized_reader)?;
 
@@ -149,7 +147,7 @@ fn examples_roundtrip_low_level_deser_ser_deser() -> Result<(), Box<dyn Error>> 
 
         // dbg!(&parsed.fixture_type.geometries.children);
 
-        let serialized = serialize_low_level_gdtf(&parsed)?;
+        let serialized = serialize::low_level::serialize(&parsed)?;
         let serialized_reader = BufReader::new(Cursor::new(serialized));
         let reparsed = parse_low_level_gdtf(serialized_reader)?;
 

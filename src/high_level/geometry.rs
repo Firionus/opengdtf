@@ -2,7 +2,7 @@ use std::{collections::HashMap, num::NonZeroU8};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{dmx_address::DmxAddress, name::Name};
+use crate::{DmxAddress, Name};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Geometry {

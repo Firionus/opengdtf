@@ -3,7 +3,7 @@ use std::num::NonZeroU8;
 use derivative::Derivative;
 use serde::Serialize;
 
-use crate::{dmx_address::DmxAddress, name::Name};
+use crate::{DmxAddress, Name};
 
 #[derive(Serialize, Debug, Default, PartialEq)]
 pub struct Geometries {
@@ -64,7 +64,7 @@ pub fn count_geometry_children(children: &[GeometryType]) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{low_level_gdtf::low_level_gdtf::LowLevelGdtf, parse::parse_geometry_children};
+    use crate::{low_level::gdtf::LowLevelGdtf, parse::low_level::parse_geometry_children};
     use pretty_assertions::assert_eq;
 
     use super::*;

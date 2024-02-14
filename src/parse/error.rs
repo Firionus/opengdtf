@@ -5,7 +5,7 @@ use zip::result::ZipError;
 
 /// An unrecoverable GDTF Parsing Error.
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum GdtfParseError {
     #[error("invalid XML: {0}")]
     InvalidXml(#[from] roxmltree::Error),
     #[error("root node 'GDTF' not found")]

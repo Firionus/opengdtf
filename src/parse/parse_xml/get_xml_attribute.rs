@@ -5,9 +5,8 @@ use std::str::FromStr;
 use roxmltree::Node;
 
 use crate::{
-    name::Name,
-    parser::problems::{HandleProblem, ProblemsMut},
-    Problem, ProblemAt, Problems,
+    parse::problems::{HandleProblem, ProblemsMut},
+    Name, Problem, ProblemAt, Problems,
 };
 
 pub(crate) trait GetXmlAttribute<'a> {
@@ -146,7 +145,7 @@ impl<'a> GetXmlAttribute<'a> for Node<'_, '_> {
     }
 }
 
-pub(crate) fn parse_attribute_content<T: FromStr>(
+fn parse_attribute_content<T: FromStr>(
     node: &Node,
     content: &str,
     attr: &str,
@@ -184,7 +183,7 @@ fn parse_name_or_fix(node: &Node, name: &str, problems: &mut impl ProblemsMut) -
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::problems::HandleProblem;
+    use crate::parse::problems::HandleProblem;
 
     use super::*;
 

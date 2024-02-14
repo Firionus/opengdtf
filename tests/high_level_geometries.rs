@@ -1,10 +1,6 @@
 use std::{collections::HashMap, num::NonZeroU8};
 
-use opengdtf::{
-    dmx_address::DmxAddress,
-    geometry::{Geometry, GeometryType},
-    Gdtf,
-};
+use opengdtf::{DmxAddress, Gdtf, Geometry, GeometryType};
 
 #[test]
 fn add_geometries() -> anyhow::Result<()> {

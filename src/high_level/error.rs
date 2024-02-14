@@ -1,6 +1,6 @@
 use std::num::NonZeroU8;
 
-use crate::name::Name;
+use crate::Name;
 
 /// Errors in high level GDTF.
 #[derive(thiserror::Error, Debug)]

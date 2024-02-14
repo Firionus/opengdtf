@@ -7,18 +7,10 @@ use roxmltree::Node;
 use uuid::Uuid;
 
 use crate::{
-    geometries::{BasicGeometry, Break, GeometryType},
-    low_level_gdtf::low_level_gdtf::LowLevelGdtf,
-    name::Name,
-    problems::{HandleProblem, ProblemsMut},
-    validate::validate,
+    low_level::{BasicGeometry, Break, GeometryType, LowLevelGdtf},
+    parse_xml::{AssignOrHandle, GetXmlAttribute, GetXmlNode},
     yes_no::YesNoEnum,
-    Error, Problem, ValidatedGdtf,
-};
-
-use super::{
-    parse_xml::{get_xml_node::GetXmlNode, AssignOrHandle, GetXmlAttribute},
-    problems::Problems,
+    GdtfParseError, HandleProblem, Name, Problem, Problems, ProblemsMut,
 };
 
 #[derive(Debug, Default)]
@@ -27,31 +19,27 @@ pub struct ParsedGdtf {
     pub problems: Problems,
 }
 
-pub fn parse_gdtf<T: Read + Seek>(reader: T) -> Result<ValidatedGdtf, Error> {
-    let low_level_parsed = parse_low_level_gdtf(reader)?;
-    Ok(validate(low_level_parsed))
-}
-
-pub fn parse_low_level_gdtf<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, Error> {
+// TODO impl for ParsedGdtf? Like ParsedGdtf::parse? Or does that intersect with an std trait?
+pub fn parse_low_level_gdtf<T: Read + Seek>(reader: T) -> Result<ParsedGdtf, GdtfParseError> {
     let mut zip = zip::ZipArchive::new(reader)?;
     let mut description_file = zip
         .by_name("description.xml")
-        .map_err(Error::DescriptionXmlMissing)?;
+        .map_err(GdtfParseError::DescriptionXmlMissing)?;
     let size: usize = description_file.size().try_into().unwrap_or(0);
     let mut description = String::with_capacity(size);
     description_file
         .read_to_string(&mut description)
-        .map_err(Error::InvalidDescriptionXml)?;
+        .map_err(GdtfParseError::InvalidDescriptionXml)?;
     let low_level_parsed = parse_description(&description)?;
     Ok(low_level_parsed)
 }
 
-pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::Error> {
+pub fn parse_description(description: &str) -> Result<ParsedGdtf, super::GdtfParseError> {
     let doc = roxmltree::Document::parse(description)?;
     let gdtf = doc
         .descendants()
         .find(|n| n.has_tag_name("GDTF"))
-        .ok_or(super::Error::NoRootNode)?;
+        .ok_or(super::GdtfParseError::NoRootNode)?;
 
     let mut parsed = ParsedGdtf::default();
     parsed.parse_gdtf_root(gdtf);

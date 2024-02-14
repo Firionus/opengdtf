@@ -1,10 +1,9 @@
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::{
-    gdtf::data_version::DataVersion, geometries::Geometries, name::Name, yes_no::YesNoEnum,
-};
+use crate::{low_level, yes_no::YesNoEnum, DataVersion, Name};
 
+// TODO rename to Gdtf, being differentiated by different import and can be referred to as low_level::Gdtf?
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename = "GDTF")]
 pub struct LowLevelGdtf {
@@ -44,5 +43,5 @@ pub struct FixtureType {
     #[serde(rename = "@CanHaveChildren")]
     pub can_have_children: YesNoEnum,
     #[serde(default)]
-    pub geometries: Geometries,
+    pub geometries: low_level::Geometries,
 }
