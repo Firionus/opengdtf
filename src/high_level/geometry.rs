@@ -23,8 +23,8 @@ pub enum GeometryType {
         /// Used when a DMX channel of the referenced geometry specifies
         /// "Overwrite" as its DMX Break.
         ///
-        /// Needs to be a valid key into offsets.
-        default_break: NonZeroU8,
+        /// Break can also exist in offsets with a different DmxAddress.
+        overwrite: (NonZeroU8, DmxAddress),
         /// Maps DMX break to a corresponding DMX offset. Channels of the
         /// referenced geometry are instantiated at their DMX address added to
         /// this DMX offset.

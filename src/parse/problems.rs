@@ -3,7 +3,7 @@
 
 use roxmltree::{Node, TextPos};
 
-use crate::Name;
+use crate::{Gdtf, GdtfError, Name};
 
 pub type Problems = Vec<HandledProblem>;
 
@@ -24,10 +24,18 @@ pub struct HandledProblem {
 
 /// A recoverable problem in a GDTF file, with position information.
 #[derive(thiserror::Error, Debug)]
-#[error("{p} (line {at})")]
+#[error("{p} ({at})")]
 pub struct ProblemAt {
     p: Problem,
-    at: TextPos,
+    at: ProblemPosition,
+}
+
+#[derive(Debug, derive_more::Display)]
+pub enum ProblemPosition {
+    #[display(fmt = "line {_0}")]
+    XmlNode(TextPos),
+    #[display(fmt = "at {_0}")]
+    Custom(String),
 }
 
 /// A recoverable kind of problem in a GDTF file.
@@ -101,6 +109,10 @@ pub enum Problem {
         ch: Name,
         mode: Name,
     },
+    #[error("error in high-level Gdtf: {0}")]
+    GdtfError(GdtfError),
+    #[error("A GeometryReference must have at least one Break child")]
+    MissingBreakOffset(),
     // #[error("Gdtf domain error: {0}")]
     // GdtfError(#[from] GdtfError),
     // #[error("invalid channel offsets: {0}")]
@@ -117,7 +129,14 @@ impl Problem {
     pub(crate) fn at(self, node: &Node) -> ProblemAt {
         ProblemAt {
             p: self,
-            at: node.document().text_pos_at(node.range().start),
+            at: ProblemPosition::XmlNode(node.document().text_pos_at(node.range().start)),
+        }
+    }
+
+    pub(crate) fn at_custom(self, at: impl Into<String>) -> ProblemAt {
+        ProblemAt {
+            p: self,
+            at: ProblemPosition::Custom(at.into()),
         }
     }
 }
@@ -202,6 +221,16 @@ impl<T, E: Into<Box<dyn std::error::Error>>> TransformUnexpected<T, E> for Resul
     }
 }
 
+pub(crate) trait PlaceGdtfError<T> {
+    fn at(self, at: impl Into<String>) -> Result<T, ProblemAt>;
+}
+
+impl<T> PlaceGdtfError<T> for Result<T, GdtfError> {
+    fn at(self, at: impl Into<String>) -> Result<T, ProblemAt> {
+        self.map_err(|e| Problem::GdtfError(e).at_custom(at.into()))
+    }
+}
+
 impl HandledProblem {
     pub fn problem(&self) -> &Problem {
         &self.p.p
@@ -229,7 +258,7 @@ mod tests {
             HandledProblem {
                 action,
                 p: ProblemAt {
-                    at,
+                    at: ProblemPosition::XmlNode(at),
                     p: Problem::UnexpectedXmlNode(..)
                 }
             } if action == "ignoring node" && at == &TextPos{row: 1, col: 1}

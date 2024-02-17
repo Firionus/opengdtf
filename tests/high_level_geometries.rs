@@ -36,15 +36,16 @@ fn add_geometries() -> anyhow::Result<()> {
         matches!(&gdtf.geometry(&geometry.name).unwrap().t, GeometryType::Geometry { children } if children[0] == child)
     );
 
-    let default_break = NonZeroU8::new(1).unwrap();
     let offset = DmxAddress::try_from(1).unwrap();
+    let default_break = NonZeroU8::new(1).unwrap();
+    let overwrite = (default_break, offset.clone());
     let mut offsets = HashMap::new();
     offsets.insert(default_break, offset);
     let reference = Geometry {
         name: "reference".try_into()?,
         t: GeometryType::GeometryReference {
             geometry: template.name.clone(),
-            default_break,
+            overwrite,
             offsets,
         },
     };

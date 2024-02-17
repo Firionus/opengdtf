@@ -11,7 +11,7 @@ pub struct Geometries {
     pub children: Vec<GeometryType>,
 }
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, Clone)]
 pub enum GeometryType {
     Geometry {
         #[serde(flatten)]
@@ -29,7 +29,7 @@ pub enum GeometryType {
     },
 }
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq, Clone)]
 pub struct BasicGeometry {
     #[serde(rename = "@Name")]
     pub name: Name,
@@ -38,7 +38,7 @@ pub struct BasicGeometry {
     // position: Matrix, // TODO
 }
 
-#[derive(Derivative, Serialize, Debug, PartialEq)]
+#[derive(Derivative, Serialize, Debug, PartialEq, Clone)]
 #[derivative(Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct Break {

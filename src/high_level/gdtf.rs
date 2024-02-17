@@ -56,7 +56,7 @@ impl Gdtf {
 
         if let GeometryType::GeometryReference {
             geometry,
-            default_break,
+            overwrite: default_break,
             offsets,
         } = &new_geometry.t
         {
@@ -65,9 +65,6 @@ impl Gdtf {
                 .ok_or(GdtfError::UnknownTopLevelGeometryName(geometry.clone()))?;
             if let GeometryType::GeometryReference { .. } = referenced.t {
                 Err(GdtfError::Unexpected(format!("There should be no top-level GeometryReference, yet there was one with name '{}'",referenced.name).into(),))?;
-            }
-            if !offsets.contains_key(default_break) {
-                Err(GdtfError::InvalidDefaulBreak(*default_break))?
             }
             // TODO validate that channels of the referencd geometry only have breaks \
             // that are in offsets (or "overwrite", in which case we use the default break)

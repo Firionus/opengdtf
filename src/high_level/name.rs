@@ -99,6 +99,12 @@ impl PartialEq<&str> for Name {
     }
 }
 
+impl From<Name> for String {
+    fn from(value: Name) -> Self {
+        value.0
+    }
+}
+
 pub(crate) trait IntoValidName {
     fn into_valid(self) -> Name;
 }
