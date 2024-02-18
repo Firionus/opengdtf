@@ -1,12 +1,12 @@
 use std::num::NonZeroU8;
 
-use crate::Name;
+use crate::{Geometry, Name};
 
 /// Errors in high level GDTF.
 #[derive(thiserror::Error, Debug)]
 pub enum GdtfError {
-    #[error("geometry name '{0}' already exists but must be unique")]
-    DuplicateGeometryName(Name),
+    #[error("geometry name '{}' already exists but must be unique", .0.name)]
+    DuplicateGeometryName(Geometry),
     #[error("geometry name '{0}' not found")]
     UnknownGeometryName(Name),
     #[error("top level geometry name '{0}' not found")]

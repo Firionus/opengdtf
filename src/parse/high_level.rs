@@ -7,8 +7,8 @@ use getset::Getters;
 
 use crate::{
     low_level::{self, BasicGeometry},
-    Gdtf, GdtfError, GdtfParseError, Geometry, GeometryType, HandleProblem, Name, PlaceGdtfError,
-    Problem, Problems, ProblemsMut,
+    Gdtf, GdtfError, GdtfParseError, Geometry, GeometryType, HandleProblem, IntoValidName, Name,
+    PlaceGdtfError, Problem, Problems, ProblemsMut,
 };
 
 use super::low_level::ParsedGdtf;
@@ -31,7 +31,7 @@ impl From<ParsedGdtf> for ValidatedGdtf {
     fn from(mut parsed: ParsedGdtf) -> Self {
         let mut gdtf = Gdtf::default();
 
-        validate_geometries(&mut parsed, &mut gdtf);
+        let rename_map = validate_geometries(&mut parsed, &mut gdtf);
 
         gdtf.data_version = parsed.gdtf.data_version;
         gdtf.name = parsed.gdtf.fixture_type.name;
@@ -50,9 +50,15 @@ impl From<ParsedGdtf> for ValidatedGdtf {
     }
 }
 
-fn validate_geometries(parsed: &mut ParsedGdtf, gdtf: &mut Gdtf) {
+/// maps (top level name, duplicate geometry name) => renamed name
+#[derive(Default)]
+pub(crate) struct GeometryLookup(HashMap<(Name, Name), Name>);
+
+fn validate_geometries(parsed: &mut ParsedGdtf, gdtf: &mut Gdtf) -> GeometryLookup {
     let input = &parsed.gdtf.fixture_type.geometries.children;
     let p = &mut parsed.problems;
+
+    let mut rename_map = GeometryLookup::default();
 
     for g in input.iter() {
         if let Some((to_add, children)) = translate_geometry(g, p) {
@@ -60,22 +66,31 @@ fn validate_geometries(parsed: &mut ParsedGdtf, gdtf: &mut Gdtf) {
             gdtf.add_top_level_geometry(to_add)
                 .at("top level geometries")
                 .ok_or_handled_by("ignoring node", p);
-            maybe_add_children_geometries(children, gdtf, &parent_name, p);
+            maybe_add_children_geometries(
+                children,
+                gdtf,
+                &parent_name,
+                &parent_name,
+                &mut rename_map,
+                p,
+            );
         }
     }
 
-    todo!("return renaming map");
+    rename_map
 }
 
 fn maybe_add_children_geometries(
     children: Option<Vec<low_level::GeometryType>>,
     gdtf: &mut Gdtf,
-    new_name: &Name,
+    parent: &Name,
+    top_level: &Name,
+    rename_map: &mut GeometryLookup,
     p: &mut impl ProblemsMut,
 ) {
     if let Some(children) = children {
         for c in children {
-            validate_child_geometry_recursively(c, gdtf, new_name, p);
+            validate_child_geometry_recursively(c, gdtf, parent, top_level, rename_map, p);
         }
     }
 }
@@ -84,21 +99,86 @@ fn validate_child_geometry_recursively(
     g: low_level::GeometryType,
     gdtf: &mut Gdtf,
     parent: &Name,
+    top_level: &Name,
+    rename_map: &mut GeometryLookup,
     p: &mut impl ProblemsMut,
 ) -> Option<()> {
     let (to_add, children) = translate_geometry(&g, p)?;
     let new_name = to_add.name.clone();
     match gdtf.add_child_geometry(parent, to_add) {
         Ok(_) => {
-            maybe_add_children_geometries(children, gdtf, &new_name, p);
+            maybe_add_children_geometries(children, gdtf, &new_name, top_level, rename_map, p);
         }
-        Err(GdtfError::DuplicateGeometryName(n)) => todo!("rename"),
+        Err(GdtfError::DuplicateGeometryName(mut g)) => {
+            // rename
+            let mut e = GdtfError::DuplicateGeometryName(g.clone());
+            let original_name = g.name.clone();
+            let name_with_top_level = format!("{} (in {top_level})", g.name).into_valid();
+            g.name = name_with_top_level.clone();
+            (g, e) = try_inserting_renamed(
+                g,
+                gdtf,
+                parent,
+                top_level,
+                &original_name,
+                rename_map,
+                p,
+                e,
+            )?;
+
+            for dedup_ind in 1..10_000 {
+                let name_with_counter =
+                    format!("{name_with_top_level} (duplicate {dedup_ind})").into_valid();
+                g.name = name_with_counter;
+                (g, e) = try_inserting_renamed(
+                    g,
+                    gdtf,
+                    parent,
+                    top_level,
+                    &original_name,
+                    rename_map,
+                    p,
+                    e,
+                )?;
+            }
+        }
         r => {
             r.at(format!("geometry '{new_name}'"))
                 .ok_or_handled_by("ignore geometry and its possible children", p);
         }
     }
     Some(())
+}
+
+/// Returning None means success, returning Some means continue working on the geometry
+fn try_inserting_renamed(
+    g: Geometry,
+    gdtf: &mut Gdtf,
+    parent: &Name,
+    top_level: &Name,
+    original_name: &Name,
+    rename_map: &mut GeometryLookup,
+    p: &mut impl ProblemsMut,
+    e: GdtfError,
+) -> Option<(Geometry, GdtfError)> {
+    let renamed = g.name.clone();
+    match gdtf.add_child_geometry(parent, g) {
+        Ok(_) => {
+            e.at("Geometries")
+                .handled_by(format!("renaming to {renamed}"), p);
+            rename_map
+                .0
+                .insert((top_level.clone(), original_name.clone()), renamed);
+            None
+        }
+        Err(GdtfError::DuplicateGeometryName(g)) => Some((g, e)),
+        Err(ue) => {
+            e.at("Geometries")
+                .handled_by("ignoring geometry because later error", p);
+            ue.at("Geometries").handled_by("ignoring geometry", p);
+            None
+        }
+    }
 }
 
 fn translate_geometry(
@@ -126,7 +206,7 @@ fn translate_geometry(
 fn translate_reference(
     basic: &BasicGeometry,
     geometry: &Name,
-    breaks: &Vec<low_level::Break>,
+    breaks: &[low_level::Break],
     p: &mut impl ProblemsMut,
 ) -> Option<Geometry> {
     let mut offsets = HashMap::new();

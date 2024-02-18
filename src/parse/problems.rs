@@ -230,6 +230,11 @@ impl<T> PlaceGdtfError<T> for Result<T, GdtfError> {
         self.map_err(|e| Problem::GdtfError(e).at_custom(at.into()))
     }
 }
+impl GdtfError {
+    pub(crate) fn at(self, at: impl Into<String>) -> ProblemAt {
+        Problem::GdtfError(self).at_custom(at.into())
+    }
+}
 
 impl HandledProblem {
     pub fn problem(&self) -> &Problem {

@@ -1,4 +1,5 @@
 use derivative::Derivative;
+use getset::Getters;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -9,7 +10,7 @@ use crate::{
 
 use super::data_version::DataVersion;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Derivative, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Derivative, Clone, Getters)]
 #[derivative(Default)]
 pub struct Gdtf {
     #[derivative(Default(value = "DataVersion::V1_2"))]
@@ -26,6 +27,7 @@ pub struct Gdtf {
     pub ref_ft: Option<Uuid>,
     pub can_have_children: bool,
 
+    #[getset(get = "pub")]
     geometries: Vec<Geometry>,
 }
 
@@ -42,7 +44,7 @@ impl Gdtf {
         if let GeometryType::GeometryReference { .. } = geometry.t {
             Err(GdtfError::TopLevelGeometryReference())?
         };
-        self.check_unique_geometry_name(&geometry.name)?;
+        let geometry = self.check_unique_geometry_name(geometry)?;
         self.geometries.push(geometry);
         Ok(())
     }
@@ -52,7 +54,7 @@ impl Gdtf {
         parent: &Name,
         new_geometry: Geometry,
     ) -> Result<(), GdtfError> {
-        self.check_unique_geometry_name(&new_geometry.name)?;
+        let new_geometry = self.check_unique_geometry_name(new_geometry)?;
 
         if let GeometryType::GeometryReference {
             geometry,
@@ -81,10 +83,11 @@ impl Gdtf {
         Ok(())
     }
 
-    fn check_unique_geometry_name(&self, name: &Name) -> Result<(), GdtfError> {
-        if self.geometry(name).is_some() {
-            Err(GdtfError::DuplicateGeometryName(name.clone()))?
+    fn check_unique_geometry_name(&self, g: Geometry) -> Result<Geometry, GdtfError> {
+        if self.geometry(&g.name).is_some() {
+            Err(GdtfError::DuplicateGeometryName(g))?
+        } else {
+            Ok(g)
         }
-        Ok(())
     }
 }
