@@ -5,7 +5,6 @@
 pub(crate) mod parse_xml;
 
 pub mod low_level;
-pub mod yes_no;
 
 mod error;
 mod high_level;

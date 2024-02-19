@@ -8,16 +8,16 @@ use crate::{DmxAddress, Name};
 #[derive(Serialize, Debug, Default, PartialEq)]
 pub struct Geometries {
     #[serde(default, rename = "$value")]
-    pub children: Vec<GeometryType>,
+    pub children: Vec<LowLevelGeometryType>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Clone)]
-pub enum GeometryType {
+pub enum LowLevelGeometryType {
     Geometry {
         #[serde(flatten)]
         basic: BasicGeometry,
         #[serde(default, rename = "$value")]
-        children: Vec<GeometryType>,
+        children: Vec<LowLevelGeometryType>,
     },
     GeometryReference {
         #[serde(flatten)]
@@ -52,9 +52,9 @@ pub struct Break {
     pub dmx_break: NonZeroU8,
 }
 
-pub fn count_geometry_children(children: &[GeometryType]) -> u64 {
+pub fn count_geometry_children(children: &[LowLevelGeometryType]) -> u64 {
     children.iter().fold(0, |i, g| {
-        if let GeometryType::Geometry { children, .. } = g {
+        if let LowLevelGeometryType::Geometry { children, .. } = g {
             i + count_geometry_children(children) + 1
         } else {
             i
@@ -75,7 +75,7 @@ mod tests {
         gdtf.fixture_type
             .geometries
             .children
-            .push(GeometryType::Geometry {
+            .push(LowLevelGeometryType::Geometry {
                 basic: BasicGeometry {
                     name: "Test".try_into().unwrap(),
                     model: Some("Test".try_into().unwrap()),
@@ -83,9 +83,9 @@ mod tests {
                 children: Vec::new(),
             });
         match gdtf.fixture_type.geometries.children.first_mut().unwrap() {
-            GeometryType::Geometry {
+            LowLevelGeometryType::Geometry {
                 ref mut children, ..
-            } => children.push(GeometryType::GeometryReference {
+            } => children.push(LowLevelGeometryType::GeometryReference {
                 basic: BasicGeometry {
                     name: "Second level".try_into().unwrap(),
                     model: None,

@@ -1,5 +1,5 @@
 use crate::{
-    low_level::{self, BasicGeometry, FixtureType, Geometries, LowLevelGdtf},
+    low_level::{self, BasicGeometry, FixtureType, Geometries, LowLevelGdtf, LowLevelGeometryType},
     Gdtf, Geometry, SerializationError,
 };
 
@@ -27,23 +27,20 @@ impl Gdtf {
 }
 
 fn recusively_add_geometries<'a>(
-    geometries: &mut Vec<low_level::GeometryType>,
-    mut iter: impl Iterator<Item = &'a Geometry>,
+    geometries: &mut Vec<LowLevelGeometryType>,
+    iter: impl Iterator<Item = &'a Geometry>,
 ) {
-    // TODO can BasicGeometry be lifted from match?
     for g in iter {
+        let basic = BasicGeometry {
+            name: g.name.clone(),
+            model: None, // TODO model, position
+        };
         let low_level = match &g.t {
             crate::GeometryType::Geometry { children } => {
-                let mut c = Vec::<low_level::GeometryType>::new();
+                let mut c = Vec::<LowLevelGeometryType>::new();
                 recusively_add_geometries(&mut c, children.iter());
 
-                low_level::GeometryType::Geometry {
-                    basic: BasicGeometry {
-                        name: g.name.clone(),
-                        model: None, // TODO
-                    },
-                    children: c,
-                }
+                LowLevelGeometryType::Geometry { basic, children: c }
             }
             crate::GeometryType::GeometryReference {
                 geometry,
@@ -68,11 +65,8 @@ fn recusively_add_geometries<'a>(
                 // whereas this is allowed in high-level gdtf to make it constructible. Unused
                 // ones can just be removed.
 
-                low_level::GeometryType::GeometryReference {
-                    basic: BasicGeometry {
-                        name: g.name.clone(),
-                        model: None, // TODO
-                    },
+                LowLevelGeometryType::GeometryReference {
+                    basic,
                     geometry: geometry.clone(),
                     breaks,
                 }

@@ -1,9 +1,10 @@
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::{low_level, yes_no::YesNoEnum, DataVersion, Name};
+use crate::{low_level, DataVersion, Name};
 
-// TODO rename to Gdtf, being differentiated by different import and can be referred to as low_level::Gdtf?
+use super::YesNoEnum;
+
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename = "GDTF")]
 pub struct LowLevelGdtf {

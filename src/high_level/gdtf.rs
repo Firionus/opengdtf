@@ -56,9 +56,10 @@ impl Gdtf {
     ) -> Result<(), GdtfError> {
         let new_geometry = self.check_unique_geometry_name(new_geometry)?;
 
+        // validations for Geometry Reference
         if let GeometryType::GeometryReference {
             geometry,
-            overwrite: default_break,
+            overwrite,
             offsets,
         } = &new_geometry.t
         {
@@ -68,10 +69,11 @@ impl Gdtf {
             if let GeometryType::GeometryReference { .. } = referenced.t {
                 Err(GdtfError::Unexpected(format!("There should be no top-level GeometryReference, yet there was one with name '{}'",referenced.name).into(),))?;
             }
-            // TODO validate that channels of the referencd geometry only have breaks \
+            // TODO validate that channels of the referenced geometry only have breaks \
             // that are in offsets (or "overwrite", in which case we use the default break)
         }
 
+        // add geometry
         let parent = find_geometry_mut(&mut self.geometries, parent)
             .ok_or(GdtfError::UnknownGeometryName(parent.clone()))?;
         match parent.t {

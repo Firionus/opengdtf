@@ -4,12 +4,14 @@ use std::{
     num::NonZeroU8,
 };
 
+use std::collections::hash_map::Entry::{Occupied, Vacant};
+
 use getset::Getters;
 
 use crate::{
-    low_level::{self, BasicGeometry},
+    low_level::{self, BasicGeometry, LowLevelGeometryType},
     DmxAddress, Gdtf, GdtfError, GdtfParseError, Geometry, GeometryType, HandleProblem,
-    IntoValidName, Name, PlaceGdtfError, Problems, ProblemsMut,
+    IntoValidName, Name, PlaceGdtfError, Problem, Problems, ProblemsMut,
 };
 
 use super::low_level::ParsedGdtf;
@@ -88,7 +90,7 @@ fn validate_geometries(parsed: &mut ParsedGdtf, gdtf: &mut Gdtf) -> GeometryLook
 }
 
 fn maybe_add_children_geometries(
-    children: Option<Vec<low_level::GeometryType>>,
+    children: Option<Vec<LowLevelGeometryType>>,
     gdtf: &mut Gdtf,
     parent: &Name,
     top_level: &Name,
@@ -103,7 +105,7 @@ fn maybe_add_children_geometries(
 }
 
 fn validate_child_geometry_recursively(
-    g: low_level::GeometryType,
+    g: LowLevelGeometryType,
     gdtf: &mut Gdtf,
     parent: &Name,
     top_level: &Name,
@@ -157,6 +159,7 @@ fn validate_child_geometry_recursively(
     Some(())
 }
 
+#[allow(clippy::too_many_arguments)] // TODO reduce number of args
 /// Returning None means success, returning Some means continue working on the geometry
 fn try_inserting_renamed(
     g: Geometry,
@@ -176,10 +179,10 @@ fn try_inserting_renamed(
                 .0
                 .entry((top_level.clone(), original_name.clone()))
             {
-                std::collections::hash_map::Entry::Occupied(_) => {
+                Occupied(_) => {
                     pe.handled_by(format!("renaming to '{renamed}', multiple geometries of this same name in its top level geometry will make references non-unique"), p);
                 }
-                std::collections::hash_map::Entry::Vacant(entry) => {
+                Vacant(entry) => {
                     pe.handled_by(format!("renaming to '{renamed}'"), p);
                     entry.insert(renamed);
                 }
@@ -197,11 +200,11 @@ fn try_inserting_renamed(
 }
 
 fn translate_geometry(
-    g: &low_level::GeometryType,
+    g: &LowLevelGeometryType,
     p: &mut impl ProblemsMut,
-) -> Option<(Geometry, Option<Vec<low_level::GeometryType>>)> {
+) -> Option<(Geometry, Option<Vec<LowLevelGeometryType>>)> {
     match g {
-        crate::low_level::GeometryType::Geometry { basic, children } => Some((
+        LowLevelGeometryType::Geometry { basic, children } => Some((
             Geometry {
                 name: basic.name.clone(),
                 t: GeometryType::Geometry {
@@ -210,7 +213,7 @@ fn translate_geometry(
             },
             Some(children.clone()),
         )),
-        crate::low_level::GeometryType::GeometryReference {
+        LowLevelGeometryType::GeometryReference {
             basic,
             geometry,
             breaks,
@@ -233,10 +236,15 @@ fn translate_reference(
         .unwrap_or((NonZeroU8::MIN, DmxAddress::default()));
 
     break_iter.for_each(|b| match offsets.entry(b.dmx_break) {
-        std::collections::hash_map::Entry::Occupied(entry) => {
-            todo!("add to problems as duplicate, don't use it")
+        Occupied(entry) => {
+            Problem::DuplicateDmxBreak(*entry.key())
+                .at_custom(format!(
+                    "GeometryReference with name '{}'",
+                    basic.name.clone()
+                ))
+                .handled_by("ignoring break", p);
         }
-        std::collections::hash_map::Entry::Vacant(entry) => {
+        Vacant(entry) => {
             entry.insert(b.dmx_offset.clone());
         }
     });

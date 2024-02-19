@@ -1,9 +1,11 @@
 //! The problems system is the core error handling mechanism in the GDTF parser.
 //! See the unit tests of this module for an example of how to do it.
 
+use std::num::NonZeroU8;
+
 use roxmltree::{Node, TextPos};
 
-use crate::{Gdtf, GdtfError, Name};
+use crate::{GdtfError, Name};
 
 pub type Problems = Vec<HandledProblem>;
 
@@ -59,13 +61,8 @@ pub enum Problem {
     UnexpectedXmlNode(String),
     #[error("duplicate Geometry name '{0}'")]
     DuplicateGeometryName(Name),
-    // #[error(
-    //     "duplicate DMXBreak attribute {duplicate_break} in GeometryReference '{geometry_reference}'"
-    // )]
-    // DuplicateDmxBreak {
-    //     duplicate_break: Break,
-    //     geometry_reference: Name,
-    // },
+    #[error("duplicate DMXBreak attribute {0}")]
+    DuplicateDmxBreak(NonZeroU8),
     #[error("unexpected GeometryReference '{0}' as top-level Geometry")]
     UnexpectedTopLevelGeometryReference(Name),
     #[error("unknown Geometry '{0}' referenced")]
@@ -167,12 +164,6 @@ impl ProblemAt {
 /// more complex types.
 pub(crate) trait ProblemsMut {
     fn problems_mut(&mut self) -> &mut Problems;
-    // TODO switch all cases of &mut Problems (especially in this file) to &mut
-    // impl ProblemsMut
-
-    // TODO go through the codebase, checking for things
-    // like `&mut self.problems` or `self.problems` and replace with `self`.
-    // This might require more implementations for ProblemsMut.
 }
 
 pub(crate) trait HandleProblem<T, S: Into<String>> {

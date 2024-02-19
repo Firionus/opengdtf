@@ -7,9 +7,8 @@ use roxmltree::Node;
 use uuid::Uuid;
 
 use crate::{
-    low_level::{BasicGeometry, Break, GeometryType, LowLevelGdtf},
+    low_level::{BasicGeometry, Break, LowLevelGdtf, LowLevelGeometryType, YesNoEnum},
     parse_xml::{AssignOrHandle, GetXmlAttribute, GetXmlNode},
-    yes_no::YesNoEnum,
     GdtfParseError, HandleProblem, Name, Problem, Problems, ProblemsMut,
 };
 
@@ -142,7 +141,7 @@ impl ProblemsMut for ParsedGdtf {
 pub(crate) fn parse_geometry_children<'a>(
     p: &'a mut impl ProblemsMut,
     geometry: Node<'a, 'a>,
-) -> impl Iterator<Item = GeometryType> + 'a {
+) -> impl Iterator<Item = LowLevelGeometryType> + 'a {
     geometry
         .children()
         .filter(|n| n.is_element())
@@ -159,7 +158,7 @@ pub(crate) fn parse_geometry_children<'a>(
                 | "MediaServerMaster" | "Display" | "Laser" | "WiringObject" | "Inventory"
                 | "Structure" | "Support" | "Magnet" => {
                     let children = parse_geometry_children(p, n).collect();
-                    Some(GeometryType::Geometry {
+                    Some(LowLevelGeometryType::Geometry {
                         basic: BasicGeometry { name, model },
                         children,
                     })
@@ -169,7 +168,7 @@ pub(crate) fn parse_geometry_children<'a>(
                     let geometry = n
                         .parse_required_attribute("Geometry")
                         .ok_or_handled_by("not parsing node", p)?;
-                    Some(GeometryType::GeometryReference {
+                    Some(LowLevelGeometryType::GeometryReference {
                         basic: BasicGeometry { name, model },
                         geometry,
                         breaks,
