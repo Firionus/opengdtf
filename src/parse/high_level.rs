@@ -1,14 +1,15 @@
 use std::{
-    collections::{btree_map::Entry, HashMap},
+    collections::HashMap,
     io::{Read, Seek},
+    num::NonZeroU8,
 };
 
 use getset::Getters;
 
 use crate::{
     low_level::{self, BasicGeometry},
-    Gdtf, GdtfError, GdtfParseError, Geometry, GeometryType, HandleProblem, IntoValidName, Name,
-    PlaceGdtfError, Problem, Problems, ProblemsMut,
+    DmxAddress, Gdtf, GdtfError, GdtfParseError, Geometry, GeometryType, HandleProblem,
+    IntoValidName, Name, PlaceGdtfError, Problems, ProblemsMut,
 };
 
 use super::low_level::ParsedGdtf;
@@ -60,21 +61,27 @@ fn validate_geometries(parsed: &mut ParsedGdtf, gdtf: &mut Gdtf) -> GeometryLook
 
     let mut rename_map = GeometryLookup::default();
 
+    let mut descendants = Vec::new();
+
     for g in input.iter() {
         if let Some((to_add, children)) = translate_geometry(g, p) {
             let parent_name = to_add.name.clone();
             gdtf.add_top_level_geometry(to_add)
+                .map(|()| descendants.push((parent_name, children)))
                 .at("top level geometries")
                 .ok_or_handled_by("ignoring node", p);
-            maybe_add_children_geometries(
-                children,
-                gdtf,
-                &parent_name,
-                &parent_name,
-                &mut rename_map,
-                p,
-            );
         }
+    }
+
+    for (parent_name, children) in descendants {
+        maybe_add_children_geometries(
+            children,
+            gdtf,
+            &parent_name,
+            &parent_name,
+            &mut rename_map,
+            p,
+        );
     }
 
     rename_map
@@ -164,11 +171,19 @@ fn try_inserting_renamed(
     let renamed = g.name.clone();
     match gdtf.add_child_geometry(parent, g) {
         Ok(_) => {
-            e.at("Geometries")
-                .handled_by(format!("renaming to {renamed}"), p);
-            rename_map
+            let pe = e.at("Geometries");
+            match rename_map
                 .0
-                .insert((top_level.clone(), original_name.clone()), renamed);
+                .entry((top_level.clone(), original_name.clone()))
+            {
+                std::collections::hash_map::Entry::Occupied(_) => {
+                    pe.handled_by(format!("renaming to '{renamed}', multiple geometries of this same name in its top level geometry will make references non-unique"), p);
+                }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    pe.handled_by(format!("renaming to '{renamed}'"), p);
+                    entry.insert(renamed);
+                }
+            }
             None
         }
         Err(GdtfError::DuplicateGeometryName(g)) => Some((g, e)),
@@ -215,8 +230,7 @@ fn translate_reference(
     let overwrite = break_iter
         .next()
         .map(|b| (b.dmx_break, b.dmx_offset.clone()))
-        .ok_or(Problem::MissingBreakOffset().at_custom(basic.name.clone()))
-        .ok_or_handled_by("ignoring geometry", p)?;
+        .unwrap_or((NonZeroU8::MIN, DmxAddress::default()));
 
     break_iter.for_each(|b| match offsets.entry(b.dmx_break) {
         std::collections::hash_map::Entry::Occupied(entry) => {

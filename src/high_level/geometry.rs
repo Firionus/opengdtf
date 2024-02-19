@@ -1,6 +1,7 @@
 use std::{collections::HashMap, num::NonZeroU8};
 
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, DisplayFromStr};
 
 use crate::{DmxAddress, Name};
 
@@ -8,10 +9,13 @@ use crate::{DmxAddress, Name};
 pub struct Geometry {
     pub name: Name,
     // TODO: model, position
+    #[serde(flatten)]
     pub t: GeometryType,
 }
 
+#[serde_as]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(tag = "type")]
 pub enum GeometryType {
     Geometry {
         children: Vec<Geometry>,
@@ -24,10 +28,13 @@ pub enum GeometryType {
         /// "Overwrite" as its DMX Break.
         ///
         /// Break can also exist in offsets with a different DmxAddress.
+        ///
+        /// Will be removed in XML serialization if not used by any channels.
         overwrite: (NonZeroU8, DmxAddress),
         /// Maps DMX break to a corresponding DMX offset. Channels of the
         /// referenced geometry are instantiated at their DMX address added to
         /// this DMX offset.
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         offsets: HashMap<NonZeroU8, DmxAddress>,
     },
 }

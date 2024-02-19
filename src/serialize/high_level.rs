@@ -30,6 +30,7 @@ fn recusively_add_geometries<'a>(
     geometries: &mut Vec<low_level::GeometryType>,
     mut iter: impl Iterator<Item = &'a Geometry>,
 ) {
+    // TODO can BasicGeometry be lifted from match?
     for g in iter {
         let low_level = match &g.t {
             crate::GeometryType::Geometry { children } => {
@@ -53,13 +54,19 @@ fn recusively_add_geometries<'a>(
                     .iter()
                     .map(|(dmx_break, dmx_address)| low_level::Break {
                         dmx_offset: dmx_address.clone(),
-                        dmx_break: dmx_break.clone(),
+                        dmx_break: *dmx_break,
                     })
                     .collect::<Vec<low_level::Break>>();
                 breaks.push(low_level::Break {
                     dmx_offset: overwrite.1.clone(),
                     dmx_break: overwrite.0,
                 });
+
+                // TODO with Breaks in GeometryReferences, we must ensure that for every value
+                // of Break in channels of the referenced geometry, there is exactly one break
+                // entry, not more or less. GDTF does not allow too many breaks to be present,
+                // whereas this is allowed in high-level gdtf to make it constructible. Unused
+                // ones can just be removed.
 
                 low_level::GeometryType::GeometryReference {
                     basic: BasicGeometry {
