@@ -1,15 +1,17 @@
 # opengdtf
 
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Project Status: Abandoned – Initial development has started, but there has not yet been a stable, usable release; the project has been abandoned and the author(s) do not intend on continuing development.](https://www.repostatus.org/badges/latest/abandoned.svg)](https://www.repostatus.org/#abandoned)
 
+:warning: This project never reached a usable state and probably never will. Go to [gdtf.eu](gdtf.eu) for a more active community. :warning:
+
+
+There's an unfinished rework on the branch `try_again` but ultimately I noticed my own need for the project has vanished. 
+
+---
 
 A starting point to build a useful open-source [GDTF](https://gdtf-share.com/)
 libary in Rust.  
 GDTF is a standardized fixture format for entertainment lighting.
-
-:construction: Early initial development, not usable yet :construction:  
-If you are interested in helping out, open a thread in the Discussions and say
-hi :wave:
 
 ## Short-term goals
 
